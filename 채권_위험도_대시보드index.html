@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채권 위험도 대시보드 — 6/15 기준</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Noto Sans KR', sans-serif; background: #f5f4f0; color: #1a1a18; font-size: 14px; }
+.header { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 18px; font-weight: 500; }
+.header .date { font-size: 12px; color: #888780; }
+.dash { padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi { background: #fff; border-radius: 10px; padding: 16px 18px; border: 0.5px solid #e0dfd8; }
+.kpi-label { font-size: 12px; color: #888780; margin-bottom: 8px; }
+.kpi-value { font-size: 24px; font-weight: 500; }
+.kpi-sub { font-size: 11px; color: #b4b2a9; margin-top: 4px; }
+.kpi.danger .kpi-value { color: #A32D2D; }
+.kpi.warn .kpi-value { color: #854F0B; }
+.kpi.blue .kpi-value { color: #185FA5; }
+.risk-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.pill { display: flex; align-items: center; gap: 7px; padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 500; border: 1px solid; }
+.pill-위험 { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
+.pill-경고 { background: #FAEEDA; color: #854F0B; border-color: #FAC775; }
+.pill-주의 { background: #E6F1FB; color: #185FA5; border-color: #85B7EB; }
+.pill-정상 { background: #EAF3DE; color: #3B6D11; border-color: #97C459; }
+.pill-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pill-위험 .pill-dot { background: #A32D2D; }
+.pill-경고 .pill-dot { background: #854F0B; }
+.pill-주의 .pill-dot { background: #185FA5; }
+.pill-정상 .pill-dot { background: #3B6D11; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 18px 20px; border: 0.5px solid #e0dfd8; }
+.card-title { font-size: 13px; font-weight: 500; color: #5f5e5a; margin-bottom: 16px; }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-bar input, .filter-bar select { font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: #fff; color: #1a1a18; outline: none; }
+.filter-bar input { flex: 1; min-width: 140px; }
+.table-wrap { overflow: auto; max-height: 400px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+thead th { position: sticky; top: 0; background: #f5f4f0; padding: 8px 10px; text-align: left; font-weight: 500; font-size: 12px; color: #5f5e5a; border-bottom: 0.5px solid #e0dfd8; white-space: nowrap; }
+tbody td { padding: 9px 10px; border-bottom: 0.5px solid #f1efe8; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+tbody tr:hover { background: #f9f8f4; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.b-위험 { background: #FCEBEB; color: #A32D2D; }
+.b-경고 { background: #FAEEDA; color: #854F0B; }
+.b-주의 { background: #E6F1FB; color: #185FA5; }
+.b-정상 { background: #EAF3DE; color: #3B6D11; }
+.b-해당없음 { background: #f1efe8; color: #888780; }
+.num-r { text-align: right; font-variant-numeric: tabular-nums; }
+.red { color: #A32D2D; }
+.muted { color: #b4b2a9; }
+.sp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sp-name { font-size: 13px; font-weight: 500; min-width: 48px; }
+.sp-bg { flex: 1; height: 8px; background: #e0dfd8; border-radius: 4px; overflow: hidden; }
+.sp-fill { height: 100%; border-radius: 4px; }
+.sp-val { font-size: 12px; color: #5f5e5a; min-width: 70px; text-align: right; }
+.sp-exc { font-size: 12px; color: #A32D2D; min-width: 70px; text-align: right; }
+.legend-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888780; margin-bottom: 5px; }
+.leg-sq { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+@media (max-width: 700px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 채권 위험도 대시보드</h1>
+  <span class="date">기준일: 2026년 6월 15일 &nbsp;|&nbsp; 용품 + 의류 합산</span>
+</div>
+
+<div class="dash">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">총 채권잔액</div>
+      <div class="kpi-value" id="k-recv">—</div>
+      <div class="kpi-sub">용품 + 의류 합산</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">총 담보</div>
+      <div class="kpi-value" id="k-coll">—</div>
+      <div class="kpi-sub">전체 매장 합산</div>
+    </div>
+    <div class="kpi danger">
+      <div class="kpi-label">담보초과 채권 합계</div>
+      <div class="kpi-value" id="k-excess">—</div>
+      <div class="kpi-sub" id="k-excess-cnt">—</div>
+    </div>
+    <div class="kpi warn">
+      <div class="kpi-label">위험·경고 매장 수</div>
+      <div class="kpi-value" id="k-hi">—</div>
+      <div class="kpi-sub">담보비율 150% 초과</div>
+    </div>
+  </div>
+
+  <div class="risk-row" id="riskPills"></div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">담보초과 채권 상위 10개 매장 (단위: 백만원)</div>
+      <div style="position:relative;width:100%;height:300px;">
+        <canvas id="topChart" role="img" aria-label="담보초과 채권 상위 10개 매장 가로 막대 차트">초과 채권 상위 매장 차트</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">영업사원별 채권잔액 현황</div>
+      <div id="spBars" style="margin-top:4px;"></div>
+      <div style="margin-top:16px;border-top:0.5px solid #e0dfd8;padding-top:12px;">
+        <div class="legend-row"><span class="leg-sq" style="background:#378ADD;"></span>채권잔액</div>
+        <div class="legend-row"><span class="leg-sq" style="background:#E24B4A;"></span>초과채권 (담보초과분)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">전체 매장 채권 현황</div>
+    <div class="filter-bar">
+      <input type="text" id="search" placeholder="매장명 검색..." />
+      <select id="riskFilter">
+        <option value="">전체 위험도</option>
+        <option value="위험">위험</option>
+        <option value="경고">경고</option>
+        <option value="주의">주의</option>
+        <option value="정상">정상</option>
+      </select>
+      <select id="spFilter">
+        <option value="">전체 영업사원</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:160px;">매장명</th>
+            <th style="width:60px;">담당</th>
+            <th style="width:90px;" class="num-r">담보</th>
+            <th style="width:100px;" class="num-r">채권잔액</th>
+            <th style="width:100px;" class="num-r">초과금액</th>
+            <th style="width:70px;" class="num-r">담보비율</th>
+            <th style="width:65px;text-align:center;">위험도</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA = {"summary":{"total_collateral":8550000000,"total_receivable":7007904194,"total_excess":2085020539,"total_stores":106,"risk_counts":{"정상":70,"주의":13,"위험":11,"경고":8,"해당없음":4}},"stores":[{"code":"D00097","name":"승리스포츠","salesperson":"김종윤","collateral":800000000,"receivable":659992264,"excess":-140007736,"ratio":0.82,"risk":"정상"},{"code":"D00014","name":"거성스포츠(안동)","salesperson":"왕준하","collateral":1110000000,"receivable":520011072,"excess":-589988928,"ratio":0.47,"risk":"정상"},{"code":"D00559","name":"배드민턴창고","salesperson":"왕준하","collateral":150000000,"receivable":383385099,"excess":233385099,"ratio":2.56,"risk":"위험"},{"code":"D00865","name":"요넥스 의정부점 퍼펙트플레이","salesperson":"전재영","collateral":90000000,"receivable":335139795,"excess":245139795,"ratio":3.72,"risk":"위험"},{"code":"D00110","name":"요넥스 화순점","salesperson":"최낙호","collateral":175000000,"receivable":298067331,"excess":123067331,"ratio":1.7,"risk":"경고"},{"code":"D00722","name":"주원스포츠","salesperson":"왕준하","collateral":85000000,"receivable":276023317,"excess":191023317,"ratio":3.25,"risk":"위험"},{"code":"D00744","name":"주식회사 미르스포츠","salesperson":"전재영","collateral":100000000,"receivable":275752115,"excess":175752115,"ratio":2.76,"risk":"위험"},{"code":"D00790","name":"와이제이(Y.J)요넥스","salesperson":"김연준","collateral":100000000,"receivable":216070870,"excess":116070870,"ratio":2.16,"risk":"위험"},{"code":"D00096","name":"스포츠뱅크","salesperson":"김종윤","collateral":30000000,"receivable":209700848,"excess":179700848,"ratio":6.99,"risk":"위험"},{"code":"D00864","name":"요넥스 연제점","salesperson":"김연준","collateral":70000000,"receivable":204553596,"excess":134553596,"ratio":2.92,"risk":"위험"},{"code":"D00267","name":"제이비스포츠","salesperson":"손효동","collateral":80000000,"receivable":164141755,"excess":84141755,"ratio":2.05,"risk":"위험"},{"code":"D00306","name":"광주스포츠","salesperson":"손효동","collateral":70000000,"receivable":152513546,"excess":82513546,"ratio":2.18,"risk":"위험"},{"code":"D00046","name":"모던스포츠","salesperson":"김종윤","collateral":150000000,"receivable":152394427,"excess":2394427,"ratio":1.02,"risk":"주의"},{"code":"D00149","name":"코리아오픈(김천)","salesperson":"왕준하","collateral":120000000,"receivable":140688700,"excess":20688700,"ratio":1.17,"risk":"주의"},{"code":"D00027","name":"남철환배드민턴SHOP","salesperson":"김연준","collateral":50000000,"receivable":125595998,"excess":75595998,"ratio":2.51,"risk":"위험"},{"code":"D00866","name":"요넥스 경북도청점","salesperson":"김연준","collateral":80000000,"receivable":124115399,"excess":44115399,"ratio":1.55,"risk":"경고"},{"code":"D00862","name":"주식회사 민턴랩스포츠","salesperson":"전재영","collateral":85000000,"receivable":117759547,"excess":32759547,"ratio":1.39,"risk":"주의"},{"code":"D00529","name":"우리스포츠(광주)","salesperson":"손효동","collateral":50000000,"receivable":116826579,"excess":66826579,"ratio":2.34,"risk":"위험"},{"code":"D00137","name":"주식회사 배드민턴마트","salesperson":"왕준하","collateral":100000000,"receivable":104709738,"excess":4709738,"ratio":1.05,"risk":"주의"},{"code":"D00292","name":"요넥스 스포원점","salesperson":"김연준","collateral":100000000,"receivable":101145823,"excess":1145823,"ratio":1.01,"risk":"주의"},{"code":"D00181","name":"준스포츠","salesperson":"왕준하","collateral":50000000,"receivable":85488708,"excess":35488708,"ratio":1.71,"risk":"경고"},{"code":"D00416","name":"서진스포츠","salesperson":"김연준","collateral":50000000,"receivable":85259816,"excess":35259816,"ratio":1.71,"risk":"경고"},{"code":"D00148","name":"케이앤비스포츠","salesperson":"김연준","collateral":70000000,"receivable":85179086,"excess":15179086,"ratio":1.22,"risk":"주의"},{"code":"D00658","name":"요넥스 강남점","salesperson":"왕준하","collateral":80000000,"receivable":81773713,"excess":1773713,"ratio":1.02,"risk":"주의"},{"code":"D00868","name":"요넥스충주점","salesperson":"전재영","collateral":50000000,"receivable":80303780,"excess":30303780,"ratio":1.61,"risk":"경고"},{"code":"D00750","name":"요넥스 동탄점","salesperson":"전재영","collateral":50000000,"receivable":75976498,"excess":25976498,"ratio":1.52,"risk":"경고"},{"code":"D00052","name":"민턴스포츠(나주)","salesperson":"최낙호","collateral":50000000,"receivable":75095225,"excess":25095225,"ratio":1.5,"risk":"경고"},{"code":"D00764","name":"럭키코리아","salesperson":"최낙호","collateral":80000000,"receivable":72934253,"excess":-7065747,"ratio":0.91,"risk":"정상"},{"code":"D00183","name":"더제일","salesperson":"왕준하","collateral":60000000,"receivable":69174396,"excess":9174396,"ratio":1.15,"risk":"주의"},{"code":"D00690","name":"요넥스강동점 MZ스포츠","salesperson":"전재영","collateral":50000000,"receivable":68195674,"excess":18195674,"ratio":1.36,"risk":"주의"},{"code":"D00526","name":"여수 요넥스","salesperson":"최낙호","collateral":50000000,"receivable":66918618,"excess":16918618,"ratio":1.34,"risk":"주의"},{"code":"D00010","name":"가나스포츠","salesperson":"최낙호","collateral":150000000,"receivable":64205953,"excess":-85794047,"ratio":0.43,"risk":"정상"},{"code":"D00031","name":"대전배드민턴전문점","salesperson":"왕준하","collateral":45000000,"receivable":52453540,"excess":7453540,"ratio":1.17,"risk":"주의"},{"code":"D00030","name":"대우스포츠","salesperson":"왕준하","collateral":118000000,"receivable":52448503,"excess":-65551497,"ratio":0.44,"risk":"정상"},{"code":"D00080","name":"상무배드민턴","salesperson":"손효동","collateral":115000000,"receivable":52373605,"excess":-62626395,"ratio":0.46,"risk":"정상"},{"code":"D00628","name":"요넥스 수원점","salesperson":"손효동","collateral":50000000,"receivable":51621155,"excess":1621155,"ratio":1.03,"risk":"주의"},{"code":"D00057","name":"민턴홀릭","salesperson":"김연준","collateral":70000000,"receivable":49795856,"excess":-20204144,"ratio":0.71,"risk":"정상"},{"code":"D00086","name":"주식회사 에스엠","salesperson":"김연준","collateral":25000000,"receivable":46775328,"excess":21775328,"ratio":1.87,"risk":"경고"},{"code":"D00160","name":"호동스포츠","salesperson":"최낙호","collateral":50000000,"receivable":44173017,"excess":-5826983,"ratio":0.88,"risk":"정상"},{"code":"D00101","name":"아산스포츠","salesperson":"김종윤","collateral":30000000,"receivable":42342610,"excess":12342610,"ratio":1.41,"risk":"주의"},{"code":"D00161","name":"홍성요넥스","salesperson":"김종윤","collateral":75000000,"receivable":41752379,"excess":-33247621,"ratio":0.56,"risk":"정상"},{"code":"D00641","name":"네버랜드","salesperson":"전재영","collateral":110000000,"receivable":41145713,"excess":-68854287,"ratio":0.37,"risk":"정상"},{"code":"D00392","name":"효성종합스포츠","salesperson":"김종윤","collateral":50000000,"receivable":38173339,"excess":-11826661,"ratio":0.76,"risk":"정상"},{"code":"D00141","name":"중앙스포츠(경주)","salesperson":"왕준하","collateral":80000000,"receivable":38104760,"excess":-41895240,"ratio":0.48,"risk":"정상"},{"code":"D00136","name":"제일스포츠","salesperson":"전재영","collateral":50000000,"receivable":34768089,"excess":-15231911,"ratio":0.7,"risk":"정상"},{"code":"D00116","name":"요넥스마산대리점(민턴스포츠)","salesperson":"김종윤","collateral":310000000,"receivable":34756931,"excess":-275243069,"ratio":0.11,"risk":"정상"},{"code":"D00471","name":"(주)아주레포츠_특판","salesperson":"손효동","collateral":60000000,"receivable":32430378,"excess":-27569622,"ratio":0.54,"risk":"정상"},{"code":"D00019","name":"구미배드민턴마트","salesperson":"왕준하","collateral":150000000,"receivable":29955195,"excess":-120044805,"ratio":0.2,"risk":"정상"},{"code":"D00280","name":"도담스포츠","salesperson":"왕준하","collateral":50000000,"receivable":29511888,"excess":-20488112,"ratio":0.59,"risk":"정상"},{"code":"D00685","name":"주식회사 온리스포츠","salesperson":"손효동","collateral":50000000,"receivable":28791508,"excess":-21208492,"ratio":0.58,"risk":"정상"},{"code":"D00074","name":"봉스포츠","salesperson":"김연준","collateral":50000000,"receivable":28142126,"excess":-21857874,"ratio":0.56,"risk":"정상"},{"code":"D00640","name":"바른스포츠","salesperson":"최낙호","collateral":50000000,"receivable":26677871,"excess":-23322129,"ratio":0.53,"risk":"정상"},{"code":"D00286","name":"요넥스 성남점","salesperson":"전재영","collateral":50000000,"receivable":25862314,"excess":-24137686,"ratio":0.52,"risk":"정상"},{"code":"D00145","name":"청룡스포츠","salesperson":"김종윤","collateral":65000000,"receivable":24998905,"excess":-40001095,"ratio":0.38,"risk":"정상"},{"code":"D00524","name":"주식회사 용인요넥스","salesperson":"김연준","collateral":400000000,"receivable":24775000,"excess":-375225000,"ratio":0.06,"risk":"정상"},{"code":"D00085","name":"성정레포츠","salesperson":"왕준하","collateral":50000000,"receivable":20785701,"excess":-29214299,"ratio":0.42,"risk":"정상"},{"code":"D00132","name":"전주요넥스","salesperson":"전재영","collateral":30000000,"receivable":20771473,"excess":-9228527,"ratio":0.69,"risk":"정상"},{"code":"D00256","name":"거성스포츠(양산)","salesperson":"김종윤","collateral":50000000,"receivable":20700969,"excess":-29299031,"ratio":0.41,"risk":"정상"},{"code":"D00022","name":"금강스포츠","salesperson":"김연준","collateral":30000000,"receivable":19965648,"excess":-10034352,"ratio":0.67,"risk":"정상"},{"code":"D00503","name":"나이스민턴","salesperson":"김종윤","collateral":45000000,"receivable":19221909,"excess":-25778091,"ratio":0.43,"risk":"정상"},{"code":"D00028","name":"대광스포츠(대구)","salesperson":"김연준","collateral":35000000,"receivable":18914278,"excess":-16085722,"ratio":0.54,"risk":"정상"},{"code":"D00072","name":"백마스포츠","salesperson":"전재영","collateral":30000000,"receivable":18302895,"excess":-11697105,"ratio":0.61,"risk":"정상"},{"code":"D00184","name":"오남스포츠","salesperson":"전재영","collateral":40000000,"receivable":16386925,"excess":-23613075,"ratio":0.41,"risk":"정상"},{"code":"D00311","name":"코리아스포츠(시흥)","salesperson":"최낙호","collateral":30000000,"receivable":16164823,"excess":-13835177,"ratio":0.54,"risk":"정상"},{"code":"D00409","name":"요넥스 스포츠","salesperson":"손효동","collateral":65000000,"receivable":15874626,"excess":-49125374,"ratio":0.24,"risk":"정상"},{"code":"D00047","name":"모용철스포츠","salesperson":"김연준","collateral":30000000,"receivable":15403331,"excess":-14596669,"ratio":0.51,"risk":"정상"},{"code":"D00127","name":"원스포츠(제주)","salesperson":"김종윤","collateral":30000000,"receivable":15225366,"excess":-14774634,"ratio":0.51,"risk":"정상"},{"code":"D00643","name":"요넥스 원주점(JS스포츠)","salesperson":"김종윤","collateral":0,"receivable":14877909,"excess":14877909,"ratio":0,"risk":"해당없음"},{"code":"D00338","name":"요넥스창원점(싸카)","salesperson":"김종윤","collateral":50000000,"receivable":14259725,"excess":-35740275,"ratio":0.29,"risk":"정상"},{"code":"D00328","name":"진주배드민턴","salesperson":"김종윤","collateral":50000000,"receivable":13710901,"excess":-36289099,"ratio":0.27,"risk":"정상"},{"code":"D00190","name":"군산스포츠","salesperson":"전재영","collateral":30000000,"receivable":13686169,"excess":-16313831,"ratio":0.46,"risk":"정상"},{"code":"D00150","name":"팔구스포츠","salesperson":"김연준","collateral":30000000,"receivable":13206589,"excess":-16793411,"ratio":0.44,"risk":"정상"},{"code":"D00068","name":"배드민턴하우스(밀양)","salesperson":"김종윤","collateral":30000000,"receivable":13022063,"excess":-16977937,"ratio":0.43,"risk":"정상"},{"code":"D00312","name":"요넥스(YONEX) 이천점","salesperson":"왕준하","collateral":50000000,"receivable":12623763,"excess":-37376237,"ratio":0.25,"risk":"정상"},{"code":"D00040","name":"동호스포츠(인천)","salesperson":"최낙호","collateral":30000000,"receivable":12427095,"excess":-17572905,"ratio":0.41,"risk":"정상"},{"code":"D00186","name":"매치포인트","salesperson":"김종윤","collateral":20000000,"receivable":12419819,"excess":-7580181,"ratio":0.62,"risk":"정상"},{"code":"D00089","name":"속초배드민턴","salesperson":"김종윤","collateral":35000000,"receivable":12329217,"excess":-22670783,"ratio":0.35,"risk":"정상"},{"code":"D00519","name":"위너스포츠","salesperson":"손효동","collateral":30000000,"receivable":12176237,"excess":-17823763,"ratio":0.41,"risk":"정상"},{"code":"D00081","name":"서대문요넥스","salesperson":"최낙호","collateral":30000000,"receivable":11941513,"excess":-18058487,"ratio":0.4,"risk":"정상"},{"code":"D00090","name":"주식회사 스매쉬스포츠","salesperson":"최낙호","collateral":30000000,"receivable":11271035,"excess":-18728965,"ratio":0.38,"risk":"정상"},{"code":"D00515","name":"영무SP","salesperson":"손효동","collateral":50000000,"receivable":11171272,"excess":-38828728,"ratio":0.22,"risk":"정상"},{"code":"D00431","name":"스포츠매니아","salesperson":"왕준하","collateral":50000000,"receivable":11055115,"excess":-38944885,"ratio":0.22,"risk":"정상"},{"code":"D00121","name":"요넥스포항점(하이크리어)","salesperson":"왕준하","collateral":50000000,"receivable":10862121,"excess":-39137879,"ratio":0.22,"risk":"정상"},{"code":"D00138","name":"주식회사동우스포츠","salesperson":"최낙호","collateral":30000000,"receivable":10317891,"excess":-19682109,"ratio":0.34,"risk":"정상"},{"code":"D00123","name":"우성스포츠","salesperson":"손효동","collateral":50000000,"receivable":10068286,"excess":-39931714,"ratio":0.2,"risk":"정상"},{"code":"D00041","name":"라이프스포츠","salesperson":"손효동","collateral":30000000,"receivable":10055033,"excess":-19944967,"ratio":0.34,"risk":"정상"},{"code":"D00282","name":"누리스포츠","salesperson":"손효동","collateral":40000000,"receivable":9543377,"excess":-30456623,"ratio":0.24,"risk":"정상"},{"code":"D00078","name":"삼성스포츠(문경)","salesperson":"왕준하","collateral":30000000,"receivable":9312376,"excess":-20687624,"ratio":0.31,"risk":"정상"},{"code":"D00758","name":"요넥스 서수원점 으뜸스포츠","salesperson":"손효동","collateral":50000000,"receivable":9110970,"excess":-40889030,"ratio":0.18,"risk":"정상"},{"code":"D00111","name":"올림픽종합스포츠(목포)","salesperson":"최낙호","collateral":30000000,"receivable":8481622,"excess":-21518378,"ratio":0.28,"risk":"정상"},{"code":"D00324","name":"파트너스포츠","salesperson":"김연준","collateral":80000000,"receivable":8115633,"excess":-71884367,"ratio":0.1,"risk":"정상"},{"code":"D00159","name":"혜성스포츠","salesperson":"최낙호","collateral":30000000,"receivable":8060579,"excess":-21939421,"ratio":0.27,"risk":"정상"},{"code":"D00287","name":"키카스포츠","salesperson":"손효동","collateral":50000000,"receivable":7513519,"excess":-42486481,"ratio":0.15,"risk":"정상"},{"code":"D00587","name":"주식회사 나이스패밀리","salesperson":"김연준","collateral":50000000,"receivable":6892118,"excess":-43107882,"ratio":0.14,"risk":"정상"},{"code":"D00061","name":"남원요넥스","salesperson":"전재영","collateral":30000000,"receivable":6328277,"excess":-23671723,"ratio":0.21,"risk":"정상"},{"code":"D00029","name":"대복스포츠","salesperson":"전재영","collateral":40000000,"receivable":5999676,"excess":-34000324,"ratio":0.15,"risk":"정상"},{"code":"D00032","name":"하비스포츠","salesperson":"김연준","collateral":115000000,"receivable":4424000,"excess":-110576000,"ratio":0.04,"risk":"정상"},{"code":"D00035","name":"대한체육사(익산)","salesperson":"전재영","collateral":27000000,"receivable":3853005,"excess":-23146995,"ratio":0.14,"risk":"정상"},{"code":"D00396","name":"요넥스 양산점","salesperson":"김종윤","collateral":55000000,"receivable":3738284,"excess":-51261716,"ratio":0.07,"risk":"정상"},{"code":"D00122","name":"우리스포츠","salesperson":"김연준","collateral":30000000,"receivable":2679400,"excess":-27320600,"ratio":0.09,"risk":"정상"},{"code":"D00077","name":"삼성스포츠(동대문)","salesperson":"김종윤","collateral":50000000,"receivable":2532706,"excess":-47467294,"ratio":0.05,"risk":"정상"},{"code":"D00528","name":"2080요넥스","salesperson":"최낙호","collateral":50000000,"receivable":1880283,"excess":-48119717,"ratio":0.04,"risk":"정상"},{"code":"D00120","name":"요넥스청주점","salesperson":"전재영","collateral":30000000,"receivable":1833213,"excess":-28166787,"ratio":0.06,"risk":"정상"},{"code":"D00433","name":"정수스포츠 요넥스 영주점","salesperson":"왕준하","collateral":45000000,"receivable":963529,"excess":-44036471,"ratio":0.02,"risk":"해당없음"},{"code":"D00063","name":"배드민턴스포츠(천안)","salesperson":"왕준하","collateral":60000000,"receivable":774000,"excess":-59226000,"ratio":0.01,"risk":"해당없음"},{"code":"D00021","name":"그린스포츠","salesperson":"최낙호","collateral":30000000,"receivable":-4255619,"excess":-34255619,"ratio":-0.14,"risk":"해당없음"}],"by_salesperson":{"김연준":{"collateral":1465000000,"receivable":1181009895,"excess":443695916,"stores":19},"김종윤":{"collateral":1925000000,"receivable":1346150571,"excess":209315794,"stores":19},"손효동":{"collateral":840000000,"receivable":684211846,"excess":235103035,"stores":15},"왕준하":{"collateral":2533000000,"receivable":1930105234,"excess":503697211,"stores":20},"전재영":{"collateral":892000000,"receivable":1142065158,"excess":528127409,"stores":17},"최낙호":{"collateral":895000000,"receivable":724361490,"excess":165081174,"stores":16}}};
+
+function fmt(n) {
+  const a = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (a >= 1e8) return sign + '₩' + (Math.round(a/1e7)/10).toFixed(1) + '억';
+  if (a >= 1e6) return sign + '₩' + Math.round(a/1e6) + '백만';
+  return sign + '₩' + Math.round(a).toLocaleString('ko-KR');
+}
+
+const s = DATA.summary;
+document.getElementById('k-recv').textContent = fmt(s.total_receivable);
+document.getElementById('k-coll').textContent = fmt(s.total_collateral);
+document.getElementById('k-excess').textContent = fmt(s.total_excess);
+const exCnt = DATA.stores.filter(x => x.excess > 0).length;
+document.getElementById('k-excess-cnt').textContent = exCnt + '개 매장 담보 초과';
+document.getElementById('k-hi').textContent = (s.risk_counts['위험']||0) + (s.risk_counts['경고']||0) + '개';
+
+const pillsEl = document.getElementById('riskPills');
+[['위험','위험'],['경고','경고'],['주의','주의'],['정상','정상']].forEach(([r, label]) => {
+  const cnt = s.risk_counts[r] || 0;
+  const p = document.createElement('div');
+  p.className = 'pill pill-' + r;
+  p.innerHTML = `<span class="pill-dot"></span>${label} ${cnt}개`;
+  pillsEl.appendChild(p);
+});
+
+const topStores = DATA.stores.filter(x => x.excess > 0).sort((a,b) => b.excess - a.excess).slice(0,10);
+const riskColors = { '위험': '#E24B4A', '경고': '#EF9F27', '주의': '#378ADD', '정상': '#639922' };
+
+new Chart(document.getElementById('topChart'), {
+  type: 'bar',
+  data: {
+    labels: topStores.map(s => s.name.length > 10 ? s.name.slice(0,10)+'…' : s.name),
+    datasets: [{
+      data: topStores.map(s => Math.round(s.excess/1e6)),
+      backgroundColor: topStores.map(s => riskColors[s.risk] || '#378ADD'),
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => '₩' + Math.round(c.raw) + '백만' } } },
+    scales: {
+      x: { ticks: { callback: v => v+'M', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+      y: { ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+const spEl = document.getElementById('spBars');
+const sp = DATA.by_salesperson;
+const maxR = Math.max(...Object.values(sp).map(d => d.receivable));
+const spColors = { '김연준':'#378ADD','김종윤':'#1D9E75','손효동':'#D85A30','왕준하':'#534AB7','전재영':'#D4537E','최낙호':'#639922' };
+Object.entries(sp).sort((a,b) => b[1].receivable - a[1].receivable).forEach(([name, d]) => {
+  const pct = Math.round(d.receivable/maxR*100);
+  const color = spColors[name] || '#378ADD';
+  const row = document.createElement('div');
+  row.className = 'sp-row';
+  row.innerHTML = `<span class="sp-name">${name}</span><div class="sp-bg"><div class="sp-fill" style="width:${pct}%;background:${color};"></div></div><span class="sp-val">${fmt(d.receivable)}</span><span class="sp-exc">${d.excess > 0 ? '+'+fmt(d.excess) : '-'}</span>`;
+  spEl.appendChild(row);
+});
+
+const spSel = document.getElementById('spFilter');
+Object.keys(sp).forEach(name => {
+  const o = document.createElement('option');
+  o.value = name; o.textContent = name;
+  spSel.appendChild(o);
+});
+
+function renderTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const r = document.getElementById('riskFilter').value;
+  const p = document.getElementById('spFilter').value;
+  const rows = DATA.stores.filter(s =>
+    (!q || s.name.toLowerCase().includes(q)) &&
+    (!r || s.risk === r) &&
+    (!p || s.salesperson === p)
+  ).sort((a,b) => b.receivable - a.receivable);
+
+  const tbody = document.getElementById('tBody');
+  tbody.innerHTML = '';
+  rows.forEach(s => {
+    const exStyle = s.excess > 0 ? 'class="red"' : 'class="muted"';
+    const exStr = s.excess > 0 ? '+'+fmt(s.excess) : fmt(s.excess);
+    const ratioStr = s.collateral > 0 ? Math.round(s.ratio*100)+'%' : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td title="${s.name}" style="max-width:160px;">${s.name}</td>
+      <td>${s.salesperson}</td>
+      <td class="num-r">${fmt(s.collateral)}</td>
+      <td class="num-r">${fmt(s.receivable)}</td>
+      <td class="num-r" ${exStyle}>${exStr}</td>
+      <td class="num-r">${ratioStr}</td>
+      <td style="text-align:center;"><span class="badge b-${s.risk}">${s.risk}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+['input','change'].forEach(ev => {
+  document.getElementById('search').addEventListener(ev, renderTable);
+  document.getElementById('riskFilter').addEventListener(ev, renderTable);
+  document.getElementById('spFilter').addEventListener(ev, renderTable);
+});
+renderTable();
+</script>
+</body>
+</html>
