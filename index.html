@@ -13,13 +13,19 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#f5f4f0;colo
 .topbar-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center}
 .topbar-center h1{font-size:17px;font-weight:500}
 .topbar .sub{font-size:12px;color:#888780}
-.cat-switch{display:flex;gap:0;background:#fff;padding:0 24px;border-bottom:.5px solid #e0dfd8;position:sticky;top:49px;z-index:100}
-.cat-btn{padding:12px 24px;font-size:14px;cursor:pointer;border-bottom:3px solid transparent;color:#5f5e5a;font-weight:500;transition:.15s}
-.cat-btn.active{border-bottom-color:#1a1a18;color:#1a1a18}
-.cat-btn:hover:not(.active){color:#1a1a18;background:#f9f8f4}
+/* 사이드바 레이아웃 */
+.layout{display:flex;min-height:calc(100vh - 57px)}
+.sidebar{width:200px;flex-shrink:0;background:#fff;border-right:.5px solid #e0dfd8;position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto}
+.sidebar-section{padding:16px 12px 8px;font-size:11px;font-weight:600;color:#b4b2a9;text-transform:uppercase;letter-spacing:0.06em}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;cursor:pointer;color:#5f5e5a;font-weight:400;transition:.15s;border-left:3px solid transparent}
+.sidebar-item:hover{background:#f5f4f0;color:#1a1a18}
+.sidebar-item.active{background:#f5f4f0;color:#1a1a18;font-weight:500;border-left-color:#1a1a18}
+.sidebar-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-divider{height:.5px;background:#e0dfd8;margin:8px 0}
+.main-content{flex:1;overflow:hidden}
 .cat-page{display:none}
 .cat-page.active{display:block}
-.tabs{display:flex;gap:0;border-bottom:.5px solid #e0dfd8;background:#fff;padding:0 24px;position:sticky;top:93px;z-index:99;overflow-x:auto}
+.tabs{display:flex;gap:0;border-bottom:.5px solid #e0dfd8;background:#fff;padding:0 24px;position:sticky;top:57px;z-index:99;overflow-x:auto}
 .tab{padding:10px 20px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;color:#5f5e5a;font-weight:400;transition:.15s;white-space:nowrap}
 .tab.active{border-bottom-color:#1a1a18;color:#1a1a18;font-weight:500}
 .tab:hover:not(.active){color:#1a1a18}
@@ -114,14 +120,32 @@ tbody tr:hover{background:#f9f8f4}
   <div class="topbar-center">
     <h1>대리점 평가기준</h1>
   </div>
-  <span class="sub">2026.06.22(월) 15:49 업데이트</span>
+  <span class="sub">2026.06.22(월) 16:38 업데이트</span>
 </div>
 
-<div class="cat-switch">
-  <div class="cat-btn active" onclick="switchCat('의류',this)">의류</div>
-  <div class="cat-btn" onclick="switchCat('용품',this)">용품</div>
-  <div class="cat-btn" onclick="switchCat('종합순위',this)">⭐ 종합순위</div>
+<div class="layout">
+
+<!-- 사이드바 -->
+<div class="sidebar">
+  <div class="sidebar-section">종합평가</div>
+  <div class="sidebar-item" id="menu-종합순위" onclick="switchCat('종합순위',this)">
+    <span class="icon">⭐</span> 의류
+  </div>
+  <div class="sidebar-item" id="menu-종합순위-용품" onclick="switchCat('종합순위-용품',this)">
+    <span class="icon">⭐</span> 용품
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">팀별 채권잔액</div>
+  <div class="sidebar-item active" id="menu-의류" onclick="switchCat('의류',this)">
+    <span class="icon">👔</span> 의류
+  </div>
+  <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
+    <span class="icon">🏸</span> 용품
+  </div>
 </div>
+
+<!-- 메인 콘텐츠 -->
+<div class="main-content">
 
 <div id="cat-의류" class="cat-page active">
   <div class="tabs">
@@ -151,9 +175,18 @@ tbody tr:hover{background:#f9f8f4}
 
 <div id="cat-종합순위" class="cat-page">
   <div style="padding:20px 24px;max-width:1200px;margin:0 auto">
-    <div id="ranking-container"></div>
+    <div id="ranking-container-의류"></div>
   </div>
 </div>
+
+<div id="cat-종합순위-용품" class="cat-page">
+  <div style="padding:20px 24px;max-width:1200px;margin:0 auto">
+    <div id="ranking-container-용품"></div>
+  </div>
+</div>
+
+</div><!-- /main-content -->
+</div><!-- /layout -->
 
 <script>
 const DATA = {
@@ -381,11 +414,12 @@ function switchTab(cat, dept, el){
 }
 
 function switchCat(cat, el){
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.cat-page').forEach(p=>p.classList.remove('active'));
   document.getElementById('cat-'+cat).classList.add('active');
-  if(cat==='종합순위') buildRanking();
+  if(cat==='종합순위') buildRankingFor('의류');
+  if(cat==='종합순위-용품') buildRankingFor('용품');
 }
 
 buildPage('의류','인사총무팀');
@@ -499,10 +533,10 @@ function buildRankingSection(cat, containerId){
   </div>`;
 }
 
-function buildRanking(){
-  const container = document.getElementById('ranking-container');
-  if(container.dataset.built) return;
-  container.innerHTML = buildRankingSection('의류') + '<div style="height:32px"></div>' + buildRankingSection('용품');
+function buildRankingFor(cat){
+  const container = document.getElementById('ranking-container-'+cat);
+  if(!container || container.dataset.built) return;
+  container.innerHTML = buildRankingSection(cat);
   container.dataset.built = '1';
 }
 
@@ -557,9 +591,10 @@ function updateCS(cat, code, val){
 }
 
 function applyRanking(cat){
-  const container = document.getElementById('ranking-container');
+  const container = document.getElementById('ranking-container-'+cat);
+  if(!container) return;
   container.dataset.built = '';
-  container.innerHTML = buildRankingSection('의류') + '<div style="height:32px"></div>' + buildRankingSection('용품');
+  container.innerHTML = buildRankingSection(cat);
 }
 </script>
 </body>
