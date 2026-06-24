@@ -120,7 +120,7 @@ tbody tr:hover{background:#f9f8f4}
   <div class="topbar-center">
     <h1>대리점 평가기준</h1>
   </div>
-  <span class="sub">2026.06.24(수) 10:08 업데이트</span>
+  <span class="sub">2026.06.24(수) 10:22 업데이트</span>
 </div>
 
 <div class="layout">
@@ -383,7 +383,7 @@ function renderTable(cat, dept){
   });
 
   const subtotalEl=document.getElementById('subtotal-'+key);
-  if(p || r || q){
+ if(p || r || q || excessOnly[key]){
     const totalCollateral=rows.reduce((sum,x)=>sum+x.collateral,0);
     const totalReceivable=rows.reduce((sum,x)=>sum+x.receivable,0);
     const totalExcess=rows.reduce((sum,x)=>sum+(x.excess>0?x.excess:0),0);
@@ -391,6 +391,7 @@ function renderTable(cat, dept){
     if(p) labelParts.push(p);
     if(r) labelParts.push(r);
     if(q) labelParts.push('"'+q+'"');
+    if(excessOnly[key]) labelParts.push('담보초과');
     const label=labelParts.length?labelParts.join(' · ')+' 소계':'필터 소계';
     subtotalEl.innerHTML=`<strong>${label}</strong> (${rows.length}개) — 담보 ${fmt(totalCollateral)} · 채권잔액 ${fmt(totalReceivable)} · 초과채권 <span class="red">${fmt(totalExcess)}</span>`;
     subtotalEl.style.display='block';
