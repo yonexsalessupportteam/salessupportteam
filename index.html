@@ -120,7 +120,7 @@ tbody tr:hover{background:#f9f8f4}
   <div class="topbar-center">
    <h1>대리점 종합평가</h1>
   </div>
-  <span class="sub">2026.06.24(수) 17:22 업데이트</span>
+  <span class="sub">2026.06.24(수) 17:30 업데이트</span>
 </div>
 
 <div class="layout">
@@ -276,6 +276,13 @@ function buildPage(cat, dept){
         <th style="width:65px;text-align:center">단계</th>
       </tr></thead>
       <tbody id="${tblId}"></tbody>
+      <tfoot><tr style="background:#f0f0eb;font-weight:600;font-size:13px;border-top:2px solid #d3d1c7">
+        <td colspan="2">합계 (<span id="${tblId}-cnt">0</span>개)</td>
+        <td class="nr" id="${tblId}-sum-col"></td>
+        <td class="nr" id="${tblId}-sum-rcv"></td>
+        <td class="nr red" id="${tblId}-sum-exc"></td>
+        <td class="nr"></td><td></td>
+      </tr></tfoot>
     </table></div>
     <div id="${subtotalId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #d3d1c7;font-size:13px"></div>
   </div>`;
@@ -373,6 +380,16 @@ function renderTable(cat, dept){
   if(excessOnly[key]) rows=rows.filter(s=>s.excess>0).sort((a,b)=>b.excess-a.excess);
   const tbody=document.getElementById(tblId);
   tbody.innerHTML='';
+  const totalC=rows.reduce((s,x)=>s+x.collateral,0);
+  const totalR=rows.reduce((s,x)=>s+x.receivable,0);
+  const totalE=rows.reduce((s,x)=>s+(x.excess>0?x.excess:0),0);
+  const cntEl=document.getElementById(tblId+'-cnt');
+  if(cntEl){
+    cntEl.textContent=rows.length;
+    document.getElementById(tblId+'-sum-col').textContent=fmt(totalC);
+    document.getElementById(tblId+'-sum-rcv').textContent=fmt(totalR);
+    document.getElementById(tblId+'-sum-exc').textContent=totalE>0?'+'+fmt(totalE):fmt(totalE);
+  }
   rows.forEach(s=>{
     const exStyle=s.excess>0?'class="red"':'class="muted"';
     const exStr=s.excess>0?'+'+fmt(s.excess):fmt(s.excess);
