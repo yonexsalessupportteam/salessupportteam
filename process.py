@@ -17,6 +17,7 @@ import numpy as np
 import json
 import sys
 from datetime import datetime, timezone, timedelta
+from fetch_cs_scores import fetch_cs_data
 
 # ──────────────────────────────────────────────
 # 설정값 (회사 정책에 맞게 이 부분만 수정하면 됨)
@@ -139,10 +140,11 @@ def get_update_timestamp():
     return f"{now.year}.{now.month:02d}.{now.day:02d}({weekday}) {now.hour:02d}:{now.minute:02d}"
 
 
-def generate_html(clothing_dash, goods_dash, output_path='index.html'):
+def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'):
     """최종 index.html 생성"""
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
     goods_raw = json.dumps(goods_dash, ensure_ascii=False)
+    cs_raw = json.dumps(cs_scores, ensure_ascii=False)
     update_date = get_update_timestamp()
 
     with open('template.html', encoding='utf-8') as f:
@@ -151,6 +153,7 @@ def generate_html(clothing_dash, goods_dash, output_path='index.html'):
     html = (template
             .replace('__CLOTHING_DATA__', clothing_raw)
             .replace('__GOODS_DATA__', goods_raw)
+            .replace('__CS_DATA__', json.dumps(cs_scores, ensure_ascii=False))
             .replace('__UPDATE_DATE__', update_date))
 
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -173,7 +176,8 @@ def main():
         s = d['summary']
         print(f"  {dept}: {len(d['stores'])}개 / 채권 {s['total_receivable']:,} / 초과 {s['total_excess']:,}")
 
-    generate_html(clothing_dash, goods_dash)
+    cs_scores = fetch_cs_data()
+    generate_html(clothing_dash, goods_dash, cs_scores)
 
 
 if __name__ == '__main__':
