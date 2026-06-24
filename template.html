@@ -443,6 +443,19 @@ const CS_LABELS = {
 
 // CS 점수 저장소 (세션 동안 유지)
 const csScores = {};
+const csSheetData = __CS_DATA__;
+Object.entries(csSheetData).forEach(([name, data]) => {
+  Object.keys(clothingData).forEach(dept => {
+    (clothingData[dept].stores || []).forEach(s => {
+      if(s.name === name) csScores['의류-'+s.code] = data.score_value;
+    });
+  });
+  Object.keys(goodsData).forEach(dept => {
+    (goodsData[dept].stores || []).forEach(s => {
+      if(s.name === name) csScores['용품-'+s.code] = data.score_value;
+    });
+  });
+});
 
 // 배점 기준
 // 담보대비채무: 60% 이하=40점 / 60~100%=20점 / 100% 초과=0점
