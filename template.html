@@ -442,7 +442,19 @@ const CS_LABELS = {
 };
 
 // CS 점수 저장소 (세션 동안 유지)
-const csScores = {};
+const csScores = {};const csSheetData = __CS_DATA__;
+Object.entries(csSheetData).forEach(([name, data]) => {
+  Object.keys(clothingData).forEach(dept => {
+    (clothingData[dept].stores || []).forEach(s => {
+      if(s.name === name) csScores['의류-'+s.code] = data.score_value;
+    });
+  });
+  Object.keys(goodsData).forEach(dept => {
+    (goodsData[dept].stores || []).forEach(s => {
+      if(s.name === name) csScores['용품-'+s.code] = data.score_value;
+    });
+  });
+});
 const csSheetData = __CS_DATA__;
 Object.entries(csSheetData).forEach(([name, data]) => {
   Object.keys(clothingData).forEach(dept => {
