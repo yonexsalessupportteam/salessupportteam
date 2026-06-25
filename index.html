@@ -165,7 +165,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.06.25(목) 11:53 업데이트</span>
+  <span class="sub">2026.06.25(목) 13:06 업데이트</span>
 </div>
 
 <div class="layout">
@@ -262,18 +262,6 @@ const excessOnly={};
 const builtPages={};
 const expandedRisk={};
 
-function gaugeHtml(risk){
-  const stages=['적정','주의','경계','위기','관리'];
-  const bgColors={'적정':'#1D9E75','주의':'#EF9F27','경계':'#D85A30','위기':'#E24B4A','관리':'#888780'};
-  const segs=stages.map(s=>{
-    const isActive=s===risk;
-    return `<div style="flex:1;padding:9px 0;text-align:center;font-size:13px;font-weight:700;color:#1a1a18;background:${bgColors[s]};opacity:${isActive?'1':'0.3'};position:relative;">${s}${isActive?`<span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:#1a1a18;">▼</span>`:''}</div>`;
-  }).join('');
-  return `<div style="margin:0 0 28px;">
-    <div style="font-size:11px;color:#888780;margin-bottom:8px;font-weight:500;">미수금 리스크 단계</div>
-    <div style="display:flex;border-radius:8px;overflow:hidden;border:0.5px solid #d3d1c7;">${segs}</div>
-  </div>`;
-}
 
 function getRiskClass(score){
   if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
@@ -397,7 +385,6 @@ function buildAiDash(){
         <div><div class="det-title">${s.name} 상세 분석</div><div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.catLabel}</div></div>
         <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
       </div>
-      ${gaugeHtml(s.worstRisk)}
       ${clSec}${gdSec}
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       <div style="margin-bottom:1rem">
