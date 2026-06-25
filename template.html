@@ -107,22 +107,18 @@ tbody tr:hover{background:#f9f8f4}
 .dept-filter-btn{font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer;color:#5f5e5a;transition:.15s}
 .dept-filter-btn:hover{background:#f5f4f0}
 .dept-filter-btn.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
-
-/* AI 리스크 대시보드 스타일 */
 .ai-dash{padding:24px;max-width:1200px;margin:0 auto}
 .ai-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
 .ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8}
 .ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
 .ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
-.ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}.ai-kpi .val.p{color:#534AB7}
-.ai-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}
 .ai-filter-tag{font-size:12px;padding:5px 12px;border-radius:20px;border:.5px solid #e0dfd8;cursor:pointer;color:#5f5e5a;background:#fff}
 .ai-filter-tag.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
 .ai-filter-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
 .ai-filter-tag.caution{background:#FAEEDA;color:#633806;border-color:#FAC775}
 .ai-filter-tag.border2{background:#FAECE7;color:#712B13;border-color:#F5C4B3}
 .ai-filter-tag.crisis{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
-.ai-filter-tag.managed{background:#EEEDFE;color:#3C3489;border-color:#CECBF6}
 .dealer-card{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .dealer-card:hover{border-color:#b4b2a9}
 .dealer-card.sel{border:1.5px solid #185FA5}
@@ -142,32 +138,24 @@ tbody tr:hover{background:#f9f8f4}
 .rp-caution{background:#FAEEDA;color:#633806}
 .rp-border{background:#FAECE7;color:#712B13}
 .rp-crisis{background:#FCEBEB;color:#791F1F}
-.rp-managed{background:#EEEDFE;color:#3C3489}
 .det-panel{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:18px 20px;margin-bottom:8px}
 .det-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:.5px solid #e0dfd8}
 .det-title{font-size:15px;font-weight:500;color:#1a1a18}
 .det-sub{font-size:12px;color:#888780;margin-top:3px}
-.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sec-label{font-size:11px;font-weight:500;color:#5f5e5a;letter-spacing:0.03em;margin-bottom:8px;padding:3px 8px;background:#f5f4f0;border-radius:6px;display:inline-block}
+.cat-section{margin-bottom:14px}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .dc{background:#f5f4f0;border-radius:8px;padding:12px}
 .dc .dl{font-size:11px;color:#888780;margin-bottom:3px}
 .dc .dv{font-size:14px;font-weight:500;color:#1a1a18}
 .dc .dsub{font-size:11px;color:#888780;margin-top:2px}
-.over-bar{height:6px;background:#e0dfd8;border-radius:3px;overflow:hidden;margin-top:5px}
+.over-bar{height:5px;background:#e0dfd8;border-radius:3px;overflow:hidden;margin-top:5px}
 .over-fill{height:100%;border-radius:3px}
-.trend-row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
-.tm{font-size:11px;color:#888780;width:28px}
-.sec-title{font-size:12px;font-weight:500;color:#888780;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em}
-.ai-box{background:#E6F1FB;border-radius:8px;padding:14px 16px;border-left:3px solid #185FA5;margin-top:12px}
-.ai-box.safe{background:#EAF3DE;border-left-color:#1D9E75}
-.ai-lbl{font-size:11px;font-weight:500;color:#0C447C;margin-bottom:5px}
-.ai-box.safe .ai-lbl{color:#085041}
-.ai-txt{font-size:13px;color:#185FA5;line-height:1.6}
-.ai-box.safe .ai-txt{color:#0F6E56}
-.kw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.kw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .kw-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#f1efe8;color:#5f5e5a;border:.5px solid #e0dfd8}
 .kw-tag.danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
 .kw-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}.cat-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -185,14 +173,6 @@ tbody tr:hover{background:#f9f8f4}
     <span class="icon">🤖</span> AI 위험탐지
   </div>
   <div class="sidebar-divider"></div>
-  <div class="sidebar-section">종합평가</div>
-  <div class="sidebar-item" id="menu-종합순위" onclick="switchCat('종합순위',this)">
-    <span class="icon">⭐</span> 의류
-  </div>
-  <div class="sidebar-item" id="menu-종합순위-용품" onclick="switchCat('종합순위-용품',this)">
-    <span class="icon">⭐</span> 용품
-  </div>
-  <div class="sidebar-divider"></div>
   <div class="sidebar-section">팀별 채권잔액</div>
   <div class="sidebar-item" id="menu-의류" onclick="switchCat('의류',this)">
     <span class="icon">👔</span> 의류
@@ -200,18 +180,24 @@ tbody tr:hover{background:#f9f8f4}
   <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
     <span class="icon">🏸</span> 용품
   </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">종합순위</div>
+  <div class="sidebar-item" id="menu-종합순위" onclick="switchCat('종합순위',this)">
+    <span class="icon">⭐</span> 의류
+  </div>
+  <div class="sidebar-item" id="menu-종합순위-용품" onclick="switchCat('종합순위-용품',this)">
+    <span class="icon">⭐</span> 용품
+  </div>
 </div>
 
 <div class="main-content">
 
-<!-- AI 리스크 탭 -->
 <div id="cat-ai-risk" class="cat-page active">
   <div class="ai-dash" id="ai-dash-content">
     <div style="color:#888780;font-size:14px;padding:40px 0;text-align:center">데이터 로딩 중...</div>
   </div>
 </div>
 
-<!-- 기존 탭들 -->
 <div id="cat-의류" class="cat-page">
   <div class="tabs">
     <div class="tab active" onclick="switchTab('의류','인사총무팀',this)">인사총무팀</div>
@@ -254,11 +240,10 @@ tbody tr:hover{background:#f9f8f4}
 </div>
 
 <script>
-const clothingData = __CLOTHING_DATA__;
-const goodsData = __GOODS_DATA__;
-const CS_SHEET = __CS_DATA__;
-
-const DATA = { '의류': clothingData, '용품': goodsData };
+const clothingData=__CLOTHING_DATA__;
+const goodsData=__GOODS_DATA__;
+const CS_SHEET=__CS_DATA__;
+const DATA={'의류':clothingData,'용품':goodsData};
 
 function fmt(n){
   const a=Math.abs(n),sign=n<0?'-':'';
@@ -275,55 +260,58 @@ const excessOnly={};
 const builtPages={};
 const expandedRisk={};
 
-// ── AI 리스크 대시보드 ──────────────────────
-
 function getRiskClass(score){
-  if(score>=80) return {label:'안전', cls:'rp-safe', bar:'#1D9E75'};
-  if(score>=60) return {label:'주의', cls:'rp-caution', bar:'#EF9F27'};
-  if(score>=40) return {label:'경계', cls:'rp-border', bar:'#EF9F27'};
-  return {label:'위기', cls:'rp-crisis', bar:'#E24B4A'};
+  if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
+  if(score>=60) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
+  if(score>=40) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
+  return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
 }
 
-function getAiBoxClass(score){ return score>=80?'ai-box safe':'ai-box'; }
+let currentAiGrade='전체';
 
 function buildAiDash(){
-  const cont = document.getElementById('ai-dash-content');
-
-  // 구글 시트 CS 데이터와 ERP 데이터 병합
-  const allStores = [];
-  const seen = {};
+  const cont=document.getElementById('ai-dash-content');
+  const allStores=[];
+  const seen={};
   ['영업1팀','영업2팀','E-BIZ팀'].forEach(dept=>{
-    ['의류','용품'].forEach(cat=>{
-      (DATA[cat][dept]||{stores:[]}).stores.forEach(s=>{
-        if(!seen[s.code] && Math.abs(s.receivable)>100000){
-          seen[s.code]=true;
-          const cs = CS_SHEET[s.name] || {};
-          const csScore = cs.score || 50;
-          const keywords = cs.keywords || '';
-          const memo = cs.memo || '';
-          const aiComment = cs.ai_comment || '';
-          // 종합점수: ERP 리스크(60%) + CS점수(40%)
-          let erpScore = 60;
-          if(s.risk==='위기') erpScore=0;
-          else if(s.risk==='경계') erpScore=20;
-          else if(s.risk==='주의') erpScore=40;
-          else if(s.risk==='적정') erpScore=60;
-          else if(s.risk==='관리') erpScore=10;
-          const totalScore = Math.round(erpScore * 0.6 + csScore * 0.4);
-          allStores.push({...s, dept, cat, csScore, keywords, memo, aiComment, totalScore});
-        }
-      });
+    const cl=(DATA['의류'][dept]||{stores:[]}).stores;
+    const gd=(DATA['용품'][dept]||{stores:[]}).stores;
+    const codes=new Set([...cl.map(s=>s.code),...gd.map(s=>s.code)]);
+    codes.forEach(code=>{
+      if(seen[code]) return;
+      seen[code]=true;
+      const c=cl.find(s=>s.code===code);
+      const g=gd.find(s=>s.code===code);
+      const base=c||g;
+      if(!base) return;
+      if(Math.abs((c||{}).receivable||0)<100000&&Math.abs((g||{}).receivable||0)<100000) return;
+      const csData=CS_SHEET[base.name]||{};
+      const csScore=csData.score||50;
+      const keywords=csData.keywords||'';
+      const memo=csData.memo||'';
+      const aiComment=csData.ai_comment||'';
+      const order=['위기','경계','주의','적정','관리','해당없음'];
+      const worstRisk=[c,g].filter(Boolean).reduce((w,s)=>order.indexOf(s.risk)<order.indexOf(w)?s.risk:w,'해당없음');
+      let erpScore=60;
+      if(worstRisk==='위기') erpScore=0;
+      else if(worstRisk==='경계') erpScore=20;
+      else if(worstRisk==='주의') erpScore=40;
+      else if(worstRisk==='적정') erpScore=60;
+      else if(worstRisk==='관리') erpScore=10;
+      const totalScore=Math.round(erpScore*0.6+csScore*0.4);
+      const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,keywords,memo,aiComment,totalScore,worstRisk,catLabel});
     });
   });
   allStores.sort((a,b)=>a.totalScore-b.totalScore);
 
-  const total = allStores.length;
-  const safe = allStores.filter(s=>s.totalScore>=80).length;
-  const caution = allStores.filter(s=>s.totalScore>=60&&s.totalScore<80).length;
-  const border = allStores.filter(s=>s.totalScore>=40&&s.totalScore<60).length;
-  const crisis = allStores.filter(s=>s.totalScore<40).length;
+  const total=allStores.length;
+  const safe=allStores.filter(s=>s.totalScore>=80).length;
+  const caution=allStores.filter(s=>s.totalScore>=60&&s.totalScore<80).length;
+  const border=allStores.filter(s=>s.totalScore>=40&&s.totalScore<60).length;
+  const crisis=allStores.filter(s=>s.totalScore<40).length;
 
-  let html = `
+  let html=`
   <div class="ai-kpi-grid">
     <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div></div>
     <div class="ai-kpi"><div class="lbl">안전</div><div class="val g">${safe}</div></div>
@@ -331,110 +319,124 @@ function buildAiDash(){
     <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div></div>
     <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div></div>
   </div>
-  <div class="ai-filters">
-    <span style="font-size:12px;color:#888780">등급 필터</span>
-    <span class="ai-filter-tag active" onclick="filterAi('',this)">전체</span>
-    <span class="ai-filter-tag safe" onclick="filterAi('안전',this)">안전</span>
-    <span class="ai-filter-tag caution" onclick="filterAi('주의',this)">주의</span>
-    <span class="ai-filter-tag border2" onclick="filterAi('경계',this)">경계</span>
-    <span class="ai-filter-tag crisis" onclick="filterAi('위기',this)">위기</span>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+    <input id="ai-search" type="text" placeholder="매장명 검색..." style="font-size:13px;padding:6px 12px;border-radius:8px;border:.5px solid #d3d1c7;outline:none;width:180px;">
+    <select id="ai-team-filter" style="font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;">
+      <option value="">전체 팀</option><option>영업1팀</option><option>영업2팀</option><option>E-BIZ팀</option>
+    </select>
+    <select id="ai-cat-filter" style="font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;">
+      <option value="">전체 카테고리</option><option>의류</option><option>용품</option>
+    </select>
+    <span style="font-size:12px;color:#888780;">등급</span>
+    <span class="ai-filter-tag active" id="aitag-전체" onclick="filterAiTag('전체')">전체</span>
+    <span class="ai-filter-tag safe" id="aitag-안전" onclick="filterAiTag('안전')">안전</span>
+    <span class="ai-filter-tag caution" id="aitag-주의" onclick="filterAiTag('주의')">주의</span>
+    <span class="ai-filter-tag border2" id="aitag-경계" onclick="filterAiTag('경계')">경계</span>
+    <span class="ai-filter-tag crisis" id="aitag-위기" onclick="filterAiTag('위기')">위기</span>
   </div>
   <div id="ai-dealer-list">`;
 
   allStores.forEach((s,i)=>{
-    const rc = getRiskClass(s.totalScore);
-    const barW = Math.min(100, s.totalScore);
-    html += `
-    <div class="dealer-card" id="aicard-${i}" onclick="toggleAiDet(${i},this)">
+    const rc=getRiskClass(s.totalScore);
+    const barW=Math.min(100,s.totalScore);
+
+    const clSec=s.clothing?`
+    <div class="cat-section">
+      <div class="sec-label">👔 의류 채권/매출</div>
+      <div class="cat-grid">
+        <div class="dc"><div class="dl">미수금 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
+        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">매출 (3개월 합계)</div><div class="dv" style="color:${s.clothing.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.clothing.sales)}</div></div>
+      </div>
+    </div>`:'';
+
+    const gdSec=s.goods?`
+    <div class="cat-section">
+      <div class="sec-label">🏸 용품 채권/매출</div>
+      <div class="cat-grid">
+        <div class="dc"><div class="dl">미수금 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
+        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">매출 (3개월 합계)</div><div class="dv" style="color:${s.goods.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.goods.sales)}</div></div>
+      </div>
+    </div>`:'';
+
+    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${['연락두절','약속불이행','클레임다발','폐업징후','허위접수','재고과다','타사이탈'].some(d=>k.includes(d))?'danger':['협조적','응대원활','약속이행','클레임없음'].some(d=>k.includes(d))?'safe':''}">${k}</span>`).join(''):'';
+
+    const aiBoxBg=s.totalScore>=80?'#EAF3DE':'#E6F1FB';
+    const aiBoxBd=s.totalScore>=80?'#1D9E75':'#185FA5';
+    const aiLblColor=s.totalScore>=80?'#085041':'#0C447C';
+    const aiTxtColor=s.totalScore>=80?'#0F6E56':'#185FA5';
+
+    html+=`
+    <div class="dealer-card" id="aicard-${i}" data-grade="${rc.label}" data-dept="${s.dept}" data-cat="${s.catLabel}" data-name="${s.name}" onclick="toggleAiDet(${i},this)">
       <div class="crow">
         <div class="rank-badge">${i+1}</div>
-        <div class="sinfo">
-          <div class="sname">${s.name}</div>
-          <div class="smeta">${s.dept} · ${s.salesperson} · ${s.cat}</div>
-        </div>
-        <div class="bwrap">
-          <div class="blbl">종합점수</div>
-          <div class="btrack"><div class="bfill" style="width:${barW}%;background:${rc.bar}"></div></div>
-        </div>
-        <div style="text-align:right">
-          <div class="snum">${s.totalScore}</div>
-          <div class="sunit">/ 100</div>
-        </div>
+        <div class="sinfo"><div class="sname">${s.name}</div><div class="smeta">${s.dept} · ${s.salesperson} · ${s.catLabel}</div></div>
+        <div class="bwrap"><div class="blbl">종합점수</div><div class="btrack"><div class="bfill" style="width:${barW}%;background:${rc.bar}"></div></div></div>
+        <div style="text-align:right"><div class="snum">${s.totalScore}</div><div class="sunit">/ 100</div></div>
         <span class="rpill ${rc.cls}">${rc.label}</span>
       </div>
     </div>
     <div class="det-panel" id="aidet-${i}" style="display:none">
       <div class="det-hdr">
-        <div>
-          <div class="det-title">${s.name} 상세 분석</div>
-          <div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.cat}</div>
-        </div>
+        <div><div class="det-title">${s.name} 상세 분석</div><div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.catLabel}</div></div>
         <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
       </div>
-      <div class="det-grid">
-        <div class="dc">
-          <div class="dl">미수금 리스크</div>
-          <div class="dv" style="color:${s.risk==='위기'?'#A32D2D':s.risk==='경계'?'#854F0B':s.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.risk}단계</div>
-        </div>
-        <div class="dc">
-          <div class="dl">담보대비 채권 초과율</div>
-          <div class="dv" style="color:${s.excess>0?'#A32D2D':'#0F6E56'}">${s.excess>0?'+'+Math.round(s.excess/Math.max(s.collateral,1)*100)+'%':'-'+Math.round(Math.abs(s.excess)/Math.max(s.collateral,1)*100)+'%'}</div>
-          <div class="dsub">담보 ${fmt(s.collateral)} / 채권 ${fmt(s.receivable)}</div>
-          <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.excess>0?Math.round(s.excess/Math.max(s.collateral,1)*100):0)}%;background:${s.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
-        </div>
-        <div class="dc">
-          <div class="dl">CS 점수</div>
-          <div class="dv" style="color:${s.csScore>=70?'#0F6E56':s.csScore>=50?'#854F0B':'#A32D2D'}">${s.csScore}점</div>
-        </div>
-        <div class="dc">
-          <div class="dl">종합점수</div>
-          <div class="dv">${s.totalScore}점 / 100점</div>
-        </div>
+      ${clSec}${gdSec}
+      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+      <div style="margin-bottom:1rem">
+        <div class="sec-label">🤝 CS 평가 (공통)</div>
+        ${kwHtml?`<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">${kwHtml}</div></div>`:''}
+        ${s.memo?`<div style="margin-top:10px"><div style="font-size:12px;color:#888780;margin-bottom:4px">담당자 메모</div><div style="font-size:13px;color:#5f5e5a;line-height:1.6;background:#f5f4f0;padding:10px 12px;border-radius:8px">${s.memo}</div></div>`:''}
+        ${!kwHtml&&!s.memo?`<div style="font-size:13px;color:#b4b2a9;margin-top:8px">구글 시트에 키워드/메모를 입력하면 표시됩니다.</div>`:''}
       </div>
-      ${s.keywords?`<div style="margin-bottom:12px"><div class="sec-title">입력 키워드</div><div class="kw-tags">${s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${['연락두절','약속불이행','클레임다발','폐업징후'].some(d=>k.includes(d))?'danger':['협조적','응대원활','약속이행'].some(d=>k.includes(d))?'safe':''}">${k}</span>`).join('')}</div></div>`:''}
-      ${s.memo?`<div style="margin-bottom:12px"><div class="sec-title">담당자 메모</div><div style="font-size:13px;color:#5f5e5a;line-height:1.6;background:#f5f4f0;padding:10px 12px;border-radius:8px">${s.memo}</div></div>`:''}
-      <div class="${getAiBoxClass(s.totalScore)}">
-        <div class="ai-lbl">🤖 AI 위험탐지 분석</div>
-        <div class="ai-txt">${s.aiComment||'담당자 입력 데이터를 기반으로 분석 중입니다. 구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.'}</div>
+      <div style="background:${aiBoxBg};border-radius:8px;padding:14px 16px;border-left:3px solid ${aiBoxBd}">
+        <div style="font-size:11px;font-weight:500;color:${aiLblColor};margin-bottom:5px">🤖 AI 위험탐지 분석</div>
+        <div style="font-size:13px;color:${aiTxtColor};line-height:1.6">${s.aiComment||'구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.'}</div>
       </div>
     </div>`;
   });
 
-  html += '</div>';
-  cont.innerHTML = html;
+  html+='</div>';
+  cont.innerHTML=html;
+
+  document.getElementById('ai-search').addEventListener('input',applyAiFilters);
+  document.getElementById('ai-team-filter').addEventListener('change',applyAiFilters);
+  document.getElementById('ai-cat-filter').addEventListener('change',applyAiFilters);
 }
 
-function toggleAiDet(idx, card){
-  const det = document.getElementById('aidet-'+idx);
-  const allCards = document.querySelectorAll('.dealer-card');
-  const allDets = document.querySelectorAll('.det-panel');
-  const isOpen = det.style.display !== 'none';
-  allCards.forEach(c=>c.classList.remove('sel'));
-  allDets.forEach(d=>d.style.display='none');
-  if(!isOpen){
-    card.classList.add('sel');
-    det.style.display='block';
-  }
+function filterAiTag(grade){
+  currentAiGrade=grade;
+  ['전체','안전','주의','경계','위기'].forEach(g=>{
+    const el=document.getElementById('aitag-'+g);
+    if(el) el.classList.toggle('active',g===grade);
+  });
+  applyAiFilters();
 }
 
-function filterAi(grade, el){
-  document.querySelectorAll('.ai-filter-tag').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+function applyAiFilters(){
+  const q=(document.getElementById('ai-search')||{}).value?.toLowerCase()||'';
+  const team=(document.getElementById('ai-team-filter')||{}).value||'';
+  const cat=(document.getElementById('ai-cat-filter')||{}).value||'';
   document.querySelectorAll('.dealer-card').forEach(card=>{
-    const idx = card.id.replace('aicard-','');
-    const det = document.getElementById('aidet-'+idx);
-    const pill = card.querySelector('.rpill');
-    if(!grade || (pill&&pill.textContent===grade)){
-      card.style.display='';
-      if(det) det.style.display='none';
-    } else {
-      card.style.display='none';
-      if(det) det.style.display='none';
-    }
+    const det=document.getElementById('aidet-'+card.id.replace('aicard-',''));
+    const gradeOk=currentAiGrade==='전체'||card.dataset.grade===currentAiGrade;
+    const teamOk=!team||card.dataset.dept===team;
+    const catOk=!cat||card.dataset.cat.includes(cat);
+    const nameOk=!q||card.dataset.name.toLowerCase().includes(q);
+    const show=gradeOk&&teamOk&&catOk&&nameOk;
+    card.style.display=show?'':'none';
+    if(det&&!show) det.style.display='none';
   });
 }
 
-// ── 기존 채권 대시보드 ──────────────────────
+function toggleAiDet(idx,card){
+  const det=document.getElementById('aidet-'+idx);
+  const isOpen=det.style.display!=='none';
+  document.querySelectorAll('.dealer-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.det-panel').forEach(d=>d.style.display='none');
+  if(!isOpen){card.classList.add('sel');det.style.display='block';}
+}
 
 function pageKey(cat,dept){return cat+'-'+dept;}
 
@@ -545,8 +547,7 @@ function togglePillExpand(key,risk){
   if(stores.length===0){
     expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (0개)</div><div style="color:#b4b2a9;font-size:13px">해당 단계 매장이 없습니다.</div>`;
   } else {
-    const rows=stores.map(s=>`<div class="pill-store-row"><div><span class="pill-store-name">${s.name}</span> <span class="pill-store-meta">· ${s.salesperson}</span></div><div class="pill-store-amt">${fmt(s.receivable)}${s.collateral>0?' / 담보비율 '+Math.round(s.ratio*100)+'%':''}</div></div>`).join('');
-    expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (${stores.length}개)</div>${rows}`;
+    expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (${stores.length}개)</div>`+stores.map(s=>`<div class="pill-store-row"><div><span class="pill-store-name">${s.name}</span> <span class="pill-store-meta">· ${s.salesperson}</span></div><div class="pill-store-amt">${fmt(s.receivable)}${s.collateral>0?' / 담보비율 '+Math.round(s.ratio*100)+'%':''}</div></div>`).join('');
   }
   expandEl.classList.add('show');
 }
@@ -581,19 +582,17 @@ function renderTable(cat,dept){
   }
   rows.forEach(s=>{
     const exStyle=s.excess>0?'class="red"':'class="muted"';
-    const exStr=s.excess>0?'+'+fmt(s.excess):fmt(s.excess);
-    const ratioStr=s.collateral>0?Math.round(s.ratio*100)+'%':'—';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td title="${s.name}">${s.name}</td><td>${s.salesperson}</td><td class="nr">${fmt(s.collateral)}</td><td class="nr">${fmt(s.receivable)}</td><td class="nr" ${exStyle}>${exStr}</td><td class="nr">${ratioStr}</td><td style="text-align:center"><span class="badge b${s.risk}">${s.risk}</span></td>`;
+    tr.innerHTML=`<td title="${s.name}">${s.name}</td><td>${s.salesperson}</td><td class="nr">${fmt(s.collateral)}</td><td class="nr">${fmt(s.receivable)}</td><td class="nr" ${exStyle}>${s.excess>0?'+'+fmt(s.excess):fmt(s.excess)}</td><td class="nr">${s.collateral>0?Math.round(s.ratio*100)+'%':'—'}</td><td style="text-align:center"><span class="badge b${s.risk}">${s.risk}</span></td>`;
     tbody.appendChild(tr);
   });
   const subtotalEl=document.getElementById('subtotal-'+key);
   if(p||r||q||excessOnly[key]){
     const labelParts=[];
-    if(p) labelParts.push(p);if(r) labelParts.push(r);if(q) labelParts.push('"'+q+'"');if(excessOnly[key]) labelParts.push('담보초과');
+    if(p)labelParts.push(p);if(r)labelParts.push(r);if(q)labelParts.push('"'+q+'"');if(excessOnly[key])labelParts.push('담보초과');
     subtotalEl.innerHTML=`<strong>${labelParts.join(' · ')} 소계</strong> (${rows.length}개) — 담보 ${fmt(totalC)} · 채권잔액 ${fmt(totalR)} · 초과채권 <span class="red">${fmt(totalE)}</span>`;
     subtotalEl.style.display='block';
-  } else { subtotalEl.style.display='none'; }
+  } else {subtotalEl.style.display='none';}
 }
 
 function switchTab(cat,dept,el){
@@ -614,14 +613,13 @@ function switchCat(cat,el){
   if(cat==='종합순위-용품') buildRankingFor('용품');
 }
 
-// 종합순위
 const CS_LABELS={1:{label:'1 - 미흡',desc:'응대 불량, 반품·클레임 잦음'},2:{label:'2 - 보통',desc:'기본 응대, 개선 여지 있음'},3:{label:'3 - 양호',desc:'원활한 소통, 불만 거의 없음'},4:{label:'4 - 우수',desc:'적극적 협조, 행사 참여 양호'},5:{label:'5 - 최우수',desc:'모범 대리점, 고객 만족도 최상'}};
 const csScores={};
 function calcDebtScore(ratio){if(ratio<=0)return 40;if(ratio<=0.6)return 40;if(ratio<=1.0)return 20;return 0;}
 function calcCsScore(cs){return(cs||1)*12;}
 function getAllStores(cat){
   const depts=['영업1팀','영업2팀','E-BIZ팀'];const all=[];const seen={};
-  depts.forEach(dept=>{(DATA[cat][dept]||{}).stores.forEach(s=>{if(!seen[s.code]&&s.receivable>100000){seen[s.code]=true;all.push({...s,dept});}});});
+  depts.forEach(dept=>{(DATA[cat][dept]||{stores:[]}).stores.forEach(s=>{if(!seen[s.code]&&s.receivable>100000){seen[s.code]=true;all.push({...s,dept});}});});
   return all;
 }
 function buildRankingSection(cat){
@@ -638,7 +636,7 @@ function buildRankingSection(cat){
   }
   const depts=['전체','영업1팀','영업2팀','E-BIZ팀'];
   const filterBtns=depts.map(d=>`<button class="dept-filter-btn${d==='전체'?' active':''}" onclick="filterRank('${cat}','${d}',this)">${d}</button>`).join('');
-  return `<div class="rank-section"><div class="rank-section-title"><span>📊 ${cat} 종합순위 (${scored.length}개 대리점)</span><button id="apply-btn-${cat}" onclick="applyRanking('${cat}')" style="font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer">순위 반영하기</button></div><p style="line-height:1.8;margin-bottom:12px;font-size:13px;color:#5f5e5a">💡 CS 마인드 점수 입력 후 <strong>순위 반영하기</strong> 버튼을 클릭하세요. 담보대비 채권 40점 + CS 마인드 60점 = 100점 만점</p><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${filterBtns}</div><div style="overflow-x:auto"><table class="rank-table" id="ranktbl-${cat}"><thead><tr><th style="width:50px">순위</th><th>대리점명</th><th class="nr">담보대비 채권<br><span style="font-weight:400;font-size:11px">40점 만점</span></th><th style="min-width:200px">CS 마인드<br><span style="font-weight:400;font-size:11px">클릭해서 점수 변경</span></th><th class="nr">CS점수<br><span style="font-weight:400;font-size:11px">60점 만점</span></th><th class="nr">종합점수<br><span style="font-weight:400;font-size:11px">100점 만점</span></th></tr></thead><tbody id="rankbody-${cat}">${renderRows('')}</tbody></table></div></div>`;
+  return `<div class="rank-section"><div class="rank-section-title"><span>📊 ${cat} 종합순위 (${scored.length}개 대리점)</span><button id="apply-btn-${cat}" onclick="applyRanking('${cat}')" style="font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer">순위 반영하기</button></div><p style="line-height:1.8;margin-bottom:12px;font-size:13px;color:#5f5e5a">💡 CS 마인드 점수 입력 후 <strong>순위 반영하기</strong> 버튼을 클릭하세요.</p><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${filterBtns}</div><div style="overflow-x:auto"><table class="rank-table"><thead><tr><th style="width:50px">순위</th><th>대리점명</th><th class="nr">담보대비 채권<br><span style="font-weight:400;font-size:11px">40점 만점</span></th><th style="min-width:200px">CS 마인드</th><th class="nr">CS점수<br><span style="font-weight:400;font-size:11px">60점 만점</span></th><th class="nr">종합점수</th></tr></thead><tbody id="rankbody-${cat}">${renderRows('')}</tbody></table></div></div>`;
 }
 const rankFilters={};
 function filterRank(cat,dept,el){
@@ -656,7 +654,7 @@ function filterRank(cat,dept,el){
 function updateCS(cat,code,val){
   csScores[cat+'-'+code]=parseInt(val);
   const descEl=document.getElementById('csdesc-'+cat+'-'+code);
-  if(descEl) descEl.textContent=CS_LABELS[parseInt(val)].desc;
+  if(descEl)descEl.textContent=CS_LABELS[parseInt(val)].desc;
   const btn=document.getElementById('apply-btn-'+cat);
   if(btn){btn.style.background='#A32D2D';btn.style.color='#fff';btn.textContent='⚠️ 순위 반영하기';}
 }
@@ -672,7 +670,6 @@ function buildRankingFor(cat){
   container.dataset.built='1';
 }
 
-// 초기화
 buildAiDash();
 buildPage('의류','인사총무팀');builtPages['의류-인사총무팀']=true;
 buildPage('용품','인사총무팀');builtPages['용품-인사총무팀']=true;
