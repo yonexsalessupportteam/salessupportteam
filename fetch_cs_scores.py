@@ -34,7 +34,7 @@ def score_from_keywords(keywords_str, memo):
             score += 10
     return max(0, min(100, score))
 def gemini_analyze(store_name, keywords, memo, api_key, debt_info={}):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     collateral = debt_info.get('collateral', 0)
     receivable = debt_info.get('receivable', 0)
     ratio = debt_info.get('ratio', 0)
