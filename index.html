@@ -13,7 +13,6 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#f5f4f0;colo
 .topbar-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center}
 .topbar-center h1{font-size:17px;font-weight:500}
 .topbar .sub{font-size:12px;color:#888780}
-/* 사이드바 레이아웃 */
 .layout{display:flex;min-height:calc(100vh - 57px)}
 .sidebar{width:200px;flex-shrink:0;background:#fff;border-right:.5px solid #e0dfd8;position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto}
 .sidebar-section{padding:16px 12px 8px;font-size:11px;font-weight:600;color:#b4b2a9;text-transform:uppercase;letter-spacing:0.06em}
@@ -89,7 +88,6 @@ tbody tr:hover{background:#f9f8f4}
 .sp-exc{font-size:12px;color:#A32D2D;min-width:70px;text-align:right}
 .leg-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#888780;margin-bottom:5px}
 .leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}}
 .rank-section{margin-bottom:28px}
 .rank-section-title{font-size:15px;font-weight:500;color:#1a1a18;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .rank-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;border:.5px solid #e0dfd8}
@@ -99,9 +97,7 @@ tbody tr:hover{background:#f9f8f4}
 .rank-table tbody tr:last-child td{border-bottom:none}
 .rank-table tbody tr:hover{background:#f9f8f4}
 .rank-num{font-size:15px;font-weight:600;color:#1a1a18;min-width:36px;text-align:center;display:inline-block}
-.rank-num.gold{color:#C8992A}
-.rank-num.silver{color:#7A7A7A}
-.rank-num.bronze{color:#9C6A3A}
+.rank-num.gold{color:#C8992A}.rank-num.silver{color:#7A7A7A}.rank-num.bronze{color:#9C6A3A}
 .score-total{font-size:15px;font-weight:600;color:#1a1a18;text-align:right}
 .score-bar-bg{width:100px;height:6px;background:#e0dfd8;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
 .score-bar-fill{height:100%;border-radius:3px;background:#378ADD}
@@ -111,22 +107,84 @@ tbody tr:hover{background:#f9f8f4}
 .dept-filter-btn{font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer;color:#5f5e5a;transition:.15s}
 .dept-filter-btn:hover{background:#f5f4f0}
 .dept-filter-btn.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
+
+/* AI 리스크 대시보드 스타일 */
+.ai-dash{padding:24px;max-width:1200px;margin:0 auto}
+.ai-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8}
+.ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
+.ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
+.ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}.ai-kpi .val.p{color:#534AB7}
+.ai-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.ai-filter-tag{font-size:12px;padding:5px 12px;border-radius:20px;border:.5px solid #e0dfd8;cursor:pointer;color:#5f5e5a;background:#fff}
+.ai-filter-tag.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.ai-filter-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+.ai-filter-tag.caution{background:#FAEEDA;color:#633806;border-color:#FAC775}
+.ai-filter-tag.border2{background:#FAECE7;color:#712B13;border-color:#F5C4B3}
+.ai-filter-tag.crisis{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.ai-filter-tag.managed{background:#EEEDFE;color:#3C3489;border-color:#CECBF6}
+.dealer-card{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.dealer-card:hover{border-color:#b4b2a9}
+.dealer-card.sel{border:1.5px solid #185FA5}
+.crow{display:flex;align-items:center;gap:12px}
+.rank-badge{font-size:13px;color:#888780;width:22px;text-align:center}
+.sinfo{flex:1;min-width:0}
+.sname{font-size:14px;font-weight:500;color:#1a1a18}
+.smeta{font-size:12px;color:#888780;margin-top:2px}
+.bwrap{flex:1;max-width:140px}
+.blbl{font-size:11px;color:#888780;margin-bottom:3px}
+.btrack{height:5px;background:#f1efe8;border-radius:3px;overflow:hidden}
+.bfill{height:100%;border-radius:3px}
+.snum{font-size:17px;font-weight:500;color:#1a1a18;text-align:right}
+.sunit{font-size:11px;color:#888780}
+.rpill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.rp-safe{background:#EAF3DE;color:#27500A}
+.rp-caution{background:#FAEEDA;color:#633806}
+.rp-border{background:#FAECE7;color:#712B13}
+.rp-crisis{background:#FCEBEB;color:#791F1F}
+.rp-managed{background:#EEEDFE;color:#3C3489}
+.det-panel{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:18px 20px;margin-bottom:8px}
+.det-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:.5px solid #e0dfd8}
+.det-title{font-size:15px;font-weight:500;color:#1a1a18}
+.det-sub{font-size:12px;color:#888780;margin-top:3px}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.dc{background:#f5f4f0;border-radius:8px;padding:12px}
+.dc .dl{font-size:11px;color:#888780;margin-bottom:3px}
+.dc .dv{font-size:14px;font-weight:500;color:#1a1a18}
+.dc .dsub{font-size:11px;color:#888780;margin-top:2px}
+.over-bar{height:6px;background:#e0dfd8;border-radius:3px;overflow:hidden;margin-top:5px}
+.over-fill{height:100%;border-radius:3px}
+.trend-row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.tm{font-size:11px;color:#888780;width:28px}
+.sec-title{font-size:12px;font-weight:500;color:#888780;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em}
+.ai-box{background:#E6F1FB;border-radius:8px;padding:14px 16px;border-left:3px solid #185FA5;margin-top:12px}
+.ai-box.safe{background:#EAF3DE;border-left-color:#1D9E75}
+.ai-lbl{font-size:11px;font-weight:500;color:#0C447C;margin-bottom:5px}
+.ai-box.safe .ai-lbl{color:#085041}
+.ai-txt{font-size:13px;color:#185FA5;line-height:1.6}
+.ai-box.safe .ai-txt{color:#0F6E56}
+.kw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.kw-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#f1efe8;color:#5f5e5a;border:.5px solid #e0dfd8}
+.kw-tag.danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.kw-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
-  <div class="topbar-center">
-   <h1>대리점 종합평가</h1>
-  </div>
-  <span class="sub">2026.06.25(목) 10:00 업데이트</span>
+  <div class="topbar-center"><h1>대리점 종합평가</h1></div>
+  <span class="sub">2026.06.25(목) 10:09 업데이트</span>
 </div>
 
 <div class="layout">
-
-<!-- 사이드바 -->
 <div class="sidebar">
+  <div class="sidebar-section">AI 리스크</div>
+  <div class="sidebar-item active" id="menu-ai-risk" onclick="switchCat('ai-risk',this)">
+    <span class="icon">🤖</span> AI 위험탐지
+  </div>
+  <div class="sidebar-divider"></div>
   <div class="sidebar-section">종합평가</div>
   <div class="sidebar-item" id="menu-종합순위" onclick="switchCat('종합순위',this)">
     <span class="icon">⭐</span> 의류
@@ -136,7 +194,7 @@ tbody tr:hover{background:#f9f8f4}
   </div>
   <div class="sidebar-divider"></div>
   <div class="sidebar-section">팀별 채권잔액</div>
-  <div class="sidebar-item active" id="menu-의류" onclick="switchCat('의류',this)">
+  <div class="sidebar-item" id="menu-의류" onclick="switchCat('의류',this)">
     <span class="icon">👔</span> 의류
   </div>
   <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
@@ -144,10 +202,17 @@ tbody tr:hover{background:#f9f8f4}
   </div>
 </div>
 
-<!-- 메인 콘텐츠 -->
 <div class="main-content">
 
-<div id="cat-의류" class="cat-page active">
+<!-- AI 리스크 탭 -->
+<div id="cat-ai-risk" class="cat-page active">
+  <div class="ai-dash" id="ai-dash-content">
+    <div style="color:#888780;font-size:14px;padding:40px 0;text-align:center">데이터 로딩 중...</div>
+  </div>
+</div>
+
+<!-- 기존 탭들 -->
+<div id="cat-의류" class="cat-page">
   <div class="tabs">
     <div class="tab active" onclick="switchTab('의류','인사총무팀',this)">인사총무팀</div>
     <div class="tab" onclick="switchTab('의류','영업1팀',this)">영업1팀</div>
@@ -185,21 +250,23 @@ tbody tr:hover{background:#f9f8f4}
   </div>
 </div>
 
-</div><!-- /main-content -->
-</div><!-- /layout -->
+</div>
+</div>
 
 <script>
-const DATA = {
-  '의류': {"인사총무팀": {"stores": [{"code": "D00113", "name": "요넥스경남대리점", "salesperson": "윤홍선", "collateral": 0, "receivable": 315172885, "excess": 315172885, "ratio": 0.0, "risk": "관리"}, {"code": "D00285", "name": "국대스포츠", "salesperson": "윤홍선", "collateral": 15000000, "receivable": 87006189, "excess": 72006189, "ratio": 5.8, "risk": "위기"}, {"code": "D00002", "name": "(주) 원스포츠코리아", "salesperson": "윤홍선", "collateral": 0, "receivable": 62397612, "excess": 62397612, "ratio": 0.0, "risk": "관리"}, {"code": "D00185", "name": "배드민턴퍼스트", "salesperson": "윤홍선", "collateral": 0, "receivable": 60986623, "excess": 60986623, "ratio": 0.0, "risk": "관리"}, {"code": "D00102", "name": "아이러브민턴통영요넥스", "salesperson": "윤홍선", "collateral": 0, "receivable": 47750221, "excess": 47750221, "ratio": 0.0, "risk": "관리"}, {"code": "D00114", "name": "요넥스광주점", "salesperson": "윤홍선", "collateral": 20000000, "receivable": 36346108, "excess": 16346108, "ratio": 1.82, "risk": "위기"}, {"code": "D00012", "name": "강원배드민턴하우스", "salesperson": "윤홍선", "collateral": 0, "receivable": 28584956, "excess": 28584956, "ratio": 0.0, "risk": "관리"}, {"code": "D00062", "name": "배드민턴스포츠(완주)", "salesperson": "윤홍선", "collateral": 0, "receivable": 8640684, "excess": 8640684, "ratio": 0.0, "risk": "관리"}, {"code": "D00082", "name": "서영스포츠(seoyoung sports)", "salesperson": "윤홍선", "collateral": 0, "receivable": 5019130, "excess": 5019130, "ratio": 0.0, "risk": "관리"}, {"code": "D00194", "name": "주식회사 월드스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 4786981, "excess": 4786981, "ratio": 0.0, "risk": "관리"}, {"code": "D00043", "name": "마곡스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 1782734, "excess": 1782734, "ratio": 0.0, "risk": "관리"}, {"code": "D00079", "name": "삼성스포츠(부천)", "salesperson": "윤홍선", "collateral": 0, "receivable": 452750, "excess": 452750, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00125", "name": "원광배드민턴", "salesperson": "윤홍선", "collateral": 0, "receivable": 164131, "excess": 164131, "ratio": 0.0, "risk": "해당없음"}], "summary": {"total_collateral": 35000000, "total_receivable": 659091004, "total_excess": 624091004, "risk_counts": {"관리": 9, "해당없음": 2, "위기": 2}}, "by_salesperson": {"윤홍선": {"collateral": 35000000, "receivable": 659091004, "excess": 624091004, "stores": 13}}}, "영업1팀": {"stores": [{"code": "D00004", "name": "(주)배드민턴마켓", "salesperson": "손효동", "collateral": 300000000, "receivable": 255256603, "excess": -44743397, "ratio": 0.85, "risk": "주의"}, {"code": "D00087", "name": "주식회사 세진스포츠", "salesperson": "손효동", "collateral": 280000000, "receivable": 252624777, "excess": -27375223, "ratio": 0.9, "risk": "주의"}, {"code": "D00764", "name": "럭키코리아", "salesperson": "최낙호", "collateral": 20000000, "receivable": 219348902, "excess": 199348902, "ratio": 10.97, "risk": "위기"}, {"code": "D00524", "name": "주식회사 용인요넥스", "salesperson": "김연준", "collateral": 50000000, "receivable": 205980302, "excess": 155980302, "ratio": 4.12, "risk": "위기"}, {"code": "D00658", "name": "요넥스 강남점", "salesperson": "왕준하", "collateral": 50000000, "receivable": 173734755, "excess": 123734755, "ratio": 3.47, "risk": "위기"}, {"code": "D00184", "name": "오남스포츠", "salesperson": "전재영", "collateral": 30000000, "receivable": 154550447, "excess": 124550447, "ratio": 5.15, "risk": "위기"}, {"code": "D00086", "name": "주식회사 에스엠", "salesperson": "김연준", "collateral": 10000000, "receivable": 143454361, "excess": 133454361, "ratio": 14.35, "risk": "위기"}, {"code": "D00090", "name": "주식회사 스매쉬스포츠", "salesperson": "최낙호", "collateral": 80000000, "receivable": 142128474, "excess": 62128474, "ratio": 1.78, "risk": "위기"}, {"code": "D00643", "name": "요넥스 원주점(JS스포츠)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 127416098, "excess": 92416098, "ratio": 3.64, "risk": "위기"}, {"code": "D00744", "name": "주식회사 미르스포츠", "salesperson": "전재영", "collateral": 40000000, "receivable": 121780278, "excess": 81780278, "ratio": 3.04, "risk": "위기"}, {"code": "D00282", "name": "누리스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 117370634, "excess": 87370634, "ratio": 3.91, "risk": "위기"}, {"code": "D00758", "name": "요넥스 서수원점 으뜸스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 103036586, "excess": 73036586, "ratio": 3.43, "risk": "위기"}, {"code": "D00864", "name": "요넥스 연제점", "salesperson": "김연준", "collateral": 15000000, "receivable": 98678743, "excess": 83678743, "ratio": 6.58, "risk": "위기"}, {"code": "D00109", "name": "영스포츠(남원)", "salesperson": "안재우", "collateral": 60000000, "receivable": 87535683, "excess": 27535683, "ratio": 1.46, "risk": "경계"}, {"code": "D00121", "name": "요넥스포항점(하이크리어)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 83108648, "excess": 73108648, "ratio": 8.31, "risk": "위기"}, {"code": "D00138", "name": "주식회사동우스포츠", "salesperson": "최낙호", "collateral": 50000000, "receivable": 81948123, "excess": 31948123, "ratio": 1.64, "risk": "위기"}, {"code": "D00868", "name": "요넥스충주점", "salesperson": "전재영", "collateral": 20000000, "receivable": 74626442, "excess": 54626442, "ratio": 3.73, "risk": "위기"}, {"code": "D00123", "name": "우성스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 71644889, "excess": 31644889, "ratio": 1.79, "risk": "위기"}, {"code": "D00018", "name": "요넥스광명", "salesperson": "최낙호", "collateral": 15000000, "receivable": 69527438, "excess": 54527438, "ratio": 4.64, "risk": "위기"}, {"code": "D00338", "name": "요넥스창원점(싸카)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 69494315, "excess": 54494315, "ratio": 4.63, "risk": "위기"}, {"code": "D00862", "name": "주식회사 민턴랩스포츠", "salesperson": "전재영", "collateral": 15000000, "receivable": 63811275, "excess": 48811275, "ratio": 4.25, "risk": "위기"}, {"code": "D00790", "name": "와이제이(Y.J)요넥스", "salesperson": "김연준", "collateral": 20000000, "receivable": 63516772, "excess": 43516772, "ratio": 3.18, "risk": "위기"}, {"code": "D00750", "name": "요넥스 동탄점", "salesperson": "전재영", "collateral": 50000000, "receivable": 61002910, "excess": 11002910, "ratio": 1.22, "risk": "경계"}, {"code": "D00041", "name": "라이프스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 56130576, "excess": 36130576, "ratio": 2.81, "risk": "위기"}, {"code": "D00280", "name": "도담스포츠", "salesperson": "왕준하", "collateral": 55000000, "receivable": 55191873, "excess": 191873, "ratio": 1.0, "risk": "경계"}, {"code": "D00137", "name": "주식회사 배드민턴마트", "salesperson": "왕준하", "collateral": 50000000, "receivable": 53215399, "excess": 3215399, "ratio": 1.06, "risk": "경계"}, {"code": "D00685", "name": "주식회사 온리스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 51201265, "excess": 36201265, "ratio": 3.41, "risk": "위기"}, {"code": "D00519", "name": "위너스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 50428479, "excess": 35428479, "ratio": 3.36, "risk": "위기"}, {"code": "D00150", "name": "팔구스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 42581039, "excess": 32581039, "ratio": 4.26, "risk": "위기"}, {"code": "D00865", "name": "요넥스 의정부점 퍼펙트플레이", "salesperson": "전재영", "collateral": 20000000, "receivable": 38707533, "excess": 18707533, "ratio": 1.94, "risk": "위기"}, {"code": "D00072", "name": "백마스포츠", "salesperson": "전재영", "collateral": 50000000, "receivable": 37506559, "excess": -12493441, "ratio": 0.75, "risk": "주의"}, {"code": "D00078", "name": "삼성스포츠(문경)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 34942022, "excess": 24942022, "ratio": 3.49, "risk": "위기"}, {"code": "D00628", "name": "요넥스 수원점", "salesperson": "손효동", "collateral": 30000000, "receivable": 30317085, "excess": 317085, "ratio": 1.01, "risk": "경계"}, {"code": "D00022", "name": "금강스포츠", "salesperson": "김연준", "collateral": 48000000, "receivable": 28730725, "excess": -19269275, "ratio": 0.6, "risk": "적정"}, {"code": "D00503", "name": "나이스민턴", "salesperson": "김종윤", "collateral": 15000000, "receivable": 25656546, "excess": 10656546, "ratio": 1.71, "risk": "위기"}, {"code": "D00528", "name": "2080요넥스", "salesperson": "최낙호", "collateral": 15000000, "receivable": 22177218, "excess": 7177218, "ratio": 1.48, "risk": "경계"}, {"code": "D00722", "name": "주원스포츠", "salesperson": "왕준하", "collateral": 30000000, "receivable": 21478964, "excess": -8521036, "ratio": 0.72, "risk": "주의"}, {"code": "D00001", "name": "(주) 넘버원스포츠", "salesperson": "김연준", "collateral": 70000000, "receivable": 20847817, "excess": -49152183, "ratio": 0.3, "risk": "적정"}, {"code": "D00046", "name": "모던스포츠", "salesperson": "김종윤", "collateral": 30000000, "receivable": 18931115, "excess": -11068885, "ratio": 0.63, "risk": "주의"}, {"code": "D00032", "name": "하비스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 18819379, "excess": -1180621, "ratio": 0.94, "risk": "주의"}, {"code": "D00148", "name": "케이앤비스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 17417128, "excess": -2582872, "ratio": 0.87, "risk": "주의"}, {"code": "D00312", "name": "요넥스(YONEX) 이천점", "salesperson": "왕준하", "collateral": 15000000, "receivable": 16987590, "excess": 1987590, "ratio": 1.13, "risk": "경계"}, {"code": "D00159", "name": "혜성스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 16435383, "excess": -3564617, "ratio": 0.82, "risk": "주의"}, {"code": "D00866", "name": "요넥스 경북도청점", "salesperson": "김연준", "collateral": 20000000, "receivable": 15902788, "excess": -4097212, "ratio": 0.8, "risk": "주의"}, {"code": "D00149", "name": "코리아오픈(김천)", "salesperson": "왕준하", "collateral": 25000000, "receivable": 15452913, "excess": -9547087, "ratio": 0.62, "risk": "주의"}, {"code": "D00186", "name": "매치포인트", "salesperson": "김종윤", "collateral": 15000000, "receivable": 14980299, "excess": -19701, "ratio": 1.0, "risk": "주의"}, {"code": "D00122", "name": "우리스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 14703024, "excess": -5296976, "ratio": 0.74, "risk": "주의"}, {"code": "D00089", "name": "속초배드민턴", "salesperson": "김종윤", "collateral": 10000000, "receivable": 13621250, "excess": 3621250, "ratio": 1.36, "risk": "경계"}, {"code": "D00409", "name": "요넥스 스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 10560702, "excess": -9439298, "ratio": 0.53, "risk": "적정"}, {"code": "D00136", "name": "제일스포츠", "salesperson": "전재영", "collateral": 20000000, "receivable": 10390568, "excess": -9609432, "ratio": 0.52, "risk": "적정"}, {"code": "D00641", "name": "네버랜드", "salesperson": "전재영", "collateral": 15000000, "receivable": 10349938, "excess": -4650062, "ratio": 0.69, "risk": "주의"}, {"code": "D00161", "name": "홍성요넥스", "salesperson": "김종윤", "collateral": 10000000, "receivable": 9845137, "excess": -154863, "ratio": 0.98, "risk": "주의"}, {"code": "D00014", "name": "거성스포츠(안동)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 9646120, "excess": -353880, "ratio": 0.96, "risk": "주의"}, {"code": "D00256", "name": "거성스포츠(양산)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 7875909, "excess": -7124091, "ratio": 0.53, "risk": "적정"}, {"code": "D00132", "name": "전주요넥스", "salesperson": "전재영", "collateral": 30000000, "receivable": 7245627, "excess": -22754373, "ratio": 0.24, "risk": "적정"}, {"code": "D00061", "name": "남원요넥스", "salesperson": "전재영", "collateral": 10000000, "receivable": 7090491, "excess": -2909509, "ratio": 0.71, "risk": "주의"}, {"code": "D00063", "name": "배드민턴스포츠(천안)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 6669240, "excess": -13330760, "ratio": 0.33, "risk": "적정"}, {"code": "D00267", "name": "제이비스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 6500698, "excess": -8499302, "ratio": 0.43, "risk": "적정"}, {"code": "D00286", "name": "요넥스 성남점", "salesperson": "전재영", "collateral": 10000000, "receivable": 6433533, "excess": -3566467, "ratio": 0.64, "risk": "주의"}, {"code": "D00111", "name": "올림픽종합스포츠(목포)", "salesperson": "최낙호", "collateral": 10000000, "receivable": 5959100, "excess": -4040900, "ratio": 0.6, "risk": "적정"}, {"code": "D00181", "name": "준스포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": 5708791, "excess": -4291209, "ratio": 0.57, "risk": "적정"}, {"code": "D00027", "name": "남철환배드민턴SHOP", "salesperson": "김연준", "collateral": 15000000, "receivable": 5546296, "excess": -9453704, "ratio": 0.37, "risk": "적정"}, {"code": "D00328", "name": "진주배드민턴", "salesperson": "김종윤", "collateral": 15000000, "receivable": 4696270, "excess": -10303730, "ratio": 0.31, "risk": "적정"}, {"code": "D00416", "name": "서진스포츠", "salesperson": "김연준", "collateral": 15000000, "receivable": 4409560, "excess": -10590440, "ratio": 0.29, "risk": "적정"}, {"code": "D00587", "name": "주식회사 나이스패밀리", "salesperson": "김연준", "collateral": 0, "receivable": 4157225, "excess": 4157225, "ratio": 0.0, "risk": "관리"}, {"code": "D00074", "name": "봉스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 4139351, "excess": -5860649, "ratio": 0.41, "risk": "적정"}, {"code": "D00057", "name": "민턴홀릭", "salesperson": "김연준", "collateral": 10000000, "receivable": 3687489, "excess": -6312511, "ratio": 0.37, "risk": "적정"}, {"code": "D00031", "name": "대전배드민턴전문점", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3671500, "excess": -6328500, "ratio": 0.37, "risk": "적정"}, {"code": "D00030", "name": "대우스포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3538191, "excess": -6461809, "ratio": 0.35, "risk": "적정"}, {"code": "D00324", "name": "파트너스포츠", "salesperson": "김연준", "collateral": 25000000, "receivable": 3485200, "excess": -21514800, "ratio": 0.14, "risk": "적정"}, {"code": "D00141", "name": "중앙스포츠(경주)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3325012, "excess": -6674988, "ratio": 0.33, "risk": "적정"}, {"code": "D00077", "name": "삼성스포츠(동대문)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 3246600, "excess": -11753400, "ratio": 0.22, "risk": "적정"}, {"code": "D00640", "name": "바른스포츠", "salesperson": "최낙호", "collateral": 15000000, "receivable": 3067992, "excess": -11932008, "ratio": 0.2, "risk": "적정"}, {"code": "D00127", "name": "원스포츠(제주)", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2644811, "excess": -7355189, "ratio": 0.26, "risk": "적정"}, {"code": "D00433", "name": "정수스포츠 요넥스 영주점", "salesperson": "왕준하", "collateral": 10000000, "receivable": 2570185, "excess": -7429815, "ratio": 0.26, "risk": "적정"}, {"code": "D00064", "name": "배드민턴전문점 요넥스(김제)", "salesperson": "전재영", "collateral": 15000000, "receivable": 2521191, "excess": -12478809, "ratio": 0.17, "risk": "적정"}, {"code": "D00471", "name": "(주)아주레포츠_특판", "salesperson": "손효동", "collateral": 100000000, "receivable": 2450000, "excess": -97550000, "ratio": 0.02, "risk": "적정"}, {"code": "D00068", "name": "배드민턴하우스(밀양)", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2446162, "excess": -7553838, "ratio": 0.24, "risk": "적정"}, {"code": "D00120", "name": "요넥스청주점", "salesperson": "전재영", "collateral": 10000000, "receivable": 2419207, "excess": -7580793, "ratio": 0.24, "risk": "적정"}, {"code": "D00431", "name": "스포츠매니아", "salesperson": "왕준하", "collateral": 15000000, "receivable": 2167450, "excess": -12832550, "ratio": 0.14, "risk": "적정"}, {"code": "D00392", "name": "효성종합스포츠", "salesperson": "김종윤", "collateral": 15000000, "receivable": 2163052, "excess": -12836948, "ratio": 0.14, "risk": "적정"}, {"code": "D00145", "name": "청룡스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2049485, "excess": -7950515, "ratio": 0.2, "risk": "적정"}, {"code": "D00116", "name": "요넥스마산대리점(민턴스포츠)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 1917953, "excess": -13082047, "ratio": 0.13, "risk": "적정"}, {"code": "D00081", "name": "서대문요넥스", "salesperson": "최낙호", "collateral": 13000000, "receivable": 1916040, "excess": -11083960, "ratio": 0.15, "risk": "적정"}, {"code": "D00160", "name": "호동스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 1889461, "excess": -18110539, "ratio": 0.09, "risk": "적정"}, {"code": "D00306", "name": "광주스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 1873280, "excess": -18126720, "ratio": 0.09, "risk": "적정"}, {"code": "D00183", "name": "더제일", "salesperson": "왕준하", "collateral": 15000000, "receivable": 1618220, "excess": -13381780, "ratio": 0.11, "risk": "적정"}, {"code": "D00019", "name": "구미배드민턴마트", "salesperson": "왕준하", "collateral": 12000000, "receivable": 1538550, "excess": -10461450, "ratio": 0.13, "risk": "적정"}, {"code": "D00096", "name": "스포츠뱅크", "salesperson": "김종윤", "collateral": 10000000, "receivable": 1515449, "excess": -8484551, "ratio": 0.15, "risk": "적정"}, {"code": "D00047", "name": "모용철스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 1508050, "excess": -8491950, "ratio": 0.15, "risk": "적정"}, {"code": "D00110", "name": "요넥스 화순점", "salesperson": "최낙호", "collateral": 20000000, "receivable": 1257320, "excess": -18742680, "ratio": 0.06, "risk": "적정"}, {"code": "D00526", "name": "여수 요넥스", "salesperson": "최낙호", "collateral": 15000000, "receivable": 1013474, "excess": -13986526, "ratio": 0.07, "risk": "적정"}, {"code": "D00101", "name": "아산스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 939480, "excess": -9060520, "ratio": 0.09, "risk": "적정"}, {"code": "D00190", "name": "군산스포츠", "salesperson": "전재영", "collateral": 10000000, "receivable": 585721, "excess": -9414279, "ratio": 0.06, "risk": "적정"}, {"code": "D00040", "name": "동호스포츠(인천)", "salesperson": "최낙호", "collateral": 10000000, "receivable": 457800, "excess": -9542200, "ratio": 0.05, "risk": "해당없음"}, {"code": "D00035", "name": "대한체육사(익산)", "salesperson": "전재영", "collateral": 10000000, "receivable": 373110, "excess": -9626890, "ratio": 0.04, "risk": "해당없음"}, {"code": "D00097", "name": "승리스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 365850, "excess": -9634150, "ratio": 0.04, "risk": "해당없음"}, {"code": "D00287", "name": "키카스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 339150, "excess": -14660850, "ratio": 0.02, "risk": "해당없음"}, {"code": "D00311", "name": "코리아스포츠(시흥)", "salesperson": "최낙호", "collateral": 15000000, "receivable": -272532, "excess": -15272532, "ratio": -0.02, "risk": "해당없음"}, {"code": "D00085", "name": "성정레포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": -773718, "excess": -10773718, "ratio": -0.08, "risk": "적정"}, {"code": "D00029", "name": "대복스포츠", "salesperson": "전재영", "collateral": 7000000, "receivable": -2978743, "excess": -9978743, "ratio": -0.43, "risk": "적정"}, {"code": "D00010", "name": "가나스포츠", "salesperson": "최낙호", "collateral": 10000000, "receivable": -3754800, "excess": -13754800, "ratio": -0.38, "risk": "적정"}, {"code": "D00690", "name": "요넥스강동점 MZ스포츠", "salesperson": "전재영", "collateral": 15000000, "receivable": -4351700, "excess": -19351700, "ratio": -0.29, "risk": "적정"}, {"code": "D00529", "name": "우리스포츠(광주)", "salesperson": "손효동", "collateral": 15000000, "receivable": -8260457, "excess": -23260457, "ratio": -0.55, "risk": "적정"}, {"code": "D00292", "name": "요넥스 스포원점", "salesperson": "김연준", "collateral": 30000000, "receivable": -9589535, "excess": -39589535, "ratio": -0.32, "risk": "적정"}], "summary": {"total_collateral": 2770000000, "total_receivable": 3735746930, "total_excess": 1864011175, "risk_counts": {"적정": 48, "위기": 26, "주의": 17, "경계": 8, "해당없음": 5, "관리": 1}}, "by_salesperson": {"김연준": {"collateral": 418000000, "receivable": 687975714, "excess": 453368442, "stores": 19}, "김종윤": {"collateral": 265000000, "receivable": 309805781, "excess": 161188209, "stores": 18}, "손효동": {"collateral": 945000000, "receivable": 1001474267, "excess": 300129514, "stores": 15}, "안재우": {"collateral": 60000000, "receivable": 87535683, "excess": 27535683, "stores": 1}, "왕준하": {"collateral": 377000000, "receivable": 493791705, "excess": 227180287, "stores": 19}, "전재영": {"collateral": 377000000, "receivable": 592064387, "excess": 339478885, "stores": 18}, "최낙호": {"collateral": 328000000, "receivable": 563099393, "excess": 355130155, "stores": 15}}}, "영업2팀": {"stores": [{"code": "D00168", "name": "원트릭샵", "salesperson": "박현진", "collateral": 0, "receivable": 12062950, "excess": 12062950, "ratio": 0.0, "risk": "관리"}, {"code": "D00202", "name": "스포닥(테니스)", "salesperson": "박현진", "collateral": 0, "receivable": 4819870, "excess": 4819870, "ratio": 0.0, "risk": "관리"}, {"code": "D00201", "name": "(주)스카이스포츠(테니스)", "salesperson": "박현진", "collateral": 0, "receivable": 4770350, "excess": 4770350, "ratio": 0.0, "risk": "관리"}, {"code": "D00612", "name": "삼성스포츠(문경)(TS)", "salesperson": "김동경", "collateral": 0, "receivable": 4281500, "excess": 4281500, "ratio": 0.0, "risk": "관리"}, {"code": "D00610", "name": "하비스포츠(TS)", "salesperson": "김동경", "collateral": 0, "receivable": 1507500, "excess": 1507500, "ratio": 0.0, "risk": "관리"}, {"code": "D00791", "name": "형제스포츠", "salesperson": "안우진", "collateral": 0, "receivable": 1191750, "excess": 1191750, "ratio": 0.0, "risk": "관리"}, {"code": "D00638", "name": "거성스포츠(안동)(TS)", "salesperson": "안우진", "collateral": 0, "receivable": 842200, "excess": 842200, "ratio": 0.0, "risk": "관리"}, {"code": "D00792", "name": "메이크라켓", "salesperson": "박현진", "collateral": 0, "receivable": 333500, "excess": 333500, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00382", "name": "오스포츠", "salesperson": "박현진", "collateral": 0, "receivable": 321800, "excess": 321800, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00308", "name": "CS스포츠", "salesperson": "박현진", "collateral": 0, "receivable": 232750, "excess": 232750, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00205", "name": "소테스포츠", "salesperson": "안우진", "collateral": 5000000, "receivable": -107560, "excess": -5107560, "ratio": -0.02, "risk": "해당없음"}, {"code": "D00199", "name": "두리스포츠(테니스)", "salesperson": "안우진", "collateral": 0, "receivable": -2383060, "excess": -2383060, "ratio": 0.0, "risk": "적정"}], "summary": {"total_collateral": 5000000, "total_receivable": 27873550, "total_excess": 30364170, "risk_counts": {"관리": 7, "해당없음": 4, "적정": 1}}, "by_salesperson": {"김동경": {"collateral": 0, "receivable": 5789000, "excess": 5789000, "stores": 2}, "박현진": {"collateral": 0, "receivable": 22541220, "excess": 22541220, "stores": 6}, "안우진": {"collateral": 5000000, "receivable": -456670, "excess": 2033950, "stores": 4}}}, "E-BIZ팀": {"stores": [{"code": "D00616", "name": "세영스포츠", "salesperson": "신동원", "collateral": 110000000, "receivable": 37615320, "excess": -72384680, "ratio": 0.34, "risk": "적정"}, {"code": "D00741", "name": "(주)이씨파트너스", "salesperson": "문창수", "collateral": 30000000, "receivable": 14361841, "excess": -15638159, "ratio": 0.48, "risk": "적정"}, {"code": "D00574", "name": "스매싱스포츠", "salesperson": "신동원", "collateral": 20000000, "receivable": 4582262, "excess": -15417738, "ratio": 0.23, "risk": "적정"}, {"code": "D00560", "name": "주식회사 디지털진", "salesperson": "문창수", "collateral": 10000000, "receivable": -21777073, "excess": -31777073, "ratio": -2.18, "risk": "적정"}], "summary": {"total_collateral": 170000000, "total_receivable": 34782350, "total_excess": 0, "risk_counts": {"적정": 4}}, "by_salesperson": {"문창수": {"collateral": 40000000, "receivable": -7415232, "excess": 0, "stores": 2}, "신동원": {"collateral": 130000000, "receivable": 42197582, "excess": 0, "stores": 2}}}},
-  '용품': {"인사총무팀": {"stores": [{"code": "D00002", "name": "(주) 원스포츠코리아", "salesperson": "윤홍선", "collateral": 0, "receivable": 207642413, "excess": 207642413, "ratio": 0.0, "risk": "관리"}, {"code": "D00016", "name": "곰스포츠", "salesperson": "윤홍선", "collateral": 150000000, "receivable": 177386197, "excess": 27386197, "ratio": 1.18, "risk": "경계"}, {"code": "D00113", "name": "요넥스경남대리점", "salesperson": "윤홍선", "collateral": 0, "receivable": 124603309, "excess": 124603309, "ratio": 0.0, "risk": "관리"}, {"code": "D00114", "name": "요넥스광주점", "salesperson": "윤홍선", "collateral": 50000000, "receivable": 95892420, "excess": 45892420, "ratio": 1.92, "risk": "위기"}, {"code": "D00185", "name": "배드민턴퍼스트", "salesperson": "윤홍선", "collateral": 0, "receivable": 39633836, "excess": 39633836, "ratio": 0.0, "risk": "관리"}, {"code": "D00188", "name": "짱스포츠", "salesperson": "윤홍선", "collateral": 70000000, "receivable": 34982000, "excess": -35018000, "ratio": 0.5, "risk": "적정"}, {"code": "D00194", "name": "주식회사 월드스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 26149837, "excess": 26149837, "ratio": 0.0, "risk": "관리"}, {"code": "D00102", "name": "아이러브민턴통영요넥스", "salesperson": "윤홍선", "collateral": 0, "receivable": 13567140, "excess": 13567140, "ratio": 0.0, "risk": "관리"}, {"code": "D00082", "name": "서영스포츠(seoyoung sports)", "salesperson": "윤홍선", "collateral": 0, "receivable": 13342327, "excess": 13342327, "ratio": 0.0, "risk": "관리"}, {"code": "D00062", "name": "배드민턴스포츠(완주)", "salesperson": "윤홍선", "collateral": 0, "receivable": 12215177, "excess": 12215177, "ratio": 0.0, "risk": "관리"}, {"code": "D00067", "name": "요넥스(동해)", "salesperson": "윤홍선", "collateral": 0, "receivable": 2875119, "excess": 2875119, "ratio": 0.0, "risk": "관리"}, {"code": "D00079", "name": "삼성스포츠(부천)", "salesperson": "윤홍선", "collateral": 0, "receivable": 2337718, "excess": 2337718, "ratio": 0.0, "risk": "관리"}, {"code": "D00043", "name": "마곡스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 1911747, "excess": 1911747, "ratio": 0.0, "risk": "관리"}, {"code": "D00012", "name": "강원배드민턴하우스", "salesperson": "윤홍선", "collateral": 0, "receivable": 1102558, "excess": 1102558, "ratio": 0.0, "risk": "관리"}], "summary": {"total_collateral": 270000000, "total_receivable": 753641798, "total_excess": 518659798, "risk_counts": {"관리": 11, "경계": 1, "위기": 1, "적정": 1}}, "by_salesperson": {"윤홍선": {"collateral": 270000000, "receivable": 753641798, "excess": 518659798, "stores": 14}}}, "영업1팀": {"stores": [{"code": "D00087", "name": "주식회사 세진스포츠", "salesperson": "손효동", "collateral": 520000000, "receivable": 498597107, "excess": -21402893, "ratio": 0.96, "risk": "주의"}, {"code": "D00471", "name": "(주)아주레포츠_특판", "salesperson": "손효동", "collateral": 300000000, "receivable": 327125000, "excess": 27125000, "ratio": 1.09, "risk": "경계"}, {"code": "D00004", "name": "(주)배드민턴마켓", "salesperson": "손효동", "collateral": 300000000, "receivable": 276172783, "excess": -23827217, "ratio": 0.92, "risk": "주의"}, {"code": "D00524", "name": "주식회사 용인요넥스", "salesperson": "김연준", "collateral": 100000000, "receivable": 205450507, "excess": 105450507, "ratio": 2.05, "risk": "위기"}, {"code": "D00090", "name": "주식회사 스매쉬스포츠", "salesperson": "최낙호", "collateral": 95000000, "receivable": 166478857, "excess": 71478857, "ratio": 1.75, "risk": "위기"}, {"code": "D00109", "name": "영스포츠(남원)", "salesperson": "안재우", "collateral": 185000000, "receivable": 145718469, "excess": -39281531, "ratio": 0.79, "risk": "주의"}, {"code": "D00643", "name": "요넥스 원주점(JS스포츠)", "salesperson": "김종윤", "collateral": 50000000, "receivable": 135914579, "excess": 85914579, "ratio": 2.72, "risk": "위기"}, {"code": "D00032", "name": "하비스포츠", "salesperson": "김연준", "collateral": 130000000, "receivable": 134078868, "excess": 4078868, "ratio": 1.03, "risk": "경계"}, {"code": "D00658", "name": "요넥스 강남점", "salesperson": "왕준하", "collateral": 50000000, "receivable": 126603460, "excess": 76603460, "ratio": 2.53, "risk": "위기"}, {"code": "D00758", "name": "요넥스 서수원점 으뜸스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 124566010, "excess": 84566010, "ratio": 3.11, "risk": "위기"}, {"code": "D00764", "name": "럭키코리아", "salesperson": "최낙호", "collateral": 70000000, "receivable": 124189553, "excess": 54189553, "ratio": 1.77, "risk": "위기"}, {"code": "D00744", "name": "주식회사 미르스포츠", "salesperson": "전재영", "collateral": 60000000, "receivable": 122060522, "excess": 62060522, "ratio": 2.03, "risk": "위기"}, {"code": "D00519", "name": "위너스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 94321720, "excess": 59321720, "ratio": 2.69, "risk": "위기"}, {"code": "D00041", "name": "라이프스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 76536689, "excess": 46536689, "ratio": 2.55, "risk": "위기"}, {"code": "D00282", "name": "누리스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 72778362, "excess": 32778362, "ratio": 1.82, "risk": "위기"}, {"code": "D00138", "name": "주식회사동우스포츠", "salesperson": "최낙호", "collateral": 70000000, "receivable": 69758377, "excess": -241623, "ratio": 1.0, "risk": "주의"}, {"code": "D00001", "name": "(주) 넘버원스포츠", "salesperson": "김연준", "collateral": 80000000, "receivable": 69373936, "excess": -10626064, "ratio": 0.87, "risk": "주의"}, {"code": "D00126", "name": "원동체육사", "salesperson": "왕준하", "collateral": 150000000, "receivable": 67946245, "excess": -82053755, "ratio": 0.45, "risk": "적정"}, {"code": "D00628", "name": "요넥스 수원점", "salesperson": "손효동", "collateral": 50000000, "receivable": 67718748, "excess": 17718748, "ratio": 1.35, "risk": "경계"}, {"code": "D00641", "name": "네버랜드", "salesperson": "전재영", "collateral": 35000000, "receivable": 62582776, "excess": 27582776, "ratio": 1.79, "risk": "위기"}, {"code": "D00865", "name": "요넥스 의정부점 퍼펙트플레이", "salesperson": "전재영", "collateral": 30000000, "receivable": 61007085, "excess": 31007085, "ratio": 2.03, "risk": "위기"}, {"code": "D00086", "name": "주식회사 에스엠", "salesperson": "김연준", "collateral": 20000000, "receivable": 58636311, "excess": 38636311, "ratio": 2.93, "risk": "위기"}, {"code": "D00750", "name": "요넥스 동탄점", "salesperson": "전재영", "collateral": 35000000, "receivable": 57779037, "excess": 22779037, "ratio": 1.65, "risk": "위기"}, {"code": "D00722", "name": "주원스포츠", "salesperson": "왕준하", "collateral": 50000000, "receivable": 52836629, "excess": 2836629, "ratio": 1.06, "risk": "경계"}, {"code": "D00123", "name": "우성스포츠", "salesperson": "손효동", "collateral": 60000000, "receivable": 51898949, "excess": -8101051, "ratio": 0.86, "risk": "주의"}, {"code": "D00790", "name": "와이제이(Y.J)요넥스", "salesperson": "김연준", "collateral": 60000000, "receivable": 51811467, "excess": -8188533, "ratio": 0.86, "risk": "주의"}, {"code": "D00159", "name": "혜성스포츠", "salesperson": "최낙호", "collateral": 40000000, "receivable": 49727163, "excess": 9727163, "ratio": 1.24, "risk": "경계"}, {"code": "D00018", "name": "요넥스광명", "salesperson": "최낙호", "collateral": 35000000, "receivable": 48753840, "excess": 13753840, "ratio": 1.39, "risk": "경계"}, {"code": "D00150", "name": "팔구스포츠", "salesperson": "김연준", "collateral": 40000000, "receivable": 48531459, "excess": 8531459, "ratio": 1.21, "risk": "경계"}, {"code": "D00121", "name": "요넥스포항점(하이크리어)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 47894705, "excess": 27894705, "ratio": 2.39, "risk": "위기"}, {"code": "D00027", "name": "남철환배드민턴SHOP", "salesperson": "김연준", "collateral": 30000000, "receivable": 47554084, "excess": 17554084, "ratio": 1.59, "risk": "위기"}, {"code": "D00097", "name": "승리스포츠", "salesperson": "김종윤", "collateral": 300000000, "receivable": 47354161, "excess": -252645839, "ratio": 0.16, "risk": "적정"}, {"code": "D00280", "name": "도담스포츠", "salesperson": "왕준하", "collateral": 45000000, "receivable": 46652430, "excess": 1652430, "ratio": 1.04, "risk": "경계"}, {"code": "D00149", "name": "코리아오픈(김천)", "salesperson": "왕준하", "collateral": 50000000, "receivable": 46254966, "excess": -3745034, "ratio": 0.93, "risk": "주의"}, {"code": "D00072", "name": "백마스포츠", "salesperson": "전재영", "collateral": 65000000, "receivable": 45972386, "excess": -19027614, "ratio": 0.71, "risk": "주의"}, {"code": "D00132", "name": "전주요넥스", "salesperson": "전재영", "collateral": 50000000, "receivable": 44210393, "excess": -5789607, "ratio": 0.88, "risk": "주의"}, {"code": "D00184", "name": "오남스포츠", "salesperson": "전재영", "collateral": 50000000, "receivable": 42906908, "excess": -7093092, "ratio": 0.86, "risk": "주의"}, {"code": "D00503", "name": "나이스민턴", "salesperson": "김종윤", "collateral": 35000000, "receivable": 41122292, "excess": 6122292, "ratio": 1.17, "risk": "경계"}, {"code": "D00022", "name": "금강스포츠", "salesperson": "김연준", "collateral": 70000000, "receivable": 40816088, "excess": -29183912, "ratio": 0.58, "risk": "적정"}, {"code": "D00137", "name": "주식회사 배드민턴마트", "salesperson": "왕준하", "collateral": 20000000, "receivable": 40139097, "excess": 20139097, "ratio": 2.01, "risk": "위기"}, {"code": "D00864", "name": "요넥스 연제점", "salesperson": "김연준", "collateral": 35000000, "receivable": 40089693, "excess": 5089693, "ratio": 1.15, "risk": "경계"}, {"code": "D00409", "name": "요넥스 스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 36813186, "excess": -3186814, "ratio": 0.92, "risk": "주의"}, {"code": "D00046", "name": "모던스포츠", "salesperson": "김종윤", "collateral": 40000000, "receivable": 35997391, "excess": -4002609, "ratio": 0.9, "risk": "주의"}, {"code": "D00528", "name": "2080요넥스", "salesperson": "최낙호", "collateral": 35000000, "receivable": 35675676, "excess": 675676, "ratio": 1.02, "risk": "경계"}, {"code": "D00868", "name": "요넥스충주점", "salesperson": "전재영", "collateral": 25000000, "receivable": 33686616, "excess": 8686616, "ratio": 1.35, "risk": "경계"}, {"code": "D00685", "name": "주식회사 온리스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 33348513, "excess": -1651487, "ratio": 0.95, "risk": "주의"}, {"code": "D00183", "name": "더제일", "salesperson": "왕준하", "collateral": 35000000, "receivable": 31664989, "excess": -3335011, "ratio": 0.9, "risk": "주의"}, {"code": "D00690", "name": "요넥스강동점 MZ스포츠", "salesperson": "전재영", "collateral": 35000000, "receivable": 30655120, "excess": -4344880, "ratio": 0.88, "risk": "주의"}, {"code": "D00640", "name": "바른스포츠", "salesperson": "최낙호", "collateral": 35000000, "receivable": 30570746, "excess": -4429254, "ratio": 0.87, "risk": "주의"}, {"code": "D00148", "name": "케이앤비스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 29217089, "excess": -782911, "ratio": 0.97, "risk": "주의"}, {"code": "D00190", "name": "군산스포츠", "salesperson": "전재영", "collateral": 30000000, "receivable": 27364716, "excess": -2635284, "ratio": 0.91, "risk": "주의"}, {"code": "D00862", "name": "주식회사 민턴랩스포츠", "salesperson": "전재영", "collateral": 35000000, "receivable": 25579505, "excess": -9420495, "ratio": 0.73, "risk": "주의"}, {"code": "D00292", "name": "요넥스 스포원점", "salesperson": "김연준", "collateral": 50000000, "receivable": 25480608, "excess": -24519392, "ratio": 0.51, "risk": "적정"}, {"code": "D00312", "name": "요넥스(YONEX) 이천점", "salesperson": "왕준하", "collateral": 35000000, "receivable": 25417529, "excess": -9582471, "ratio": 0.73, "risk": "주의"}, {"code": "D00063", "name": "배드민턴스포츠(천안)", "salesperson": "왕준하", "collateral": 30000000, "receivable": 23911506, "excess": -6088494, "ratio": 0.8, "risk": "주의"}, {"code": "D00006", "name": "(주)아주레포츠", "salesperson": "손효동", "collateral": 120000000, "receivable": 23802275, "excess": -96197725, "ratio": 0.2, "risk": "적정"}, {"code": "D00136", "name": "제일스포츠", "salesperson": "전재영", "collateral": 45000000, "receivable": 23241697, "excess": -21758303, "ratio": 0.52, "risk": "적정"}, {"code": "D00866", "name": "요넥스 경북도청점", "salesperson": "김연준", "collateral": 20000000, "receivable": 23221306, "excess": 3221306, "ratio": 1.16, "risk": "경계"}, {"code": "D00267", "name": "제이비스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 22833411, "excess": -12166589, "ratio": 0.65, "risk": "주의"}, {"code": "D00306", "name": "광주스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 21738261, "excess": -8261739, "ratio": 0.72, "risk": "주의"}, {"code": "D00019", "name": "구미배드민턴마트", "salesperson": "왕준하", "collateral": 23000000, "receivable": 21659968, "excess": -1340032, "ratio": 0.94, "risk": "주의"}, {"code": "D00529", "name": "우리스포츠(광주)", "salesperson": "손효동", "collateral": 35000000, "receivable": 21499208, "excess": -13500792, "ratio": 0.61, "risk": "주의"}, {"code": "D00416", "name": "서진스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 20738509, "excess": -9261491, "ratio": 0.69, "risk": "주의"}, {"code": "D00256", "name": "거성스포츠(양산)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 20682065, "excess": -14317935, "ratio": 0.59, "risk": "적정"}, {"code": "D00328", "name": "진주배드민턴", "salesperson": "김종윤", "collateral": 50000000, "receivable": 19838356, "excess": -30161644, "ratio": 0.4, "risk": "적정"}, {"code": "D00160", "name": "호동스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 19419464, "excess": -580536, "ratio": 0.97, "risk": "주의"}, {"code": "D00014", "name": "거성스포츠(안동)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 18891568, "excess": -1108432, "ratio": 0.94, "risk": "주의"}, {"code": "D00035", "name": "대한체육사(익산)", "salesperson": "전재영", "collateral": 20000000, "receivable": 18835421, "excess": -1164579, "ratio": 0.94, "risk": "주의"}, {"code": "D00077", "name": "삼성스포츠(동대문)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 18723741, "excess": -16276259, "ratio": 0.53, "risk": "적정"}, {"code": "D00085", "name": "성정레포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 18412633, "excess": -1587367, "ratio": 0.92, "risk": "주의"}, {"code": "D00120", "name": "요넥스청주점", "salesperson": "전재영", "collateral": 20000000, "receivable": 18183959, "excess": -1816041, "ratio": 0.91, "risk": "주의"}, {"code": "D00286", "name": "요넥스 성남점", "salesperson": "전재영", "collateral": 20000000, "receivable": 17732850, "excess": -2267150, "ratio": 0.89, "risk": "주의"}, {"code": "D00074", "name": "봉스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 16607362, "excess": -3392638, "ratio": 0.83, "risk": "주의"}, {"code": "D00186", "name": "매치포인트", "salesperson": "김종윤", "collateral": 35000000, "receivable": 16292319, "excess": -18707681, "ratio": 0.47, "risk": "적정"}, {"code": "D00061", "name": "남원요넥스", "salesperson": "전재영", "collateral": 20000000, "receivable": 15996724, "excess": -4003276, "ratio": 0.8, "risk": "주의"}, {"code": "D00089", "name": "속초배드민턴", "salesperson": "김종윤", "collateral": 20000000, "receivable": 15623280, "excess": -4376720, "ratio": 0.78, "risk": "주의"}, {"code": "D00068", "name": "배드민턴하우스(밀양)", "salesperson": "김종윤", "collateral": 20000000, "receivable": 15599694, "excess": -4400306, "ratio": 0.78, "risk": "주의"}, {"code": "D00311", "name": "코리아스포츠(시흥)", "salesperson": "최낙호", "collateral": 35000000, "receivable": 15056857, "excess": -19943143, "ratio": 0.43, "risk": "적정"}, {"code": "D00338", "name": "요넥스창원점(싸카)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 14695981, "excess": -20304019, "ratio": 0.42, "risk": "적정"}, {"code": "D00141", "name": "중앙스포츠(경주)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 14197617, "excess": -5802383, "ratio": 0.71, "risk": "주의"}, {"code": "D00122", "name": "우리스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 14133535, "excess": -15866465, "ratio": 0.47, "risk": "적정"}, {"code": "D00526", "name": "여수 요넥스", "salesperson": "최낙호", "collateral": 35000000, "receivable": 13949764, "excess": -21050236, "ratio": 0.4, "risk": "적정"}, {"code": "D00116", "name": "요넥스마산대리점(민턴스포츠)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 13443693, "excess": -21556307, "ratio": 0.38, "risk": "적정"}, {"code": "D00110", "name": "요넥스 화순점", "salesperson": "최낙호", "collateral": 30000000, "receivable": 13213141, "excess": -16786859, "ratio": 0.44, "risk": "적정"}, {"code": "D00431", "name": "스포츠매니아", "salesperson": "왕준하", "collateral": 35000000, "receivable": 13147542, "excess": -21852458, "ratio": 0.38, "risk": "적정"}, {"code": "D00031", "name": "대전배드민턴전문점", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12820173, "excess": -7179827, "ratio": 0.64, "risk": "주의"}, {"code": "D00078", "name": "삼성스포츠(문경)", "salesperson": "왕준하", "collateral": 15000000, "receivable": 12746106, "excess": -2253894, "ratio": 0.85, "risk": "주의"}, {"code": "D00081", "name": "서대문요넥스", "salesperson": "최낙호", "collateral": 22000000, "receivable": 12669177, "excess": -9330823, "ratio": 0.58, "risk": "적정"}, {"code": "D00433", "name": "정수스포츠 요넥스 영주점", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12073852, "excess": -7926148, "ratio": 0.6, "risk": "주의"}, {"code": "D00181", "name": "준스포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12007418, "excess": -7992582, "ratio": 0.6, "risk": "주의"}, {"code": "D00096", "name": "스포츠뱅크", "salesperson": "김종윤", "collateral": 20000000, "receivable": 11461053, "excess": -8538947, "ratio": 0.57, "risk": "적정"}, {"code": "D00057", "name": "민턴홀릭", "salesperson": "김연준", "collateral": 20000000, "receivable": 11394574, "excess": -8605426, "ratio": 0.57, "risk": "적정"}, {"code": "D00030", "name": "대우스포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 11284144, "excess": -8715856, "ratio": 0.56, "risk": "적정"}, {"code": "D00287", "name": "키카스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 10976613, "excess": -24023387, "ratio": 0.31, "risk": "적정"}, {"code": "D00028", "name": "대광스포츠(대구)", "salesperson": "김연준", "collateral": 100000000, "receivable": 10719040, "excess": -89280960, "ratio": 0.11, "risk": "적정"}, {"code": "D00161", "name": "홍성요넥스", "salesperson": "김종윤", "collateral": 10000000, "receivable": 10238542, "excess": 238542, "ratio": 1.02, "risk": "경계"}, {"code": "D00127", "name": "원스포츠(제주)", "salesperson": "김종윤", "collateral": 20000000, "receivable": 10203260, "excess": -9796740, "ratio": 0.51, "risk": "적정"}, {"code": "D00052", "name": "민턴스포츠(나주)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 9781600, "excess": -10218400, "ratio": 0.49, "risk": "적정"}, {"code": "D00392", "name": "효성종합스포츠", "salesperson": "김종윤", "collateral": 35000000, "receivable": 9757863, "excess": -25242137, "ratio": 0.28, "risk": "적정"}, {"code": "D00029", "name": "대복스포츠", "salesperson": "전재영", "collateral": 20000000, "receivable": 9653998, "excess": -10346002, "ratio": 0.48, "risk": "적정"}, {"code": "D00021", "name": "그린스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 8860116, "excess": -11139884, "ratio": 0.44, "risk": "적정"}, {"code": "D00587", "name": "주식회사 나이스패밀리", "salesperson": "김연준", "collateral": 0, "receivable": 8414684, "excess": 8414684, "ratio": 0.0, "risk": "관리"}, {"code": "D00145", "name": "청룡스포츠", "salesperson": "김종윤", "collateral": 20000000, "receivable": 8190434, "excess": -11809566, "ratio": 0.41, "risk": "적정"}, {"code": "D00396", "name": "요넥스 양산점(화랑스포츠)", "salesperson": "김종윤", "collateral": 30000000, "receivable": 7096038, "excess": -22903962, "ratio": 0.24, "risk": "적정"}, {"code": "D00101", "name": "아산스포츠", "salesperson": "김종윤", "collateral": 20000000, "receivable": 6631253, "excess": -13368747, "ratio": 0.33, "risk": "적정"}, {"code": "D00324", "name": "파트너스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 5208800, "excess": -24791200, "ratio": 0.17, "risk": "적정"}, {"code": "D00040", "name": "동호스포츠(인천)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 4373400, "excess": -15626600, "ratio": 0.22, "risk": "적정"}, {"code": "D00010", "name": "가나스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 3150691, "excess": -16849309, "ratio": 0.16, "risk": "적정"}, {"code": "D00111", "name": "올림픽종합스포츠(목포)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 2982520, "excess": -17017480, "ratio": 0.15, "risk": "적정"}, {"code": "D00047", "name": "모용철스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 2596077, "excess": -17403923, "ratio": 0.13, "risk": "적정"}, {"code": "D00515", "name": "영무SP", "salesperson": "손효동", "collateral": 35000000, "receivable": 1685880, "excess": -33314120, "ratio": 0.05, "risk": "적정"}, {"code": "D00048", "name": "무등스포츠", "salesperson": "손효동", "collateral": 50000000, "receivable": 1400880, "excess": -48599120, "ratio": 0.03, "risk": "적정"}, {"code": "D00064", "name": "배드민턴전문점 요넥스(김제)", "salesperson": "전재영", "collateral": 35000000, "receivable": 106555, "excess": -34893445, "ratio": 0.0, "risk": "해당없음"}], "summary": {"total_collateral": 5685000000, "total_receivable": 5175201843, "total_excess": 982366300, "risk_counts": {"주의": 42, "적정": 38, "위기": 17, "경계": 14, "관리": 1, "해당없음": 1}}, "by_salesperson": {"김연준": {"collateral": 915000000, "receivable": 864073997, "excess": 190976912, "stores": 20}, "김종윤": {"collateral": 845000000, "receivable": 458865995, "excess": 92275413, "stores": 19}, "손효동": {"collateral": 1790000000, "receivable": 1763813595, "excess": 268046529, "stores": 18}, "안재우": {"collateral": 185000000, "receivable": 145718469, "excess": 0, "stores": 1}, "왕준하": {"collateral": 698000000, "receivable": 656562577, "excess": 129126321, "stores": 20}, "전재영": {"collateral": 630000000, "receivable": 657556268, "excess": 152116036, "stores": 18}, "최낙호": {"collateral": 622000000, "receivable": 628610942, "excess": 149825089, "stores": 17}}}, "영업2팀": {"stores": [{"code": "D00611", "name": "백마스포츠(TS)", "salesperson": "김동경", "collateral": 135000000, "receivable": 365130666, "excess": 230130666, "ratio": 2.7, "risk": "위기"}, {"code": "D00610", "name": "하비스포츠(TS)", "salesperson": "김동경", "collateral": 70000000, "receivable": 232524999, "excess": 162524999, "ratio": 3.32, "risk": "위기"}, {"code": "D00202", "name": "스포닥(테니스)", "salesperson": "박현진", "collateral": 5000000, "receivable": 47426008, "excess": 42426008, "ratio": 9.49, "risk": "위기"}, {"code": "D00201", "name": "(주)스카이스포츠(테니스)", "salesperson": "박현진", "collateral": 20000000, "receivable": 47243700, "excess": 27243700, "ratio": 2.36, "risk": "위기"}, {"code": "D00608", "name": "(주) 넘버원스포츠(TS)", "salesperson": "김동경", "collateral": 30000000, "receivable": 34527230, "excess": 4527230, "ratio": 1.15, "risk": "경계"}, {"code": "D00382", "name": "오스포츠", "salesperson": "박현진", "collateral": 6000000, "receivable": 32136430, "excess": 26136430, "ratio": 5.36, "risk": "위기"}, {"code": "D00408", "name": "구리코트로", "salesperson": "안우진", "collateral": 23000000, "receivable": 29357325, "excess": 6357325, "ratio": 1.28, "risk": "경계"}, {"code": "D00210", "name": "(주)에이제이인터내셔날(테니스)", "salesperson": "박현진", "collateral": 20000000, "receivable": 23441638, "excess": 3441638, "ratio": 1.17, "risk": "경계"}, {"code": "D00203", "name": "연코리아(테니스)", "salesperson": "김동경", "collateral": 23000000, "receivable": 19123733, "excess": -3876267, "ratio": 0.83, "risk": "주의"}, {"code": "D00517", "name": "OK 스포츠(테니스)", "salesperson": "안우진", "collateral": 0, "receivable": 16166230, "excess": 16166230, "ratio": 0.0, "risk": "관리"}, {"code": "D00192", "name": "영문스포츠(테니스)", "salesperson": "김동경", "collateral": 6000000, "receivable": 15440250, "excess": 9440250, "ratio": 2.57, "risk": "위기"}, {"code": "D00791", "name": "형제스포츠", "salesperson": "안우진", "collateral": 10000000, "receivable": 14695662, "excess": 4695662, "ratio": 1.47, "risk": "경계"}, {"code": "D00308", "name": "CS스포츠", "salesperson": "박현진", "collateral": 15000000, "receivable": 10224500, "excess": -4775500, "ratio": 0.68, "risk": "주의"}, {"code": "D00196", "name": "강스포츠(테니스)", "salesperson": "김동경", "collateral": 5650005, "receivable": 9284494, "excess": 3634489, "ratio": 1.64, "risk": "위기"}, {"code": "D00792", "name": "메이크라켓", "salesperson": "박현진", "collateral": 11388896, "receivable": 8762940, "excess": -2625956, "ratio": 0.77, "risk": "주의"}, {"code": "D00195", "name": "스포츠테크(테니스)", "salesperson": "김동경", "collateral": 12000000, "receivable": 7523977, "excess": -4476023, "ratio": 0.63, "risk": "주의"}, {"code": "D00612", "name": "삼성스포츠(문경)(TS)", "salesperson": "김동경", "collateral": 5000000, "receivable": 5007250, "excess": 7250, "ratio": 1.0, "risk": "경계"}, {"code": "D00770", "name": "국제스포츠", "salesperson": "박현진", "collateral": 10000000, "receivable": 3517000, "excess": -6483000, "ratio": 0.35, "risk": "적정"}, {"code": "D00209", "name": "스포츠플러스(Sports Plus)(테니스)", "salesperson": "안우진", "collateral": 12000000, "receivable": 3271500, "excess": -8728500, "ratio": 0.27, "risk": "적정"}, {"code": "D00193", "name": "탑스핀스포츠(테니스)", "salesperson": "안우진", "collateral": 5000000, "receivable": 2803360, "excess": -2196640, "ratio": 0.56, "risk": "적정"}, {"code": "D00638", "name": "거성스포츠(안동)(TS)", "salesperson": "안우진", "collateral": 6625000, "receivable": 717500, "excess": -5907500, "ratio": 0.11, "risk": "적정"}], "summary": {"total_collateral": 430663901, "total_receivable": 928326392, "total_excess": 536731877, "risk_counts": {"위기": 7, "경계": 5, "주의": 4, "적정": 4, "관리": 1}}, "by_salesperson": {"김동경": {"collateral": 286650005, "receivable": 688562599, "excess": 410264884, "stores": 8}, "박현진": {"collateral": 87388896, "receivable": 172752216, "excess": 99247776, "stores": 7}, "안우진": {"collateral": 56625000, "receivable": 67011577, "excess": 27219217, "stores": 6}}}, "E-BIZ팀": {"stores": [{"code": "D00616", "name": "세영스포츠", "salesperson": "신동원", "collateral": 140000000, "receivable": 38718241, "excess": -101281759, "ratio": 0.28, "risk": "적정"}, {"code": "D00574", "name": "스매싱스포츠", "salesperson": "신동원", "collateral": 50000000, "receivable": 12448672, "excess": -37551328, "ratio": 0.25, "risk": "적정"}, {"code": "D00741", "name": "(주)이씨파트너스", "salesperson": "문창수", "collateral": 70000000, "receivable": -1098526, "excess": -71098526, "ratio": -0.02, "risk": "적정"}, {"code": "D00560", "name": "주식회사 디지털진", "salesperson": "문창수", "collateral": 90000000, "receivable": -18199431, "excess": -108199431, "ratio": -0.2, "risk": "적정"}], "summary": {"total_collateral": 350000000, "total_receivable": 31868956, "total_excess": 0, "risk_counts": {"적정": 4}}, "by_salesperson": {"문창수": {"collateral": 160000000, "receivable": -19297957, "excess": 0, "stores": 2}, "신동원": {"collateral": 190000000, "receivable": 51166913, "excess": 0, "stores": 2}}}}
-};
+const clothingData = {"인사총무팀": {"stores": [{"code": "D00113", "name": "요넥스경남대리점", "salesperson": "윤홍선", "collateral": 0, "receivable": 315172885, "excess": 315172885, "ratio": 0.0, "risk": "관리"}, {"code": "D00285", "name": "국대스포츠", "salesperson": "윤홍선", "collateral": 15000000, "receivable": 87006189, "excess": 72006189, "ratio": 5.8, "risk": "위기"}, {"code": "D00002", "name": "(주) 원스포츠코리아", "salesperson": "윤홍선", "collateral": 0, "receivable": 62397612, "excess": 62397612, "ratio": 0.0, "risk": "관리"}, {"code": "D00185", "name": "배드민턴퍼스트", "salesperson": "윤홍선", "collateral": 0, "receivable": 60986623, "excess": 60986623, "ratio": 0.0, "risk": "관리"}, {"code": "D00102", "name": "아이러브민턴통영요넥스", "salesperson": "윤홍선", "collateral": 0, "receivable": 47750221, "excess": 47750221, "ratio": 0.0, "risk": "관리"}, {"code": "D00114", "name": "요넥스광주점", "salesperson": "윤홍선", "collateral": 20000000, "receivable": 36346108, "excess": 16346108, "ratio": 1.82, "risk": "위기"}, {"code": "D00012", "name": "강원배드민턴하우스", "salesperson": "윤홍선", "collateral": 0, "receivable": 28584956, "excess": 28584956, "ratio": 0.0, "risk": "관리"}, {"code": "D00062", "name": "배드민턴스포츠(완주)", "salesperson": "윤홍선", "collateral": 0, "receivable": 8640684, "excess": 8640684, "ratio": 0.0, "risk": "관리"}, {"code": "D00082", "name": "서영스포츠(seoyoung sports)", "salesperson": "윤홍선", "collateral": 0, "receivable": 5019130, "excess": 5019130, "ratio": 0.0, "risk": "관리"}, {"code": "D00194", "name": "주식회사 월드스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 4786981, "excess": 4786981, "ratio": 0.0, "risk": "관리"}, {"code": "D00043", "name": "마곡스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 1782734, "excess": 1782734, "ratio": 0.0, "risk": "관리"}, {"code": "D00079", "name": "삼성스포츠(부천)", "salesperson": "윤홍선", "collateral": 0, "receivable": 452750, "excess": 452750, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00125", "name": "원광배드민턴", "salesperson": "윤홍선", "collateral": 0, "receivable": 164131, "excess": 164131, "ratio": 0.0, "risk": "해당없음"}], "summary": {"total_collateral": 35000000, "total_receivable": 659091004, "total_excess": 624091004, "risk_counts": {"관리": 9, "해당없음": 2, "위기": 2}}, "by_salesperson": {"윤홍선": {"collateral": 35000000, "receivable": 659091004, "excess": 624091004, "stores": 13}}}, "영업1팀": {"stores": [{"code": "D00004", "name": "(주)배드민턴마켓", "salesperson": "손효동", "collateral": 300000000, "receivable": 255256603, "excess": -44743397, "ratio": 0.85, "risk": "주의"}, {"code": "D00087", "name": "주식회사 세진스포츠", "salesperson": "손효동", "collateral": 280000000, "receivable": 252624777, "excess": -27375223, "ratio": 0.9, "risk": "주의"}, {"code": "D00764", "name": "럭키코리아", "salesperson": "최낙호", "collateral": 20000000, "receivable": 219348902, "excess": 199348902, "ratio": 10.97, "risk": "위기"}, {"code": "D00524", "name": "주식회사 용인요넥스", "salesperson": "김연준", "collateral": 50000000, "receivable": 205980302, "excess": 155980302, "ratio": 4.12, "risk": "위기"}, {"code": "D00658", "name": "요넥스 강남점", "salesperson": "왕준하", "collateral": 50000000, "receivable": 173734755, "excess": 123734755, "ratio": 3.47, "risk": "위기"}, {"code": "D00184", "name": "오남스포츠", "salesperson": "전재영", "collateral": 30000000, "receivable": 154550447, "excess": 124550447, "ratio": 5.15, "risk": "위기"}, {"code": "D00086", "name": "주식회사 에스엠", "salesperson": "김연준", "collateral": 10000000, "receivable": 143454361, "excess": 133454361, "ratio": 14.35, "risk": "위기"}, {"code": "D00090", "name": "주식회사 스매쉬스포츠", "salesperson": "최낙호", "collateral": 80000000, "receivable": 142128474, "excess": 62128474, "ratio": 1.78, "risk": "위기"}, {"code": "D00643", "name": "요넥스 원주점(JS스포츠)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 127416098, "excess": 92416098, "ratio": 3.64, "risk": "위기"}, {"code": "D00744", "name": "주식회사 미르스포츠", "salesperson": "전재영", "collateral": 40000000, "receivable": 121780278, "excess": 81780278, "ratio": 3.04, "risk": "위기"}, {"code": "D00282", "name": "누리스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 117370634, "excess": 87370634, "ratio": 3.91, "risk": "위기"}, {"code": "D00758", "name": "요넥스 서수원점 으뜸스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 103036586, "excess": 73036586, "ratio": 3.43, "risk": "위기"}, {"code": "D00864", "name": "요넥스 연제점", "salesperson": "김연준", "collateral": 15000000, "receivable": 98678743, "excess": 83678743, "ratio": 6.58, "risk": "위기"}, {"code": "D00109", "name": "영스포츠(남원)", "salesperson": "안재우", "collateral": 60000000, "receivable": 87535683, "excess": 27535683, "ratio": 1.46, "risk": "경계"}, {"code": "D00121", "name": "요넥스포항점(하이크리어)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 83108648, "excess": 73108648, "ratio": 8.31, "risk": "위기"}, {"code": "D00138", "name": "주식회사동우스포츠", "salesperson": "최낙호", "collateral": 50000000, "receivable": 81948123, "excess": 31948123, "ratio": 1.64, "risk": "위기"}, {"code": "D00868", "name": "요넥스충주점", "salesperson": "전재영", "collateral": 20000000, "receivable": 74626442, "excess": 54626442, "ratio": 3.73, "risk": "위기"}, {"code": "D00123", "name": "우성스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 71644889, "excess": 31644889, "ratio": 1.79, "risk": "위기"}, {"code": "D00018", "name": "요넥스광명", "salesperson": "최낙호", "collateral": 15000000, "receivable": 69527438, "excess": 54527438, "ratio": 4.64, "risk": "위기"}, {"code": "D00338", "name": "요넥스창원점(싸카)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 69494315, "excess": 54494315, "ratio": 4.63, "risk": "위기"}, {"code": "D00862", "name": "주식회사 민턴랩스포츠", "salesperson": "전재영", "collateral": 15000000, "receivable": 63811275, "excess": 48811275, "ratio": 4.25, "risk": "위기"}, {"code": "D00790", "name": "와이제이(Y.J)요넥스", "salesperson": "김연준", "collateral": 20000000, "receivable": 63516772, "excess": 43516772, "ratio": 3.18, "risk": "위기"}, {"code": "D00750", "name": "요넥스 동탄점", "salesperson": "전재영", "collateral": 50000000, "receivable": 61002910, "excess": 11002910, "ratio": 1.22, "risk": "경계"}, {"code": "D00041", "name": "라이프스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 56130576, "excess": 36130576, "ratio": 2.81, "risk": "위기"}, {"code": "D00280", "name": "도담스포츠", "salesperson": "왕준하", "collateral": 55000000, "receivable": 55191873, "excess": 191873, "ratio": 1.0, "risk": "경계"}, {"code": "D00137", "name": "주식회사 배드민턴마트", "salesperson": "왕준하", "collateral": 50000000, "receivable": 53215399, "excess": 3215399, "ratio": 1.06, "risk": "경계"}, {"code": "D00685", "name": "주식회사 온리스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 51201265, "excess": 36201265, "ratio": 3.41, "risk": "위기"}, {"code": "D00519", "name": "위너스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 50428479, "excess": 35428479, "ratio": 3.36, "risk": "위기"}, {"code": "D00150", "name": "팔구스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 42581039, "excess": 32581039, "ratio": 4.26, "risk": "위기"}, {"code": "D00865", "name": "요넥스 의정부점 퍼펙트플레이", "salesperson": "전재영", "collateral": 20000000, "receivable": 38707533, "excess": 18707533, "ratio": 1.94, "risk": "위기"}, {"code": "D00072", "name": "백마스포츠", "salesperson": "전재영", "collateral": 50000000, "receivable": 37506559, "excess": -12493441, "ratio": 0.75, "risk": "주의"}, {"code": "D00078", "name": "삼성스포츠(문경)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 34942022, "excess": 24942022, "ratio": 3.49, "risk": "위기"}, {"code": "D00628", "name": "요넥스 수원점", "salesperson": "손효동", "collateral": 30000000, "receivable": 30317085, "excess": 317085, "ratio": 1.01, "risk": "경계"}, {"code": "D00022", "name": "금강스포츠", "salesperson": "김연준", "collateral": 48000000, "receivable": 28730725, "excess": -19269275, "ratio": 0.6, "risk": "적정"}, {"code": "D00503", "name": "나이스민턴", "salesperson": "김종윤", "collateral": 15000000, "receivable": 25656546, "excess": 10656546, "ratio": 1.71, "risk": "위기"}, {"code": "D00528", "name": "2080요넥스", "salesperson": "최낙호", "collateral": 15000000, "receivable": 22177218, "excess": 7177218, "ratio": 1.48, "risk": "경계"}, {"code": "D00722", "name": "주원스포츠", "salesperson": "왕준하", "collateral": 30000000, "receivable": 21478964, "excess": -8521036, "ratio": 0.72, "risk": "주의"}, {"code": "D00001", "name": "(주) 넘버원스포츠", "salesperson": "김연준", "collateral": 70000000, "receivable": 20847817, "excess": -49152183, "ratio": 0.3, "risk": "적정"}, {"code": "D00046", "name": "모던스포츠", "salesperson": "김종윤", "collateral": 30000000, "receivable": 18931115, "excess": -11068885, "ratio": 0.63, "risk": "주의"}, {"code": "D00032", "name": "하비스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 18819379, "excess": -1180621, "ratio": 0.94, "risk": "주의"}, {"code": "D00148", "name": "케이앤비스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 17417128, "excess": -2582872, "ratio": 0.87, "risk": "주의"}, {"code": "D00312", "name": "요넥스(YONEX) 이천점", "salesperson": "왕준하", "collateral": 15000000, "receivable": 16987590, "excess": 1987590, "ratio": 1.13, "risk": "경계"}, {"code": "D00159", "name": "혜성스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 16435383, "excess": -3564617, "ratio": 0.82, "risk": "주의"}, {"code": "D00866", "name": "요넥스 경북도청점", "salesperson": "김연준", "collateral": 20000000, "receivable": 15902788, "excess": -4097212, "ratio": 0.8, "risk": "주의"}, {"code": "D00149", "name": "코리아오픈(김천)", "salesperson": "왕준하", "collateral": 25000000, "receivable": 15452913, "excess": -9547087, "ratio": 0.62, "risk": "주의"}, {"code": "D00186", "name": "매치포인트", "salesperson": "김종윤", "collateral": 15000000, "receivable": 14980299, "excess": -19701, "ratio": 1.0, "risk": "주의"}, {"code": "D00122", "name": "우리스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 14703024, "excess": -5296976, "ratio": 0.74, "risk": "주의"}, {"code": "D00089", "name": "속초배드민턴", "salesperson": "김종윤", "collateral": 10000000, "receivable": 13621250, "excess": 3621250, "ratio": 1.36, "risk": "경계"}, {"code": "D00409", "name": "요넥스 스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 10560702, "excess": -9439298, "ratio": 0.53, "risk": "적정"}, {"code": "D00136", "name": "제일스포츠", "salesperson": "전재영", "collateral": 20000000, "receivable": 10390568, "excess": -9609432, "ratio": 0.52, "risk": "적정"}, {"code": "D00641", "name": "네버랜드", "salesperson": "전재영", "collateral": 15000000, "receivable": 10349938, "excess": -4650062, "ratio": 0.69, "risk": "주의"}, {"code": "D00161", "name": "홍성요넥스", "salesperson": "김종윤", "collateral": 10000000, "receivable": 9845137, "excess": -154863, "ratio": 0.98, "risk": "주의"}, {"code": "D00014", "name": "거성스포츠(안동)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 9646120, "excess": -353880, "ratio": 0.96, "risk": "주의"}, {"code": "D00256", "name": "거성스포츠(양산)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 7875909, "excess": -7124091, "ratio": 0.53, "risk": "적정"}, {"code": "D00132", "name": "전주요넥스", "salesperson": "전재영", "collateral": 30000000, "receivable": 7245627, "excess": -22754373, "ratio": 0.24, "risk": "적정"}, {"code": "D00061", "name": "남원요넥스", "salesperson": "전재영", "collateral": 10000000, "receivable": 7090491, "excess": -2909509, "ratio": 0.71, "risk": "주의"}, {"code": "D00063", "name": "배드민턴스포츠(천안)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 6669240, "excess": -13330760, "ratio": 0.33, "risk": "적정"}, {"code": "D00267", "name": "제이비스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 6500698, "excess": -8499302, "ratio": 0.43, "risk": "적정"}, {"code": "D00286", "name": "요넥스 성남점", "salesperson": "전재영", "collateral": 10000000, "receivable": 6433533, "excess": -3566467, "ratio": 0.64, "risk": "주의"}, {"code": "D00111", "name": "올림픽종합스포츠(목포)", "salesperson": "최낙호", "collateral": 10000000, "receivable": 5959100, "excess": -4040900, "ratio": 0.6, "risk": "적정"}, {"code": "D00181", "name": "준스포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": 5708791, "excess": -4291209, "ratio": 0.57, "risk": "적정"}, {"code": "D00027", "name": "남철환배드민턴SHOP", "salesperson": "김연준", "collateral": 15000000, "receivable": 5546296, "excess": -9453704, "ratio": 0.37, "risk": "적정"}, {"code": "D00328", "name": "진주배드민턴", "salesperson": "김종윤", "collateral": 15000000, "receivable": 4696270, "excess": -10303730, "ratio": 0.31, "risk": "적정"}, {"code": "D00416", "name": "서진스포츠", "salesperson": "김연준", "collateral": 15000000, "receivable": 4409560, "excess": -10590440, "ratio": 0.29, "risk": "적정"}, {"code": "D00587", "name": "주식회사 나이스패밀리", "salesperson": "김연준", "collateral": 0, "receivable": 4157225, "excess": 4157225, "ratio": 0.0, "risk": "관리"}, {"code": "D00074", "name": "봉스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 4139351, "excess": -5860649, "ratio": 0.41, "risk": "적정"}, {"code": "D00057", "name": "민턴홀릭", "salesperson": "김연준", "collateral": 10000000, "receivable": 3687489, "excess": -6312511, "ratio": 0.37, "risk": "적정"}, {"code": "D00031", "name": "대전배드민턴전문점", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3671500, "excess": -6328500, "ratio": 0.37, "risk": "적정"}, {"code": "D00030", "name": "대우스포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3538191, "excess": -6461809, "ratio": 0.35, "risk": "적정"}, {"code": "D00324", "name": "파트너스포츠", "salesperson": "김연준", "collateral": 25000000, "receivable": 3485200, "excess": -21514800, "ratio": 0.14, "risk": "적정"}, {"code": "D00141", "name": "중앙스포츠(경주)", "salesperson": "왕준하", "collateral": 10000000, "receivable": 3325012, "excess": -6674988, "ratio": 0.33, "risk": "적정"}, {"code": "D00077", "name": "삼성스포츠(동대문)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 3246600, "excess": -11753400, "ratio": 0.22, "risk": "적정"}, {"code": "D00640", "name": "바른스포츠", "salesperson": "최낙호", "collateral": 15000000, "receivable": 3067992, "excess": -11932008, "ratio": 0.2, "risk": "적정"}, {"code": "D00127", "name": "원스포츠(제주)", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2644811, "excess": -7355189, "ratio": 0.26, "risk": "적정"}, {"code": "D00433", "name": "정수스포츠 요넥스 영주점", "salesperson": "왕준하", "collateral": 10000000, "receivable": 2570185, "excess": -7429815, "ratio": 0.26, "risk": "적정"}, {"code": "D00064", "name": "배드민턴전문점 요넥스(김제)", "salesperson": "전재영", "collateral": 15000000, "receivable": 2521191, "excess": -12478809, "ratio": 0.17, "risk": "적정"}, {"code": "D00471", "name": "(주)아주레포츠_특판", "salesperson": "손효동", "collateral": 100000000, "receivable": 2450000, "excess": -97550000, "ratio": 0.02, "risk": "적정"}, {"code": "D00068", "name": "배드민턴하우스(밀양)", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2446162, "excess": -7553838, "ratio": 0.24, "risk": "적정"}, {"code": "D00120", "name": "요넥스청주점", "salesperson": "전재영", "collateral": 10000000, "receivable": 2419207, "excess": -7580793, "ratio": 0.24, "risk": "적정"}, {"code": "D00431", "name": "스포츠매니아", "salesperson": "왕준하", "collateral": 15000000, "receivable": 2167450, "excess": -12832550, "ratio": 0.14, "risk": "적정"}, {"code": "D00392", "name": "효성종합스포츠", "salesperson": "김종윤", "collateral": 15000000, "receivable": 2163052, "excess": -12836948, "ratio": 0.14, "risk": "적정"}, {"code": "D00145", "name": "청룡스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 2049485, "excess": -7950515, "ratio": 0.2, "risk": "적정"}, {"code": "D00116", "name": "요넥스마산대리점(민턴스포츠)", "salesperson": "김종윤", "collateral": 15000000, "receivable": 1917953, "excess": -13082047, "ratio": 0.13, "risk": "적정"}, {"code": "D00081", "name": "서대문요넥스", "salesperson": "최낙호", "collateral": 13000000, "receivable": 1916040, "excess": -11083960, "ratio": 0.15, "risk": "적정"}, {"code": "D00160", "name": "호동스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 1889461, "excess": -18110539, "ratio": 0.09, "risk": "적정"}, {"code": "D00306", "name": "광주스포츠", "salesperson": "손효동", "collateral": 20000000, "receivable": 1873280, "excess": -18126720, "ratio": 0.09, "risk": "적정"}, {"code": "D00183", "name": "더제일", "salesperson": "왕준하", "collateral": 15000000, "receivable": 1618220, "excess": -13381780, "ratio": 0.11, "risk": "적정"}, {"code": "D00019", "name": "구미배드민턴마트", "salesperson": "왕준하", "collateral": 12000000, "receivable": 1538550, "excess": -10461450, "ratio": 0.13, "risk": "적정"}, {"code": "D00096", "name": "스포츠뱅크", "salesperson": "김종윤", "collateral": 10000000, "receivable": 1515449, "excess": -8484551, "ratio": 0.15, "risk": "적정"}, {"code": "D00047", "name": "모용철스포츠", "salesperson": "김연준", "collateral": 10000000, "receivable": 1508050, "excess": -8491950, "ratio": 0.15, "risk": "적정"}, {"code": "D00110", "name": "요넥스 화순점", "salesperson": "최낙호", "collateral": 20000000, "receivable": 1257320, "excess": -18742680, "ratio": 0.06, "risk": "적정"}, {"code": "D00526", "name": "여수 요넥스", "salesperson": "최낙호", "collateral": 15000000, "receivable": 1013474, "excess": -13986526, "ratio": 0.07, "risk": "적정"}, {"code": "D00101", "name": "아산스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 939480, "excess": -9060520, "ratio": 0.09, "risk": "적정"}, {"code": "D00190", "name": "군산스포츠", "salesperson": "전재영", "collateral": 10000000, "receivable": 585721, "excess": -9414279, "ratio": 0.06, "risk": "적정"}, {"code": "D00040", "name": "동호스포츠(인천)", "salesperson": "최낙호", "collateral": 10000000, "receivable": 457800, "excess": -9542200, "ratio": 0.05, "risk": "해당없음"}, {"code": "D00035", "name": "대한체육사(익산)", "salesperson": "전재영", "collateral": 10000000, "receivable": 373110, "excess": -9626890, "ratio": 0.04, "risk": "해당없음"}, {"code": "D00097", "name": "승리스포츠", "salesperson": "김종윤", "collateral": 10000000, "receivable": 365850, "excess": -9634150, "ratio": 0.04, "risk": "해당없음"}, {"code": "D00287", "name": "키카스포츠", "salesperson": "손효동", "collateral": 15000000, "receivable": 339150, "excess": -14660850, "ratio": 0.02, "risk": "해당없음"}, {"code": "D00311", "name": "코리아스포츠(시흥)", "salesperson": "최낙호", "collateral": 15000000, "receivable": -272532, "excess": -15272532, "ratio": -0.02, "risk": "해당없음"}, {"code": "D00085", "name": "성정레포츠", "salesperson": "왕준하", "collateral": 10000000, "receivable": -773718, "excess": -10773718, "ratio": -0.08, "risk": "적정"}, {"code": "D00029", "name": "대복스포츠", "salesperson": "전재영", "collateral": 7000000, "receivable": -2978743, "excess": -9978743, "ratio": -0.43, "risk": "적정"}, {"code": "D00010", "name": "가나스포츠", "salesperson": "최낙호", "collateral": 10000000, "receivable": -3754800, "excess": -13754800, "ratio": -0.38, "risk": "적정"}, {"code": "D00690", "name": "요넥스강동점 MZ스포츠", "salesperson": "전재영", "collateral": 15000000, "receivable": -4351700, "excess": -19351700, "ratio": -0.29, "risk": "적정"}, {"code": "D00529", "name": "우리스포츠(광주)", "salesperson": "손효동", "collateral": 15000000, "receivable": -8260457, "excess": -23260457, "ratio": -0.55, "risk": "적정"}, {"code": "D00292", "name": "요넥스 스포원점", "salesperson": "김연준", "collateral": 30000000, "receivable": -9589535, "excess": -39589535, "ratio": -0.32, "risk": "적정"}], "summary": {"total_collateral": 2770000000, "total_receivable": 3735746930, "total_excess": 1864011175, "risk_counts": {"적정": 48, "위기": 26, "주의": 17, "경계": 8, "해당없음": 5, "관리": 1}}, "by_salesperson": {"김연준": {"collateral": 418000000, "receivable": 687975714, "excess": 453368442, "stores": 19}, "김종윤": {"collateral": 265000000, "receivable": 309805781, "excess": 161188209, "stores": 18}, "손효동": {"collateral": 945000000, "receivable": 1001474267, "excess": 300129514, "stores": 15}, "안재우": {"collateral": 60000000, "receivable": 87535683, "excess": 27535683, "stores": 1}, "왕준하": {"collateral": 377000000, "receivable": 493791705, "excess": 227180287, "stores": 19}, "전재영": {"collateral": 377000000, "receivable": 592064387, "excess": 339478885, "stores": 18}, "최낙호": {"collateral": 328000000, "receivable": 563099393, "excess": 355130155, "stores": 15}}}, "영업2팀": {"stores": [{"code": "D00168", "name": "원트릭샵", "salesperson": "박현진", "collateral": 0, "receivable": 12062950, "excess": 12062950, "ratio": 0.0, "risk": "관리"}, {"code": "D00202", "name": "스포닥(테니스)", "salesperson": "박현진", "collateral": 0, "receivable": 4819870, "excess": 4819870, "ratio": 0.0, "risk": "관리"}, {"code": "D00201", "name": "(주)스카이스포츠(테니스)", "salesperson": "박현진", "collateral": 0, "receivable": 4770350, "excess": 4770350, "ratio": 0.0, "risk": "관리"}, {"code": "D00612", "name": "삼성스포츠(문경)(TS)", "salesperson": "김동경", "collateral": 0, "receivable": 4281500, "excess": 4281500, "ratio": 0.0, "risk": "관리"}, {"code": "D00610", "name": "하비스포츠(TS)", "salesperson": "김동경", "collateral": 0, "receivable": 1507500, "excess": 1507500, "ratio": 0.0, "risk": "관리"}, {"code": "D00791", "name": "형제스포츠", "salesperson": "안우진", "collateral": 0, "receivable": 1191750, "excess": 1191750, "ratio": 0.0, "risk": "관리"}, {"code": "D00638", "name": "거성스포츠(안동)(TS)", "salesperson": "안우진", "collateral": 0, "receivable": 842200, "excess": 842200, "ratio": 0.0, "risk": "관리"}, {"code": "D00792", "name": "메이크라켓", "salesperson": "박현진", "collateral": 0, "receivable": 333500, "excess": 333500, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00382", "name": "오스포츠", "salesperson": "박현진", "collateral": 0, "receivable": 321800, "excess": 321800, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00308", "name": "CS스포츠", "salesperson": "박현진", "collateral": 0, "receivable": 232750, "excess": 232750, "ratio": 0.0, "risk": "해당없음"}, {"code": "D00205", "name": "소테스포츠", "salesperson": "안우진", "collateral": 5000000, "receivable": -107560, "excess": -5107560, "ratio": -0.02, "risk": "해당없음"}, {"code": "D00199", "name": "두리스포츠(테니스)", "salesperson": "안우진", "collateral": 0, "receivable": -2383060, "excess": -2383060, "ratio": 0.0, "risk": "적정"}], "summary": {"total_collateral": 5000000, "total_receivable": 27873550, "total_excess": 30364170, "risk_counts": {"관리": 7, "해당없음": 4, "적정": 1}}, "by_salesperson": {"김동경": {"collateral": 0, "receivable": 5789000, "excess": 5789000, "stores": 2}, "박현진": {"collateral": 0, "receivable": 22541220, "excess": 22541220, "stores": 6}, "안우진": {"collateral": 5000000, "receivable": -456670, "excess": 2033950, "stores": 4}}}, "E-BIZ팀": {"stores": [{"code": "D00616", "name": "세영스포츠", "salesperson": "신동원", "collateral": 110000000, "receivable": 37615320, "excess": -72384680, "ratio": 0.34, "risk": "적정"}, {"code": "D00741", "name": "(주)이씨파트너스", "salesperson": "문창수", "collateral": 30000000, "receivable": 14361841, "excess": -15638159, "ratio": 0.48, "risk": "적정"}, {"code": "D00574", "name": "스매싱스포츠", "salesperson": "신동원", "collateral": 20000000, "receivable": 4582262, "excess": -15417738, "ratio": 0.23, "risk": "적정"}, {"code": "D00560", "name": "주식회사 디지털진", "salesperson": "문창수", "collateral": 10000000, "receivable": -21777073, "excess": -31777073, "ratio": -2.18, "risk": "적정"}], "summary": {"total_collateral": 170000000, "total_receivable": 34782350, "total_excess": 0, "risk_counts": {"적정": 4}}, "by_salesperson": {"문창수": {"collateral": 40000000, "receivable": -7415232, "excess": 0, "stores": 2}, "신동원": {"collateral": 130000000, "receivable": 42197582, "excess": 0, "stores": 2}}}};
+const goodsData = {"인사총무팀": {"stores": [{"code": "D00002", "name": "(주) 원스포츠코리아", "salesperson": "윤홍선", "collateral": 0, "receivable": 207642413, "excess": 207642413, "ratio": 0.0, "risk": "관리"}, {"code": "D00016", "name": "곰스포츠", "salesperson": "윤홍선", "collateral": 150000000, "receivable": 177386197, "excess": 27386197, "ratio": 1.18, "risk": "경계"}, {"code": "D00113", "name": "요넥스경남대리점", "salesperson": "윤홍선", "collateral": 0, "receivable": 124603309, "excess": 124603309, "ratio": 0.0, "risk": "관리"}, {"code": "D00114", "name": "요넥스광주점", "salesperson": "윤홍선", "collateral": 50000000, "receivable": 95892420, "excess": 45892420, "ratio": 1.92, "risk": "위기"}, {"code": "D00185", "name": "배드민턴퍼스트", "salesperson": "윤홍선", "collateral": 0, "receivable": 39633836, "excess": 39633836, "ratio": 0.0, "risk": "관리"}, {"code": "D00188", "name": "짱스포츠", "salesperson": "윤홍선", "collateral": 70000000, "receivable": 34982000, "excess": -35018000, "ratio": 0.5, "risk": "적정"}, {"code": "D00194", "name": "주식회사 월드스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 26149837, "excess": 26149837, "ratio": 0.0, "risk": "관리"}, {"code": "D00102", "name": "아이러브민턴통영요넥스", "salesperson": "윤홍선", "collateral": 0, "receivable": 13567140, "excess": 13567140, "ratio": 0.0, "risk": "관리"}, {"code": "D00082", "name": "서영스포츠(seoyoung sports)", "salesperson": "윤홍선", "collateral": 0, "receivable": 13342327, "excess": 13342327, "ratio": 0.0, "risk": "관리"}, {"code": "D00062", "name": "배드민턴스포츠(완주)", "salesperson": "윤홍선", "collateral": 0, "receivable": 12215177, "excess": 12215177, "ratio": 0.0, "risk": "관리"}, {"code": "D00067", "name": "요넥스(동해)", "salesperson": "윤홍선", "collateral": 0, "receivable": 2875119, "excess": 2875119, "ratio": 0.0, "risk": "관리"}, {"code": "D00079", "name": "삼성스포츠(부천)", "salesperson": "윤홍선", "collateral": 0, "receivable": 2337718, "excess": 2337718, "ratio": 0.0, "risk": "관리"}, {"code": "D00043", "name": "마곡스포츠", "salesperson": "윤홍선", "collateral": 0, "receivable": 1911747, "excess": 1911747, "ratio": 0.0, "risk": "관리"}, {"code": "D00012", "name": "강원배드민턴하우스", "salesperson": "윤홍선", "collateral": 0, "receivable": 1102558, "excess": 1102558, "ratio": 0.0, "risk": "관리"}], "summary": {"total_collateral": 270000000, "total_receivable": 753641798, "total_excess": 518659798, "risk_counts": {"관리": 11, "경계": 1, "위기": 1, "적정": 1}}, "by_salesperson": {"윤홍선": {"collateral": 270000000, "receivable": 753641798, "excess": 518659798, "stores": 14}}}, "영업1팀": {"stores": [{"code": "D00087", "name": "주식회사 세진스포츠", "salesperson": "손효동", "collateral": 520000000, "receivable": 498597107, "excess": -21402893, "ratio": 0.96, "risk": "주의"}, {"code": "D00471", "name": "(주)아주레포츠_특판", "salesperson": "손효동", "collateral": 300000000, "receivable": 327125000, "excess": 27125000, "ratio": 1.09, "risk": "경계"}, {"code": "D00004", "name": "(주)배드민턴마켓", "salesperson": "손효동", "collateral": 300000000, "receivable": 276172783, "excess": -23827217, "ratio": 0.92, "risk": "주의"}, {"code": "D00524", "name": "주식회사 용인요넥스", "salesperson": "김연준", "collateral": 100000000, "receivable": 205450507, "excess": 105450507, "ratio": 2.05, "risk": "위기"}, {"code": "D00090", "name": "주식회사 스매쉬스포츠", "salesperson": "최낙호", "collateral": 95000000, "receivable": 166478857, "excess": 71478857, "ratio": 1.75, "risk": "위기"}, {"code": "D00109", "name": "영스포츠(남원)", "salesperson": "안재우", "collateral": 185000000, "receivable": 145718469, "excess": -39281531, "ratio": 0.79, "risk": "주의"}, {"code": "D00643", "name": "요넥스 원주점(JS스포츠)", "salesperson": "김종윤", "collateral": 50000000, "receivable": 135914579, "excess": 85914579, "ratio": 2.72, "risk": "위기"}, {"code": "D00032", "name": "하비스포츠", "salesperson": "김연준", "collateral": 130000000, "receivable": 134078868, "excess": 4078868, "ratio": 1.03, "risk": "경계"}, {"code": "D00658", "name": "요넥스 강남점", "salesperson": "왕준하", "collateral": 50000000, "receivable": 126603460, "excess": 76603460, "ratio": 2.53, "risk": "위기"}, {"code": "D00758", "name": "요넥스 서수원점 으뜸스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 124566010, "excess": 84566010, "ratio": 3.11, "risk": "위기"}, {"code": "D00764", "name": "럭키코리아", "salesperson": "최낙호", "collateral": 70000000, "receivable": 124189553, "excess": 54189553, "ratio": 1.77, "risk": "위기"}, {"code": "D00744", "name": "주식회사 미르스포츠", "salesperson": "전재영", "collateral": 60000000, "receivable": 122060522, "excess": 62060522, "ratio": 2.03, "risk": "위기"}, {"code": "D00519", "name": "위너스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 94321720, "excess": 59321720, "ratio": 2.69, "risk": "위기"}, {"code": "D00041", "name": "라이프스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 76536689, "excess": 46536689, "ratio": 2.55, "risk": "위기"}, {"code": "D00282", "name": "누리스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 72778362, "excess": 32778362, "ratio": 1.82, "risk": "위기"}, {"code": "D00138", "name": "주식회사동우스포츠", "salesperson": "최낙호", "collateral": 70000000, "receivable": 69758377, "excess": -241623, "ratio": 1.0, "risk": "주의"}, {"code": "D00001", "name": "(주) 넘버원스포츠", "salesperson": "김연준", "collateral": 80000000, "receivable": 69373936, "excess": -10626064, "ratio": 0.87, "risk": "주의"}, {"code": "D00126", "name": "원동체육사", "salesperson": "왕준하", "collateral": 150000000, "receivable": 67946245, "excess": -82053755, "ratio": 0.45, "risk": "적정"}, {"code": "D00628", "name": "요넥스 수원점", "salesperson": "손효동", "collateral": 50000000, "receivable": 67718748, "excess": 17718748, "ratio": 1.35, "risk": "경계"}, {"code": "D00641", "name": "네버랜드", "salesperson": "전재영", "collateral": 35000000, "receivable": 62582776, "excess": 27582776, "ratio": 1.79, "risk": "위기"}, {"code": "D00865", "name": "요넥스 의정부점 퍼펙트플레이", "salesperson": "전재영", "collateral": 30000000, "receivable": 61007085, "excess": 31007085, "ratio": 2.03, "risk": "위기"}, {"code": "D00086", "name": "주식회사 에스엠", "salesperson": "김연준", "collateral": 20000000, "receivable": 58636311, "excess": 38636311, "ratio": 2.93, "risk": "위기"}, {"code": "D00750", "name": "요넥스 동탄점", "salesperson": "전재영", "collateral": 35000000, "receivable": 57779037, "excess": 22779037, "ratio": 1.65, "risk": "위기"}, {"code": "D00722", "name": "주원스포츠", "salesperson": "왕준하", "collateral": 50000000, "receivable": 52836629, "excess": 2836629, "ratio": 1.06, "risk": "경계"}, {"code": "D00123", "name": "우성스포츠", "salesperson": "손효동", "collateral": 60000000, "receivable": 51898949, "excess": -8101051, "ratio": 0.86, "risk": "주의"}, {"code": "D00790", "name": "와이제이(Y.J)요넥스", "salesperson": "김연준", "collateral": 60000000, "receivable": 51811467, "excess": -8188533, "ratio": 0.86, "risk": "주의"}, {"code": "D00159", "name": "혜성스포츠", "salesperson": "최낙호", "collateral": 40000000, "receivable": 49727163, "excess": 9727163, "ratio": 1.24, "risk": "경계"}, {"code": "D00018", "name": "요넥스광명", "salesperson": "최낙호", "collateral": 35000000, "receivable": 48753840, "excess": 13753840, "ratio": 1.39, "risk": "경계"}, {"code": "D00150", "name": "팔구스포츠", "salesperson": "김연준", "collateral": 40000000, "receivable": 48531459, "excess": 8531459, "ratio": 1.21, "risk": "경계"}, {"code": "D00121", "name": "요넥스포항점(하이크리어)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 47894705, "excess": 27894705, "ratio": 2.39, "risk": "위기"}, {"code": "D00027", "name": "남철환배드민턴SHOP", "salesperson": "김연준", "collateral": 30000000, "receivable": 47554084, "excess": 17554084, "ratio": 1.59, "risk": "위기"}, {"code": "D00097", "name": "승리스포츠", "salesperson": "김종윤", "collateral": 300000000, "receivable": 47354161, "excess": -252645839, "ratio": 0.16, "risk": "적정"}, {"code": "D00280", "name": "도담스포츠", "salesperson": "왕준하", "collateral": 45000000, "receivable": 46652430, "excess": 1652430, "ratio": 1.04, "risk": "경계"}, {"code": "D00149", "name": "코리아오픈(김천)", "salesperson": "왕준하", "collateral": 50000000, "receivable": 46254966, "excess": -3745034, "ratio": 0.93, "risk": "주의"}, {"code": "D00072", "name": "백마스포츠", "salesperson": "전재영", "collateral": 65000000, "receivable": 45972386, "excess": -19027614, "ratio": 0.71, "risk": "주의"}, {"code": "D00132", "name": "전주요넥스", "salesperson": "전재영", "collateral": 50000000, "receivable": 44210393, "excess": -5789607, "ratio": 0.88, "risk": "주의"}, {"code": "D00184", "name": "오남스포츠", "salesperson": "전재영", "collateral": 50000000, "receivable": 42906908, "excess": -7093092, "ratio": 0.86, "risk": "주의"}, {"code": "D00503", "name": "나이스민턴", "salesperson": "김종윤", "collateral": 35000000, "receivable": 41122292, "excess": 6122292, "ratio": 1.17, "risk": "경계"}, {"code": "D00022", "name": "금강스포츠", "salesperson": "김연준", "collateral": 70000000, "receivable": 40816088, "excess": -29183912, "ratio": 0.58, "risk": "적정"}, {"code": "D00137", "name": "주식회사 배드민턴마트", "salesperson": "왕준하", "collateral": 20000000, "receivable": 40139097, "excess": 20139097, "ratio": 2.01, "risk": "위기"}, {"code": "D00864", "name": "요넥스 연제점", "salesperson": "김연준", "collateral": 35000000, "receivable": 40089693, "excess": 5089693, "ratio": 1.15, "risk": "경계"}, {"code": "D00409", "name": "요넥스 스포츠", "salesperson": "손효동", "collateral": 40000000, "receivable": 36813186, "excess": -3186814, "ratio": 0.92, "risk": "주의"}, {"code": "D00046", "name": "모던스포츠", "salesperson": "김종윤", "collateral": 40000000, "receivable": 35997391, "excess": -4002609, "ratio": 0.9, "risk": "주의"}, {"code": "D00528", "name": "2080요넥스", "salesperson": "최낙호", "collateral": 35000000, "receivable": 35675676, "excess": 675676, "ratio": 1.02, "risk": "경계"}, {"code": "D00868", "name": "요넥스충주점", "salesperson": "전재영", "collateral": 25000000, "receivable": 33686616, "excess": 8686616, "ratio": 1.35, "risk": "경계"}, {"code": "D00685", "name": "주식회사 온리스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 33348513, "excess": -1651487, "ratio": 0.95, "risk": "주의"}, {"code": "D00183", "name": "더제일", "salesperson": "왕준하", "collateral": 35000000, "receivable": 31664989, "excess": -3335011, "ratio": 0.9, "risk": "주의"}, {"code": "D00690", "name": "요넥스강동점 MZ스포츠", "salesperson": "전재영", "collateral": 35000000, "receivable": 30655120, "excess": -4344880, "ratio": 0.88, "risk": "주의"}, {"code": "D00640", "name": "바른스포츠", "salesperson": "최낙호", "collateral": 35000000, "receivable": 30570746, "excess": -4429254, "ratio": 0.87, "risk": "주의"}, {"code": "D00148", "name": "케이앤비스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 29217089, "excess": -782911, "ratio": 0.97, "risk": "주의"}, {"code": "D00190", "name": "군산스포츠", "salesperson": "전재영", "collateral": 30000000, "receivable": 27364716, "excess": -2635284, "ratio": 0.91, "risk": "주의"}, {"code": "D00862", "name": "주식회사 민턴랩스포츠", "salesperson": "전재영", "collateral": 35000000, "receivable": 25579505, "excess": -9420495, "ratio": 0.73, "risk": "주의"}, {"code": "D00292", "name": "요넥스 스포원점", "salesperson": "김연준", "collateral": 50000000, "receivable": 25480608, "excess": -24519392, "ratio": 0.51, "risk": "적정"}, {"code": "D00312", "name": "요넥스(YONEX) 이천점", "salesperson": "왕준하", "collateral": 35000000, "receivable": 25417529, "excess": -9582471, "ratio": 0.73, "risk": "주의"}, {"code": "D00063", "name": "배드민턴스포츠(천안)", "salesperson": "왕준하", "collateral": 30000000, "receivable": 23911506, "excess": -6088494, "ratio": 0.8, "risk": "주의"}, {"code": "D00006", "name": "(주)아주레포츠", "salesperson": "손효동", "collateral": 120000000, "receivable": 23802275, "excess": -96197725, "ratio": 0.2, "risk": "적정"}, {"code": "D00136", "name": "제일스포츠", "salesperson": "전재영", "collateral": 45000000, "receivable": 23241697, "excess": -21758303, "ratio": 0.52, "risk": "적정"}, {"code": "D00866", "name": "요넥스 경북도청점", "salesperson": "김연준", "collateral": 20000000, "receivable": 23221306, "excess": 3221306, "ratio": 1.16, "risk": "경계"}, {"code": "D00267", "name": "제이비스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 22833411, "excess": -12166589, "ratio": 0.65, "risk": "주의"}, {"code": "D00306", "name": "광주스포츠", "salesperson": "손효동", "collateral": 30000000, "receivable": 21738261, "excess": -8261739, "ratio": 0.72, "risk": "주의"}, {"code": "D00019", "name": "구미배드민턴마트", "salesperson": "왕준하", "collateral": 23000000, "receivable": 21659968, "excess": -1340032, "ratio": 0.94, "risk": "주의"}, {"code": "D00529", "name": "우리스포츠(광주)", "salesperson": "손효동", "collateral": 35000000, "receivable": 21499208, "excess": -13500792, "ratio": 0.61, "risk": "주의"}, {"code": "D00416", "name": "서진스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 20738509, "excess": -9261491, "ratio": 0.69, "risk": "주의"}, {"code": "D00256", "name": "거성스포츠(양산)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 20682065, "excess": -14317935, "ratio": 0.59, "risk": "적정"}, {"code": "D00328", "name": "진주배드민턴", "salesperson": "김종윤", "collateral": 50000000, "receivable": 19838356, "excess": -30161644, "ratio": 0.4, "risk": "적정"}, {"code": "D00160", "name": "호동스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 19419464, "excess": -580536, "ratio": 0.97, "risk": "주의"}, {"code": "D00014", "name": "거성스포츠(안동)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 18891568, "excess": -1108432, "ratio": 0.94, "risk": "주의"}, {"code": "D00035", "name": "대한체육사(익산)", "salesperson": "전재영", "collateral": 20000000, "receivable": 18835421, "excess": -1164579, "ratio": 0.94, "risk": "주의"}, {"code": "D00077", "name": "삼성스포츠(동대문)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 18723741, "excess": -16276259, "ratio": 0.53, "risk": "적정"}, {"code": "D00085", "name": "성정레포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 18412633, "excess": -1587367, "ratio": 0.92, "risk": "주의"}, {"code": "D00120", "name": "요넥스청주점", "salesperson": "전재영", "collateral": 20000000, "receivable": 18183959, "excess": -1816041, "ratio": 0.91, "risk": "주의"}, {"code": "D00286", "name": "요넥스 성남점", "salesperson": "전재영", "collateral": 20000000, "receivable": 17732850, "excess": -2267150, "ratio": 0.89, "risk": "주의"}, {"code": "D00074", "name": "봉스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 16607362, "excess": -3392638, "ratio": 0.83, "risk": "주의"}, {"code": "D00186", "name": "매치포인트", "salesperson": "김종윤", "collateral": 35000000, "receivable": 16292319, "excess": -18707681, "ratio": 0.47, "risk": "적정"}, {"code": "D00061", "name": "남원요넥스", "salesperson": "전재영", "collateral": 20000000, "receivable": 15996724, "excess": -4003276, "ratio": 0.8, "risk": "주의"}, {"code": "D00089", "name": "속초배드민턴", "salesperson": "김종윤", "collateral": 20000000, "receivable": 15623280, "excess": -4376720, "ratio": 0.78, "risk": "주의"}, {"code": "D00068", "name": "배드민턴하우스(밀양)", "salesperson": "김종윤", "collateral": 20000000, "receivable": 15599694, "excess": -4400306, "ratio": 0.78, "risk": "주의"}, {"code": "D00311", "name": "코리아스포츠(시흥)", "salesperson": "최낙호", "collateral": 35000000, "receivable": 15056857, "excess": -19943143, "ratio": 0.43, "risk": "적정"}, {"code": "D00338", "name": "요넥스창원점(싸카)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 14695981, "excess": -20304019, "ratio": 0.42, "risk": "적정"}, {"code": "D00141", "name": "중앙스포츠(경주)", "salesperson": "왕준하", "collateral": 20000000, "receivable": 14197617, "excess": -5802383, "ratio": 0.71, "risk": "주의"}, {"code": "D00122", "name": "우리스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 14133535, "excess": -15866465, "ratio": 0.47, "risk": "적정"}, {"code": "D00526", "name": "여수 요넥스", "salesperson": "최낙호", "collateral": 35000000, "receivable": 13949764, "excess": -21050236, "ratio": 0.4, "risk": "적정"}, {"code": "D00116", "name": "요넥스마산대리점(민턴스포츠)", "salesperson": "김종윤", "collateral": 35000000, "receivable": 13443693, "excess": -21556307, "ratio": 0.38, "risk": "적정"}, {"code": "D00110", "name": "요넥스 화순점", "salesperson": "최낙호", "collateral": 30000000, "receivable": 13213141, "excess": -16786859, "ratio": 0.44, "risk": "적정"}, {"code": "D00431", "name": "스포츠매니아", "salesperson": "왕준하", "collateral": 35000000, "receivable": 13147542, "excess": -21852458, "ratio": 0.38, "risk": "적정"}, {"code": "D00031", "name": "대전배드민턴전문점", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12820173, "excess": -7179827, "ratio": 0.64, "risk": "주의"}, {"code": "D00078", "name": "삼성스포츠(문경)", "salesperson": "왕준하", "collateral": 15000000, "receivable": 12746106, "excess": -2253894, "ratio": 0.85, "risk": "주의"}, {"code": "D00081", "name": "서대문요넥스", "salesperson": "최낙호", "collateral": 22000000, "receivable": 12669177, "excess": -9330823, "ratio": 0.58, "risk": "적정"}, {"code": "D00433", "name": "정수스포츠 요넥스 영주점", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12073852, "excess": -7926148, "ratio": 0.6, "risk": "주의"}, {"code": "D00181", "name": "준스포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 12007418, "excess": -7992582, "ratio": 0.6, "risk": "주의"}, {"code": "D00096", "name": "스포츠뱅크", "salesperson": "김종윤", "collateral": 20000000, "receivable": 11461053, "excess": -8538947, "ratio": 0.57, "risk": "적정"}, {"code": "D00057", "name": "민턴홀릭", "salesperson": "김연준", "collateral": 20000000, "receivable": 11394574, "excess": -8605426, "ratio": 0.57, "risk": "적정"}, {"code": "D00030", "name": "대우스포츠", "salesperson": "왕준하", "collateral": 20000000, "receivable": 11284144, "excess": -8715856, "ratio": 0.56, "risk": "적정"}, {"code": "D00287", "name": "키카스포츠", "salesperson": "손효동", "collateral": 35000000, "receivable": 10976613, "excess": -24023387, "ratio": 0.31, "risk": "적정"}, {"code": "D00028", "name": "대광스포츠(대구)", "salesperson": "김연준", "collateral": 100000000, "receivable": 10719040, "excess": -89280960, "ratio": 0.11, "risk": "적정"}, {"code": "D00161", "name": "홍성요넥스", "salesperson": "김종윤", "collateral": 10000000, "receivable": 10238542, "excess": 238542, "ratio": 1.02, "risk": "경계"}, {"code": "D00127", "name": "원스포츠(제주)", "salesperson": "김종윤", "collateral": 20000000, "receivable": 10203260, "excess": -9796740, "ratio": 0.51, "risk": "적정"}, {"code": "D00052", "name": "민턴스포츠(나주)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 9781600, "excess": -10218400, "ratio": 0.49, "risk": "적정"}, {"code": "D00392", "name": "효성종합스포츠", "salesperson": "김종윤", "collateral": 35000000, "receivable": 9757863, "excess": -25242137, "ratio": 0.28, "risk": "적정"}, {"code": "D00029", "name": "대복스포츠", "salesperson": "전재영", "collateral": 20000000, "receivable": 9653998, "excess": -10346002, "ratio": 0.48, "risk": "적정"}, {"code": "D00021", "name": "그린스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 8860116, "excess": -11139884, "ratio": 0.44, "risk": "적정"}, {"code": "D00587", "name": "주식회사 나이스패밀리", "salesperson": "김연준", "collateral": 0, "receivable": 8414684, "excess": 8414684, "ratio": 0.0, "risk": "관리"}, {"code": "D00145", "name": "청룡스포츠", "salesperson": "김종윤", "collateral": 20000000, "receivable": 8190434, "excess": -11809566, "ratio": 0.41, "risk": "적정"}, {"code": "D00396", "name": "요넥스 양산점(화랑스포츠)", "salesperson": "김종윤", "collateral": 30000000, "receivable": 7096038, "excess": -22903962, "ratio": 0.24, "risk": "적정"}, {"code": "D00101", "name": "아산스포츠", "salesperson": "김종윤", "collateral": 20000000, "receivable": 6631253, "excess": -13368747, "ratio": 0.33, "risk": "적정"}, {"code": "D00324", "name": "파트너스포츠", "salesperson": "김연준", "collateral": 30000000, "receivable": 5208800, "excess": -24791200, "ratio": 0.17, "risk": "적정"}, {"code": "D00040", "name": "동호스포츠(인천)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 4373400, "excess": -15626600, "ratio": 0.22, "risk": "적정"}, {"code": "D00010", "name": "가나스포츠", "salesperson": "최낙호", "collateral": 20000000, "receivable": 3150691, "excess": -16849309, "ratio": 0.16, "risk": "적정"}, {"code": "D00111", "name": "올림픽종합스포츠(목포)", "salesperson": "최낙호", "collateral": 20000000, "receivable": 2982520, "excess": -17017480, "ratio": 0.15, "risk": "적정"}, {"code": "D00047", "name": "모용철스포츠", "salesperson": "김연준", "collateral": 20000000, "receivable": 2596077, "excess": -17403923, "ratio": 0.13, "risk": "적정"}, {"code": "D00515", "name": "영무SP", "salesperson": "손효동", "collateral": 35000000, "receivable": 1685880, "excess": -33314120, "ratio": 0.05, "risk": "적정"}, {"code": "D00048", "name": "무등스포츠", "salesperson": "손효동", "collateral": 50000000, "receivable": 1400880, "excess": -48599120, "ratio": 0.03, "risk": "적정"}, {"code": "D00064", "name": "배드민턴전문점 요넥스(김제)", "salesperson": "전재영", "collateral": 35000000, "receivable": 106555, "excess": -34893445, "ratio": 0.0, "risk": "해당없음"}], "summary": {"total_collateral": 5685000000, "total_receivable": 5175201843, "total_excess": 982366300, "risk_counts": {"주의": 42, "적정": 38, "위기": 17, "경계": 14, "관리": 1, "해당없음": 1}}, "by_salesperson": {"김연준": {"collateral": 915000000, "receivable": 864073997, "excess": 190976912, "stores": 20}, "김종윤": {"collateral": 845000000, "receivable": 458865995, "excess": 92275413, "stores": 19}, "손효동": {"collateral": 1790000000, "receivable": 1763813595, "excess": 268046529, "stores": 18}, "안재우": {"collateral": 185000000, "receivable": 145718469, "excess": 0, "stores": 1}, "왕준하": {"collateral": 698000000, "receivable": 656562577, "excess": 129126321, "stores": 20}, "전재영": {"collateral": 630000000, "receivable": 657556268, "excess": 152116036, "stores": 18}, "최낙호": {"collateral": 622000000, "receivable": 628610942, "excess": 149825089, "stores": 17}}}, "영업2팀": {"stores": [{"code": "D00611", "name": "백마스포츠(TS)", "salesperson": "김동경", "collateral": 135000000, "receivable": 365130666, "excess": 230130666, "ratio": 2.7, "risk": "위기"}, {"code": "D00610", "name": "하비스포츠(TS)", "salesperson": "김동경", "collateral": 70000000, "receivable": 232524999, "excess": 162524999, "ratio": 3.32, "risk": "위기"}, {"code": "D00202", "name": "스포닥(테니스)", "salesperson": "박현진", "collateral": 5000000, "receivable": 47426008, "excess": 42426008, "ratio": 9.49, "risk": "위기"}, {"code": "D00201", "name": "(주)스카이스포츠(테니스)", "salesperson": "박현진", "collateral": 20000000, "receivable": 47243700, "excess": 27243700, "ratio": 2.36, "risk": "위기"}, {"code": "D00608", "name": "(주) 넘버원스포츠(TS)", "salesperson": "김동경", "collateral": 30000000, "receivable": 34527230, "excess": 4527230, "ratio": 1.15, "risk": "경계"}, {"code": "D00382", "name": "오스포츠", "salesperson": "박현진", "collateral": 6000000, "receivable": 32136430, "excess": 26136430, "ratio": 5.36, "risk": "위기"}, {"code": "D00408", "name": "구리코트로", "salesperson": "안우진", "collateral": 23000000, "receivable": 29357325, "excess": 6357325, "ratio": 1.28, "risk": "경계"}, {"code": "D00210", "name": "(주)에이제이인터내셔날(테니스)", "salesperson": "박현진", "collateral": 20000000, "receivable": 23441638, "excess": 3441638, "ratio": 1.17, "risk": "경계"}, {"code": "D00203", "name": "연코리아(테니스)", "salesperson": "김동경", "collateral": 23000000, "receivable": 19123733, "excess": -3876267, "ratio": 0.83, "risk": "주의"}, {"code": "D00517", "name": "OK 스포츠(테니스)", "salesperson": "안우진", "collateral": 0, "receivable": 16166230, "excess": 16166230, "ratio": 0.0, "risk": "관리"}, {"code": "D00192", "name": "영문스포츠(테니스)", "salesperson": "김동경", "collateral": 6000000, "receivable": 15440250, "excess": 9440250, "ratio": 2.57, "risk": "위기"}, {"code": "D00791", "name": "형제스포츠", "salesperson": "안우진", "collateral": 10000000, "receivable": 14695662, "excess": 4695662, "ratio": 1.47, "risk": "경계"}, {"code": "D00308", "name": "CS스포츠", "salesperson": "박현진", "collateral": 15000000, "receivable": 10224500, "excess": -4775500, "ratio": 0.68, "risk": "주의"}, {"code": "D00196", "name": "강스포츠(테니스)", "salesperson": "김동경", "collateral": 5650005, "receivable": 9284494, "excess": 3634489, "ratio": 1.64, "risk": "위기"}, {"code": "D00792", "name": "메이크라켓", "salesperson": "박현진", "collateral": 11388896, "receivable": 8762940, "excess": -2625956, "ratio": 0.77, "risk": "주의"}, {"code": "D00195", "name": "스포츠테크(테니스)", "salesperson": "김동경", "collateral": 12000000, "receivable": 7523977, "excess": -4476023, "ratio": 0.63, "risk": "주의"}, {"code": "D00612", "name": "삼성스포츠(문경)(TS)", "salesperson": "김동경", "collateral": 5000000, "receivable": 5007250, "excess": 7250, "ratio": 1.0, "risk": "경계"}, {"code": "D00770", "name": "국제스포츠", "salesperson": "박현진", "collateral": 10000000, "receivable": 3517000, "excess": -6483000, "ratio": 0.35, "risk": "적정"}, {"code": "D00209", "name": "스포츠플러스(Sports Plus)(테니스)", "salesperson": "안우진", "collateral": 12000000, "receivable": 3271500, "excess": -8728500, "ratio": 0.27, "risk": "적정"}, {"code": "D00193", "name": "탑스핀스포츠(테니스)", "salesperson": "안우진", "collateral": 5000000, "receivable": 2803360, "excess": -2196640, "ratio": 0.56, "risk": "적정"}, {"code": "D00638", "name": "거성스포츠(안동)(TS)", "salesperson": "안우진", "collateral": 6625000, "receivable": 717500, "excess": -5907500, "ratio": 0.11, "risk": "적정"}], "summary": {"total_collateral": 430663901, "total_receivable": 928326392, "total_excess": 536731877, "risk_counts": {"위기": 7, "경계": 5, "주의": 4, "적정": 4, "관리": 1}}, "by_salesperson": {"김동경": {"collateral": 286650005, "receivable": 688562599, "excess": 410264884, "stores": 8}, "박현진": {"collateral": 87388896, "receivable": 172752216, "excess": 99247776, "stores": 7}, "안우진": {"collateral": 56625000, "receivable": 67011577, "excess": 27219217, "stores": 6}}}, "E-BIZ팀": {"stores": [{"code": "D00616", "name": "세영스포츠", "salesperson": "신동원", "collateral": 140000000, "receivable": 38718241, "excess": -101281759, "ratio": 0.28, "risk": "적정"}, {"code": "D00574", "name": "스매싱스포츠", "salesperson": "신동원", "collateral": 50000000, "receivable": 12448672, "excess": -37551328, "ratio": 0.25, "risk": "적정"}, {"code": "D00741", "name": "(주)이씨파트너스", "salesperson": "문창수", "collateral": 70000000, "receivable": -1098526, "excess": -71098526, "ratio": -0.02, "risk": "적정"}, {"code": "D00560", "name": "주식회사 디지털진", "salesperson": "문창수", "collateral": 90000000, "receivable": -18199431, "excess": -108199431, "ratio": -0.2, "risk": "적정"}], "summary": {"total_collateral": 350000000, "total_receivable": 31868956, "total_excess": 0, "risk_counts": {"적정": 4}}, "by_salesperson": {"문창수": {"collateral": 160000000, "receivable": -19297957, "excess": 0, "stores": 2}, "신동원": {"collateral": 190000000, "receivable": 51166913, "excess": 0, "stores": 2}}}};
+const CS_SHEET = {"위너스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}, "세영스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}, "스매싱스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}};
+
+const DATA = { '의류': clothingData, '용품': goodsData };
 
 function fmt(n){
-  const a=Math.abs(n), sign=n<0?'-':'';
+  const a=Math.abs(n),sign=n<0?'-':'';
   if(a>=1e8) return sign+'₩'+(Math.round(a/1e7)/10).toFixed(1)+'억';
   if(a>=1e6) return sign+'₩'+Math.round(a/1e6)+'백만';
   return sign+'₩'+Math.round(a).toLocaleString('ko-KR');
 }
+
 const riskColors={'위기':'#E24B4A','경계':'#EF9F27','주의':'#378ADD','적정':'#639922','관리':'#888780'};
 const spColors={'김연준':'#378ADD','김종윤':'#1D9E75','손효동':'#D85A30','왕준하':'#534AB7','전재영':'#D4537E','최낙호':'#639922','윤홍선':'#7F77DD','안재우':'#F0997B','김동경':'#E24B4A','박현진':'#993556','안우진':'#854F0B','신동원':'#0F6E56','문창수':'#993C1D'};
 const chartRegistry={};
@@ -208,9 +275,170 @@ const excessOnly={};
 const builtPages={};
 const expandedRisk={};
 
-function pageKey(cat, dept){ return cat+'-'+dept; }
+// ── AI 리스크 대시보드 ──────────────────────
 
-function buildPage(cat, dept){
+function getRiskClass(score){
+  if(score>=80) return {label:'안전', cls:'rp-safe', bar:'#1D9E75'};
+  if(score>=60) return {label:'주의', cls:'rp-caution', bar:'#EF9F27'};
+  if(score>=40) return {label:'경계', cls:'rp-border', bar:'#EF9F27'};
+  return {label:'위기', cls:'rp-crisis', bar:'#E24B4A'};
+}
+
+function getAiBoxClass(score){ return score>=80?'ai-box safe':'ai-box'; }
+
+function buildAiDash(){
+  const cont = document.getElementById('ai-dash-content');
+
+  // 구글 시트 CS 데이터와 ERP 데이터 병합
+  const allStores = [];
+  const seen = {};
+  ['영업1팀','영업2팀','E-BIZ팀'].forEach(dept=>{
+    ['의류','용품'].forEach(cat=>{
+      (DATA[cat][dept]||{stores:[]}).stores.forEach(s=>{
+        if(!seen[s.code] && Math.abs(s.receivable)>100000){
+          seen[s.code]=true;
+          const cs = CS_SHEET[s.name] || {};
+          const csScore = cs.score || 50;
+          const keywords = cs.keywords || '';
+          const memo = cs.memo || '';
+          const aiComment = cs.ai_comment || '';
+          // 종합점수: ERP 리스크(60%) + CS점수(40%)
+          let erpScore = 60;
+          if(s.risk==='위기') erpScore=0;
+          else if(s.risk==='경계') erpScore=20;
+          else if(s.risk==='주의') erpScore=40;
+          else if(s.risk==='적정') erpScore=60;
+          else if(s.risk==='관리') erpScore=10;
+          const totalScore = Math.round(erpScore * 0.6 + csScore * 0.4);
+          allStores.push({...s, dept, cat, csScore, keywords, memo, aiComment, totalScore});
+        }
+      });
+    });
+  });
+  allStores.sort((a,b)=>a.totalScore-b.totalScore);
+
+  const total = allStores.length;
+  const safe = allStores.filter(s=>s.totalScore>=80).length;
+  const caution = allStores.filter(s=>s.totalScore>=60&&s.totalScore<80).length;
+  const border = allStores.filter(s=>s.totalScore>=40&&s.totalScore<60).length;
+  const crisis = allStores.filter(s=>s.totalScore<40).length;
+
+  let html = `
+  <div class="ai-kpi-grid">
+    <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div></div>
+    <div class="ai-kpi"><div class="lbl">안전</div><div class="val g">${safe}</div></div>
+    <div class="ai-kpi"><div class="lbl">주의</div><div class="val a">${caution}</div></div>
+    <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div></div>
+    <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div></div>
+  </div>
+  <div class="ai-filters">
+    <span style="font-size:12px;color:#888780">등급 필터</span>
+    <span class="ai-filter-tag active" onclick="filterAi('',this)">전체</span>
+    <span class="ai-filter-tag safe" onclick="filterAi('안전',this)">안전</span>
+    <span class="ai-filter-tag caution" onclick="filterAi('주의',this)">주의</span>
+    <span class="ai-filter-tag border2" onclick="filterAi('경계',this)">경계</span>
+    <span class="ai-filter-tag crisis" onclick="filterAi('위기',this)">위기</span>
+  </div>
+  <div id="ai-dealer-list">`;
+
+  allStores.forEach((s,i)=>{
+    const rc = getRiskClass(s.totalScore);
+    const barW = Math.min(100, s.totalScore);
+    html += `
+    <div class="dealer-card" id="aicard-${i}" onclick="toggleAiDet(${i},this)">
+      <div class="crow">
+        <div class="rank-badge">${i+1}</div>
+        <div class="sinfo">
+          <div class="sname">${s.name}</div>
+          <div class="smeta">${s.dept} · ${s.salesperson} · ${s.cat}</div>
+        </div>
+        <div class="bwrap">
+          <div class="blbl">종합점수</div>
+          <div class="btrack"><div class="bfill" style="width:${barW}%;background:${rc.bar}"></div></div>
+        </div>
+        <div style="text-align:right">
+          <div class="snum">${s.totalScore}</div>
+          <div class="sunit">/ 100</div>
+        </div>
+        <span class="rpill ${rc.cls}">${rc.label}</span>
+      </div>
+    </div>
+    <div class="det-panel" id="aidet-${i}" style="display:none">
+      <div class="det-hdr">
+        <div>
+          <div class="det-title">${s.name} 상세 분석</div>
+          <div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.cat}</div>
+        </div>
+        <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
+      </div>
+      <div class="det-grid">
+        <div class="dc">
+          <div class="dl">미수금 리스크</div>
+          <div class="dv" style="color:${s.risk==='위기'?'#A32D2D':s.risk==='경계'?'#854F0B':s.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.risk}단계</div>
+        </div>
+        <div class="dc">
+          <div class="dl">담보대비 채권 초과율</div>
+          <div class="dv" style="color:${s.excess>0?'#A32D2D':'#0F6E56'}">${s.excess>0?'+'+Math.round(s.excess/Math.max(s.collateral,1)*100)+'%':'-'+Math.round(Math.abs(s.excess)/Math.max(s.collateral,1)*100)+'%'}</div>
+          <div class="dsub">담보 ${fmt(s.collateral)} / 채권 ${fmt(s.receivable)}</div>
+          <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.excess>0?Math.round(s.excess/Math.max(s.collateral,1)*100):0)}%;background:${s.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
+        </div>
+        <div class="dc">
+          <div class="dl">CS 점수</div>
+          <div class="dv" style="color:${s.csScore>=70?'#0F6E56':s.csScore>=50?'#854F0B':'#A32D2D'}">${s.csScore}점</div>
+        </div>
+        <div class="dc">
+          <div class="dl">종합점수</div>
+          <div class="dv">${s.totalScore}점 / 100점</div>
+        </div>
+      </div>
+      ${s.keywords?`<div style="margin-bottom:12px"><div class="sec-title">입력 키워드</div><div class="kw-tags">${s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${['연락두절','약속불이행','클레임다발','폐업징후'].some(d=>k.includes(d))?'danger':['협조적','응대원활','약속이행'].some(d=>k.includes(d))?'safe':''}">${k}</span>`).join('')}</div></div>`:''}
+      ${s.memo?`<div style="margin-bottom:12px"><div class="sec-title">담당자 메모</div><div style="font-size:13px;color:#5f5e5a;line-height:1.6;background:#f5f4f0;padding:10px 12px;border-radius:8px">${s.memo}</div></div>`:''}
+      <div class="${getAiBoxClass(s.totalScore)}">
+        <div class="ai-lbl">🤖 AI 위험탐지 분석</div>
+        <div class="ai-txt">${s.aiComment||'담당자 입력 데이터를 기반으로 분석 중입니다. 구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.'}</div>
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  cont.innerHTML = html;
+}
+
+function toggleAiDet(idx, card){
+  const det = document.getElementById('aidet-'+idx);
+  const allCards = document.querySelectorAll('.dealer-card');
+  const allDets = document.querySelectorAll('.det-panel');
+  const isOpen = det.style.display !== 'none';
+  allCards.forEach(c=>c.classList.remove('sel'));
+  allDets.forEach(d=>d.style.display='none');
+  if(!isOpen){
+    card.classList.add('sel');
+    det.style.display='block';
+  }
+}
+
+function filterAi(grade, el){
+  document.querySelectorAll('.ai-filter-tag').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.dealer-card').forEach(card=>{
+    const idx = card.id.replace('aicard-','');
+    const det = document.getElementById('aidet-'+idx);
+    const pill = card.querySelector('.rpill');
+    if(!grade || (pill&&pill.textContent===grade)){
+      card.style.display='';
+      if(det) det.style.display='none';
+    } else {
+      card.style.display='none';
+      if(det) det.style.display='none';
+    }
+  });
+}
+
+// ── 기존 채권 대시보드 ──────────────────────
+
+function pageKey(cat,dept){return cat+'-'+dept;}
+
+function buildPage(cat,dept){
   const key=pageKey(cat,dept);
   const d=DATA[cat][dept];
   const s=d.summary;
@@ -218,36 +446,23 @@ function buildPage(cat, dept){
   el.innerHTML='';
   excessOnly[key]=false;
   expandedRisk[key]=null;
-
   const hiCnt=(s.risk_counts['위기']||0)+(s.risk_counts['경계']||0);
   const exCnt=d.stores.filter(x=>x.excess>0).length;
-  const kpiHtml=`
-  <div class="kpi-grid">
+  const kpiHtml=`<div class="kpi-grid">
     <div class="kpi"><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div><div class="kpi-sub">ERP 기준</div></div>
     <div class="kpi"><div class="kpi-label">총 담보</div><div class="kpi-value">${fmt(s.total_collateral)}</div><div class="kpi-sub">해당 부서 합산</div></div>
     <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div><div class="kpi-sub">${exCnt}개 매장 초과</div></div>
     <div class="kpi warn"><div class="kpi-label">경계·위기 매장</div><div class="kpi-value">${hiCnt}개</div><div class="kpi-sub">아래 단계 클릭시 목록 표시</div></div>
   </div>`;
-
   const pillHtml=allRisks.map(r=>`<div class="pill p${r}" id="pill-${key}-${r}" onclick="togglePillExpand('${key}','${r}')"><span class="pill-dot"></span>${r} ${s.risk_counts[r]||0}개</div>`).join('');
-
-  const chartId='chart-'+key;
-  const tblId='tbl-'+key;
-  const spId='sp-'+key;
-  const searchId='srch-'+key;
-  const riskId='risk-'+key;
-  const spFilterId='spf-'+key;
-  const toggleId='toggle-'+key;
-  const expandId='expand-'+key;
-  const subtotalId='subtotal-'+key;
-
+  const chartId='chart-'+key,tblId='tbl-'+key,spId='sp-'+key,searchId='srch-'+key,riskId='risk-'+key,spFilterId='spf-'+key,toggleId='toggle-'+key,expandId='expand-'+key,subtotalId='subtotal-'+key;
   el.innerHTML=kpiHtml+`
   <div class="risk-pills">${pillHtml}</div>
   <div class="pill-expand" id="${expandId}"></div>
   <div class="two-col">
     <div class="card">
       <div class="card-title">담보초과 채권 상위 매장 (단위: 백만원)</div>
-      <div style="position:relative;width:100%;height:300px"><canvas id="${chartId}" role="img" aria-label="담보초과 상위 매장"></canvas></div>
+      <div style="position:relative;width:100%;height:300px"><canvas id="${chartId}"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">영업사원별 채권잔액</div>
@@ -286,24 +501,19 @@ function buildPage(cat, dept){
     </table></div>
     <div id="${subtotalId}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #d3d1c7;font-size:13px"></div>
   </div>`;
-
-  document.getElementById('excess-kpi-'+key).addEventListener('click', ()=>toggleExcess(key, true));
-
+  document.getElementById('excess-kpi-'+key).addEventListener('click',()=>toggleExcess(key,true));
   const topStores=d.stores.filter(x=>x.excess>0).sort((a,b)=>b.excess-a.excess).slice(0,10);
   if(chartRegistry[chartId]) chartRegistry[chartId].destroy();
   if(topStores.length>0){
     chartRegistry[chartId]=new Chart(document.getElementById(chartId),{
       type:'bar',
-      data:{
-        labels:topStores.map(s=>s.name.length>10?s.name.slice(0,10)+'…':s.name),
-        datasets:[{data:topStores.map(s=>Math.round(s.excess/1e6)),backgroundColor:topStores.map(s=>riskColors[s.risk]||'#378ADD'),borderRadius:4,borderSkipped:false}]
-      },
+      data:{labels:topStores.map(s=>s.name.length>10?s.name.slice(0,10)+'…':s.name),
+        datasets:[{data:topStores.map(s=>Math.round(s.excess/1e6)),backgroundColor:topStores.map(s=>riskColors[s.risk]||'#378ADD'),borderRadius:4,borderSkipped:false}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₩'+Math.round(c.raw)+'백만'}}},
         scales:{x:{ticks:{callback:v=>v+'M',font:{size:11}},grid:{color:'rgba(0,0,0,0.06)'}},y:{ticks:{font:{size:11}}}}}
     });
   }
-
   const spEl=document.getElementById(spId);
   const sp=d.by_salesperson;
   const maxR=Math.max(...Object.values(sp).map(x=>x.receivable),1);
@@ -315,80 +525,59 @@ function buildPage(cat, dept){
     row.innerHTML=`<span class="sp-name">${name}</span><div class="sp-bg"><div class="sp-fill" style="width:${pct}%;background:${color}"></div></div><span class="sp-val">${fmt(dd.receivable)}</span><span class="sp-exc">${dd.excess>0?'+'+fmt(dd.excess):'-'}</span>`;
     spEl.appendChild(row);
   });
-
   const spSel=document.getElementById(spFilterId);
   Object.keys(sp).forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;spSel.appendChild(o);});
-
   document.getElementById(searchId).addEventListener('input',()=>renderTable(cat,dept));
   document.getElementById(riskId).addEventListener('change',()=>renderTable(cat,dept));
   document.getElementById(spFilterId).addEventListener('change',()=>renderTable(cat,dept));
   renderTable(cat,dept);
 }
 
-function togglePillExpand(key, risk){
+function togglePillExpand(key,risk){
   const expandEl=document.getElementById('expand-'+key);
-  allRisks.forEach(r=>{
-    const p=document.getElementById('pill-'+key+'-'+r);
-    if(p) p.classList.remove('selected');
-  });
-
-  if(expandedRisk[key]===risk){
-    expandedRisk[key]=null;
-    expandEl.classList.remove('show');
-    expandEl.innerHTML='';
-    return;
-  }
+  allRisks.forEach(r=>{const p=document.getElementById('pill-'+key+'-'+r);if(p)p.classList.remove('selected');});
+  if(expandedRisk[key]===risk){expandedRisk[key]=null;expandEl.classList.remove('show');expandEl.innerHTML='';return;}
   expandedRisk[key]=risk;
   document.getElementById('pill-'+key+'-'+risk).classList.add('selected');
-
-  const parts=key.split('-');
-  const cat=parts[0], dept=parts.slice(1).join('-');
+  const parts=key.split('-');const cat=parts[0],dept=parts.slice(1).join('-');
   const d=DATA[cat][dept];
   const stores=d.stores.filter(s=>s.risk===risk).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-
   if(stores.length===0){
-    expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (0개)</div><div style="color:var(--color-text-tertiary,#b4b2a9);font-size:13px">해당 단계 매장이 없습니다.</div>`;
+    expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (0개)</div><div style="color:#b4b2a9;font-size:13px">해당 단계 매장이 없습니다.</div>`;
   } else {
-    const rows=stores.map(s=>`
-      <div class="pill-store-row">
-        <div><span class="pill-store-name">${s.name}</span> <span class="pill-store-meta">· ${s.salesperson}</span></div>
-        <div class="pill-store-amt">${fmt(s.receivable)}${s.collateral>0?' / 담보비율 '+Math.round(s.ratio*100)+'%':''}</div>
-      </div>`).join('');
+    const rows=stores.map(s=>`<div class="pill-store-row"><div><span class="pill-store-name">${s.name}</span> <span class="pill-store-meta">· ${s.salesperson}</span></div><div class="pill-store-amt">${fmt(s.receivable)}${s.collateral>0?' / 담보비율 '+Math.round(s.ratio*100)+'%':''}</div></div>`).join('');
     expandEl.innerHTML=`<div class="pill-expand-title">${risk} 단계 매장 (${stores.length}개)</div>${rows}`;
   }
   expandEl.classList.add('show');
 }
 
-function toggleExcess(key, forceOn){
-  excessOnly[key] = forceOn ? true : !excessOnly[key];
+function toggleExcess(key,forceOn){
+  excessOnly[key]=forceOn?true:!excessOnly[key];
   const btn=document.getElementById('toggle-'+key);
-  if(excessOnly[key]){ btn.classList.add('active'); btn.textContent='전체 보기'; }
-  else { btn.classList.remove('active'); btn.textContent='담보초과만 보기'; }
-  const parts=key.split('-');
-  const cat=parts[0], dept=parts.slice(1).join('-');
-  renderTable(cat,dept);
+  if(excessOnly[key]){btn.classList.add('active');btn.textContent='전체 보기';}
+  else{btn.classList.remove('active');btn.textContent='담보초과만 보기';}
+  const parts=key.split('-');renderTable(parts[0],parts.slice(1).join('-'));
 }
 
-function renderTable(cat, dept){
+function renderTable(cat,dept){
   const key=pageKey(cat,dept);
   const d=DATA[cat][dept];
-  const searchId='srch-'+key, riskId='risk-'+key, spFilterId='spf-'+key, tblId='tbl-'+key;
-  const q=document.getElementById(searchId).value.toLowerCase();
-  const r=document.getElementById(riskId).value;
-  const p=document.getElementById(spFilterId).value;
+  const q=document.getElementById('srch-'+key).value.toLowerCase();
+  const r=document.getElementById('risk-'+key).value;
+  const p=document.getElementById('spf-'+key).value;
   let rows=d.stores.filter(s=>(!q||s.name.toLowerCase().includes(q))&&(!r||s.risk===r)&&(!p||s.salesperson===p));
   if(excessOnly[key]) rows=rows.filter(s=>s.excess>0).sort((a,b)=>b.excess-a.excess);
-  const tbody=document.getElementById(tblId);
+  const tbody=document.getElementById('tbl-'+key);
   tbody.innerHTML='';
   const totalC=rows.reduce((s,x)=>s+x.collateral,0);
   const totalR=rows.reduce((s,x)=>s+x.receivable,0);
   const totalE=rows.reduce((s,x)=>s+(x.excess>0?x.excess:0),0);
-  const cntEl=document.getElementById(tblId+'-cnt');
+  const cntEl=document.getElementById('tbl-'+key+'-cnt');
   if(cntEl){
     cntEl.textContent=rows.length;
-    document.getElementById(tblId+'-sum-col').textContent=fmt(totalC);
-    document.getElementById(tblId+'-sum-rcv').textContent=fmt(totalR);
-    document.getElementById(tblId+'-sum-exc').textContent=totalE>0?'+'+fmt(totalE):fmt(totalE);
+    document.getElementById('tbl-'+key+'-sum-col').textContent=fmt(totalC);
+    document.getElementById('tbl-'+key+'-sum-rcv').textContent=fmt(totalR);
+    document.getElementById('tbl-'+key+'-sum-exc').textContent=totalE>0?'+'+fmt(totalE):fmt(totalE);
   }
   rows.forEach(s=>{
     const exStyle=s.excess>0?'class="red"':'class="muted"';
@@ -398,40 +587,25 @@ function renderTable(cat, dept){
     tr.innerHTML=`<td title="${s.name}">${s.name}</td><td>${s.salesperson}</td><td class="nr">${fmt(s.collateral)}</td><td class="nr">${fmt(s.receivable)}</td><td class="nr" ${exStyle}>${exStr}</td><td class="nr">${ratioStr}</td><td style="text-align:center"><span class="badge b${s.risk}">${s.risk}</span></td>`;
     tbody.appendChild(tr);
   });
-
   const subtotalEl=document.getElementById('subtotal-'+key);
- if(p || r || q || excessOnly[key]){
-    const totalCollateral=rows.reduce((sum,x)=>sum+x.collateral,0);
-    const totalReceivable=rows.reduce((sum,x)=>sum+x.receivable,0);
-    const totalExcess=rows.reduce((sum,x)=>sum+(x.excess>0?x.excess:0),0);
+  if(p||r||q||excessOnly[key]){
     const labelParts=[];
-    if(p) labelParts.push(p);
-    if(r) labelParts.push(r);
-    if(q) labelParts.push('"'+q+'"');
-    if(excessOnly[key]) labelParts.push('담보초과');
-    const label=labelParts.length?labelParts.join(' · ')+' 소계':'필터 소계';
-    subtotalEl.innerHTML=`<strong>${label}</strong> (${rows.length}개) — 담보 ${fmt(totalCollateral)} · 채권잔액 ${fmt(totalReceivable)} · 초과채권 <span class="red">${fmt(totalExcess)}</span>`;
+    if(p) labelParts.push(p);if(r) labelParts.push(r);if(q) labelParts.push('"'+q+'"');if(excessOnly[key]) labelParts.push('담보초과');
+    subtotalEl.innerHTML=`<strong>${labelParts.join(' · ')} 소계</strong> (${rows.length}개) — 담보 ${fmt(totalC)} · 채권잔액 ${fmt(totalR)} · 초과채권 <span class="red">${fmt(totalE)}</span>`;
     subtotalEl.style.display='block';
-  } else {
-    subtotalEl.style.display='none';
-  }
+  } else { subtotalEl.style.display='none'; }
 }
 
-function switchTab(cat, dept, el){
-  const tabsContainer = el.parentElement;
-  tabsContainer.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+function switchTab(cat,dept,el){
+  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const catPage = document.getElementById('cat-'+cat);
-  catPage.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('cat-'+cat).querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+pageKey(cat,dept)).classList.add('active');
   const key=pageKey(cat,dept);
-  if(!builtPages[key]){
-    buildPage(cat,dept);
-    builtPages[key]=true;
-  }
+  if(!builtPages[key]){buildPage(cat,dept);builtPages[key]=true;}
 }
 
-function switchCat(cat, el){
+function switchCat(cat,el){
   document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.cat-page').forEach(p=>p.classList.remove('active'));
@@ -440,192 +614,68 @@ function switchCat(cat, el){
   if(cat==='종합순위-용품') buildRankingFor('용품');
 }
 
-buildPage('의류','인사총무팀');
-builtPages['의류-인사총무팀']=true;
-buildPage('용품','인사총무팀');
-builtPages['용품-인사총무팀']=true;
-
-// ───────────────────────────────────────────
 // 종합순위
-// ───────────────────────────────────────────
-
-// CS 점수 기준 (나중에 변경 가능)
-const CS_LABELS = {
-  1: { label: '1 - 미흡', desc: '응대 불량, 반품·클레임 잦음' },
-  2: { label: '2 - 보통', desc: '기본 응대, 개선 여지 있음' },
-  3: { label: '3 - 양호', desc: '원활한 소통, 불만 거의 없음' },
-  4: { label: '4 - 우수', desc: '적극적 협조, 행사 참여 양호' },
-  5: { label: '5 - 최우수', desc: '모범 대리점, 고객 만족도 최상' }
-};
-
-// CS 점수 저장소 (세션 동안 유지)
-const csScores = {};const csSheetData = {"위너스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}, "세영스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}, "스매싱스포츠": {"score": 50, "keywords": "", "memo": "", "ai_comment": " 키워드 기반 분석: 담당자 확인 필요"}};
-Object.entries(csSheetData).forEach(([name, data]) => {
-  Object.keys(clothingData).forEach(dept => {
-    (clothingData[dept].stores || []).forEach(s => {
-      if(s.name === name) csScores['의류-'+s.code] = data.score_value;
-    });
-  });
-  Object.keys(goodsData).forEach(dept => {
-    (goodsData[dept].stores || []).forEach(s => {
-      if(s.name === name) csScores['용품-'+s.code] = data.score_value;
-    });
-  });
-});
-
-// 배점 기준
-// 담보대비채무: 60% 이하=40점 / 60~100%=20점 / 100% 초과=0점
-// CS 마인드: 1~5점 → 각 12점씩 환산 (최대 60점)
-function calcDebtScore(ratio){
-  if(ratio <= 0) return 40; // 채권없음
-  if(ratio <= 0.6) return 40;
-  if(ratio <= 1.0) return 20;
-  return 0;
-}
-function calcCsScore(cs){ return (cs||1) * 12; }
-function calcTotal(ratio, cs){ return calcDebtScore(ratio) + calcCsScore(cs); }
-
+const CS_LABELS={1:{label:'1 - 미흡',desc:'응대 불량, 반품·클레임 잦음'},2:{label:'2 - 보통',desc:'기본 응대, 개선 여지 있음'},3:{label:'3 - 양호',desc:'원활한 소통, 불만 거의 없음'},4:{label:'4 - 우수',desc:'적극적 협조, 행사 참여 양호'},5:{label:'5 - 최우수',desc:'모범 대리점, 고객 만족도 최상'}};
+const csScores={};
+function calcDebtScore(ratio){if(ratio<=0)return 40;if(ratio<=0.6)return 40;if(ratio<=1.0)return 20;return 0;}
+function calcCsScore(cs){return(cs||1)*12;}
 function getAllStores(cat){
-  const depts = ['영업1팀','영업2팀','E-BIZ팀'];
-  const all = [];
-  depts.forEach(dept=>{
-    const stores = (DATA[cat][dept]||{}).stores || [];
-    stores.forEach(s=>{ if(s.receivable > 100000) all.push({...s, dept}); });
-  });
-  // deduplicate by code
-  const seen = {};
-  return all.filter(s=>{ if(seen[s.code]) return false; seen[s.code]=true; return true; });
+  const depts=['영업1팀','영업2팀','E-BIZ팀'];const all=[];const seen={};
+  depts.forEach(dept=>{(DATA[cat][dept]||{}).stores.forEach(s=>{if(!seen[s.code]&&s.receivable>100000){seen[s.code]=true;all.push({...s,dept});}});});
+  return all;
 }
-
-function buildRankingSection(cat, containerId){
-  const stores = getAllStores(cat);
-  const key = (code)=> cat+'-'+code;
-
-  // compute scores
-  const scored = stores.map(s=>{
-    const cs = csScores[key(s.code)] || 3;
-    const debt = calcDebtScore(s.ratio);
-    const csP = calcCsScore(cs);
-    const total = debt + csP;
-    return {...s, cs, debt, csP, total};
-  }).sort((a,b)=>b.total-a.total);
-
+function buildRankingSection(cat){
+  const stores=getAllStores(cat);
+  const key=(code)=>cat+'-'+code;
+  const scored=stores.map(s=>{const cs=csScores[key(s.code)]||3;const debt=calcDebtScore(s.ratio);const csP=calcCsScore(cs);return{...s,cs,debt,csP,total:debt+csP};}).sort((a,b)=>b.total-a.total);
   function renderRows(filter){
-    const filtered = filter ? scored.filter(s=>s.dept===filter) : scored;
+    const filtered=filter?scored.filter(s=>s.dept===filter):scored;
     return filtered.map((s,i)=>{
-      const rank = i+1;
-      const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
-      const barW = Math.round(s.total);
-      const csOpts = [1,2,3,4,5].map(v=>`<option value="${v}" ${s.cs===v?'selected':''}>${CS_LABELS[v].label}</option>`).join('');
-      return `<tr>
-        <td><span class="rank-num ${rankClass}">${rank}</span></td>
-        <td><strong>${s.name}</strong><br><span style="font-size:11px;color:#888780">${s.dept} · ${s.salesperson}</span></td>
-        <td class="nr">${s.debt}점</td>
-        <td>
-          <div class="cs-label">
-            <select class="cs-select" onchange="updateCS('${cat}','${s.code}',this.value)">${csOpts}</select>
-          </div>
-          <div class="cs-desc" id="csdesc-${cat}-${s.code}">${CS_LABELS[s.cs].desc}</div>
-        </td>
-        <td class="nr">${s.csP}점</td>
-        <td class="nr">
-          <span class="score-total">${s.total}점</span>
-          <div><span class="score-bar-bg"><span class="score-bar-fill" style="width:${barW}%"></span></span></div>
-        </td>
-      </tr>`;
+      const rank=i+1;const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
+      const csOpts=[1,2,3,4,5].map(v=>`<option value="${v}" ${s.cs===v?'selected':''}>${CS_LABELS[v].label}</option>`).join('');
+      return `<tr><td><span class="rank-num ${rankClass}">${rank}</span></td><td><strong>${s.name}</strong><br><span style="font-size:11px;color:#888780">${s.dept} · ${s.salesperson}</span></td><td class="nr">${s.debt}점</td><td><div class="cs-label"><select class="cs-select" onchange="updateCS('${cat}','${s.code}',this.value)">${csOpts}</select></div><div class="cs-desc" id="csdesc-${cat}-${s.code}">${CS_LABELS[s.cs].desc}</div></td><td class="nr">${s.csP}점</td><td class="nr"><span class="score-total">${s.total}점</span><div><span class="score-bar-bg"><span class="score-bar-fill" style="width:${s.total}%"></span></span></div></td></tr>`;
     }).join('');
   }
-
-  const depts = ['전체','영업1팀','영업2팀','E-BIZ팀'];
-  const filterBtns = depts.map(d=>`<button class="dept-filter-btn${d==='전체'?' active':''}" onclick="filterRank('${cat}','${d}',this)">${d}</button>`).join('');
-
-  return `
-  <div class="rank-section">
-    <div class="rank-section-title">
-      <span>📊 ${cat} 종합순위 (${scored.length}개 대리점)</span>
-      <button id="apply-btn-${cat}" onclick="applyRanking('${cat}')" style="font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer;color:#5f5e5a;transition:.15s">순위 반영하기</button>
-    </div>
-    <p class="rank-notice" style="line-height:1.8">💡 CS 마인드 점수를 모두 입력한 후 <strong>순위 반영하기</strong> 버튼을 클릭하세요.<br>담보대비 채권 40점 + CS 마인드 60점 = 100점 만점</p>
-    <div class="dept-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${filterBtns}</div>
-    <div style="overflow-x:auto">
-    <table class="rank-table" id="ranktbl-${cat}">
-      <thead><tr>
-        <th style="width:50px">순위</th>
-        <th>대리점명</th>
-        <th class="nr">담보대비 채권<br><span style="font-weight:400;font-size:11px">40점 만점</span></th>
-        <th style="min-width:200px">CS 마인드<br><span style="font-weight:400;font-size:11px">클릭해서 점수 변경</span></th>
-        <th class="nr">CS점수<br><span style="font-weight:400;font-size:11px">60점 만점</span></th>
-        <th class="nr">종합점수<br><span style="font-weight:400;font-size:11px">100점 만점</span></th>
-      </tr></thead>
-      <tbody id="rankbody-${cat}">${renderRows('')}</tbody>
-    </table>
-    </div>
-  </div>`;
+  const depts=['전체','영업1팀','영업2팀','E-BIZ팀'];
+  const filterBtns=depts.map(d=>`<button class="dept-filter-btn${d==='전체'?' active':''}" onclick="filterRank('${cat}','${d}',this)">${d}</button>`).join('');
+  return `<div class="rank-section"><div class="rank-section-title"><span>📊 ${cat} 종합순위 (${scored.length}개 대리점)</span><button id="apply-btn-${cat}" onclick="applyRanking('${cat}')" style="font-size:13px;padding:6px 16px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer">순위 반영하기</button></div><p style="line-height:1.8;margin-bottom:12px;font-size:13px;color:#5f5e5a">💡 CS 마인드 점수 입력 후 <strong>순위 반영하기</strong> 버튼을 클릭하세요. 담보대비 채권 40점 + CS 마인드 60점 = 100점 만점</p><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${filterBtns}</div><div style="overflow-x:auto"><table class="rank-table" id="ranktbl-${cat}"><thead><tr><th style="width:50px">순위</th><th>대리점명</th><th class="nr">담보대비 채권<br><span style="font-weight:400;font-size:11px">40점 만점</span></th><th style="min-width:200px">CS 마인드<br><span style="font-weight:400;font-size:11px">클릭해서 점수 변경</span></th><th class="nr">CS점수<br><span style="font-weight:400;font-size:11px">60점 만점</span></th><th class="nr">종합점수<br><span style="font-weight:400;font-size:11px">100점 만점</span></th></tr></thead><tbody id="rankbody-${cat}">${renderRows('')}</tbody></table></div></div>`;
 }
-
-function buildRankingFor(cat){
-  const container = document.getElementById('ranking-container-'+cat);
-  if(!container || container.dataset.built) return;
-  container.innerHTML = buildRankingSection(cat);
-  container.dataset.built = '1';
-}
-
-// 부서 필터
-const rankFilters = {};
-function filterRank(cat, dept, el){
-  rankFilters[cat] = dept === '전체' ? '' : dept;
-  // 버튼 활성화 표시
-  el.closest('.dept-filter-bar').querySelectorAll('.dept-filter-btn').forEach(b=>b.classList.remove('active'));
+const rankFilters={};
+function filterRank(cat,dept,el){
+  rankFilters[cat]=dept==='전체'?'':dept;
+  el.closest('div').querySelectorAll('.dept-filter-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  // tbody 재렌더
-  const stores = getAllStores(cat);
-  const key = (code)=> cat+'-'+code;
-  const scored = stores.map(s=>{
-    const cs = csScores[key(s.code)] || 3;
-    const debt = calcDebtScore(s.ratio);
-    const csP = calcCsScore(cs);
-    return {...s, cs, debt, csP, total: debt+csP};
-  }).sort((a,b)=>b.total-a.total);
-  const filter = rankFilters[cat] || '';
-  const filtered = filter ? scored.filter(s=>s.dept===filter) : scored;
-  const tbody = document.getElementById('rankbody-'+cat);
-  if(!tbody) return;
-  tbody.innerHTML = filtered.map((s,i)=>{
-    const rank = i+1;
-    const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
-    const barW = Math.round(s.total);
-    const csOpts = [1,2,3,4,5].map(v=>`<option value="${v}" ${s.cs===v?'selected':''}>${CS_LABELS[v].label}</option>`).join('');
-    return `<tr>
-      <td><span class="rank-num ${rankClass}">${rank}</span></td>
-      <td><strong>${s.name}</strong><br><span style="font-size:11px;color:#888780">${s.dept} · ${s.salesperson}</span></td>
-      <td class="nr">${s.debt}점</td>
-      <td>
-        <div class="cs-label"><select class="cs-select" onchange="updateCS('${cat}','${s.code}',this.value)">${csOpts}</select></div>
-        <div class="cs-desc" id="csdesc-${cat}-${s.code}">${CS_LABELS[s.cs].desc}</div>
-      </td>
-      <td class="nr">${s.csP}점</td>
-      <td class="nr"><span class="score-total">${s.total}점</span><div><span class="score-bar-bg"><span class="score-bar-fill" style="width:${barW}%"></span></span></div></td>
-    </tr>`;
-  }).join('');
+  const stores=getAllStores(cat);
+  const key=(code)=>cat+'-'+code;
+  const scored=stores.map(s=>{const cs=csScores[key(s.code)]||3;const debt=calcDebtScore(s.ratio);const csP=calcCsScore(cs);return{...s,cs,debt,csP,total:debt+csP};}).sort((a,b)=>b.total-a.total);
+  const filter=rankFilters[cat]||'';
+  const filtered=filter?scored.filter(s=>s.dept===filter):scored;
+  const tbody=document.getElementById('rankbody-'+cat);if(!tbody)return;
+  tbody.innerHTML=filtered.map((s,i)=>{const rank=i+1;const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';const csOpts=[1,2,3,4,5].map(v=>`<option value="${v}" ${s.cs===v?'selected':''}>${CS_LABELS[v].label}</option>`).join('');return`<tr><td><span class="rank-num ${rankClass}">${rank}</span></td><td><strong>${s.name}</strong><br><span style="font-size:11px;color:#888780">${s.dept} · ${s.salesperson}</span></td><td class="nr">${s.debt}점</td><td><div class="cs-label"><select class="cs-select" onchange="updateCS('${cat}','${s.code}',this.value)">${csOpts}</select></div><div class="cs-desc" id="csdesc-${cat}-${s.code}">${CS_LABELS[s.cs].desc}</div></td><td class="nr">${s.csP}점</td><td class="nr"><span class="score-total">${s.total}점</span><div><span class="score-bar-bg"><span class="score-bar-fill" style="width:${s.total}%"></span></span></div></td></tr>`;}).join('');
 }
-
-function updateCS(cat, code, val){
-  // 점수만 저장, 순위는 바꾸지 않음
-  csScores[cat+'-'+code] = parseInt(val);
-  // desc만 업데이트
-  const descEl = document.getElementById('csdesc-'+cat+'-'+code);
-  if(descEl) descEl.textContent = CS_LABELS[parseInt(val)].desc;
-  // 변경사항 있음 표시
-  const btn = document.getElementById('apply-btn-'+cat);
-  if(btn){ btn.style.background='#A32D2D'; btn.style.color='#fff'; btn.textContent='⚠️ 순위 반영하기'; }
+function updateCS(cat,code,val){
+  csScores[cat+'-'+code]=parseInt(val);
+  const descEl=document.getElementById('csdesc-'+cat+'-'+code);
+  if(descEl) descEl.textContent=CS_LABELS[parseInt(val)].desc;
+  const btn=document.getElementById('apply-btn-'+cat);
+  if(btn){btn.style.background='#A32D2D';btn.style.color='#fff';btn.textContent='⚠️ 순위 반영하기';}
 }
-
 function applyRanking(cat){
-  const container = document.getElementById('ranking-container-'+cat);
-  if(!container) return;
-  container.dataset.built = '';
-  container.innerHTML = buildRankingSection(cat);
+  const container=document.getElementById('ranking-container-'+cat);
+  if(!container)return;
+  container.dataset.built='';container.innerHTML=buildRankingSection(cat);
 }
+function buildRankingFor(cat){
+  const container=document.getElementById('ranking-container-'+cat);
+  if(!container||container.dataset.built)return;
+  container.innerHTML=buildRankingSection(cat);
+  container.dataset.built='1';
+}
+
+// 초기화
+buildAiDash();
+buildPage('의류','인사총무팀');builtPages['의류-인사총무팀']=true;
+buildPage('용품','인사총무팀');builtPages['용품-인사총무팀']=true;
 </script>
 </body>
 </html>
