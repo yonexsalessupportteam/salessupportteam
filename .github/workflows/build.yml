@@ -1,38 +1,32 @@
 name: 대시보드 자동 생성
-
 on:
   push:
     paths:
       - 'clothing_raw.xls'
       - 'goods_raw.xls'
   schedule:
-    - cron: '0 0 * * *'  # 매일 오전 9시 KST (UTC 0시)
+    - cron: '0 0 * * *'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
-
       - name: Python 설치
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: 필요한 패키지 설치
-        run: pip install pandas numpy xlrd gspread google-auth
-
+        run: pip install pandas numpy xlrd gspread google-auth requests
       - name: 대시보드 생성
         env:
           GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python process.py
-
       - name: 변경사항 커밋 & 푸시
         run: |
           git config --local user.email "action@github.com"
