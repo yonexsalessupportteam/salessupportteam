@@ -33,22 +33,28 @@ def score_from_keywords(keywords_str, memo):
         if kw in text:
             score += 10
     return max(0, min(100, score))
-def gemini_analyze(store_name, keywords, memo, api_key):
+def gemini_analyze(store_name, keywords, memo, api_key, debt_info={}):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    collateral = debt_info.get('collateral', 0)
+    receivable = debt_info.get('receivable', 0)
+    ratio = debt_info.get('ratio', 0)
+    risk = debt_info.get('risk', '정보없음')
+    ratio_pct = int(ratio * 100)
+    col_str = f"{collateral//10000}백만" if collateral else "없음"
+    rec_str = f"{receivable//10000}백만" if receivable else "없음"
     prompt = f"""당신은 스포츠용품 대리점 채권·CS 리스크 분석 전문가입니다.
-아래 대리점의 누적 이슈를 종합적으로 분석해주세요.
+아래 데이터를 바탕으로 실무적인 리스크 분석을 작성해주세요.
 
-대리점명: {store_name}
-키워드 (복수 이슈 포함): {keywords}
-특이사항 메모: {memo}
+[채권 현황]
+- 담보금액: {col_str} / 채권잔액: {rec_str} / 초과율: {ratio_pct}% / 위험단계: {risk}
 
-다음 기준으로 3~4문장으로 분석해주세요:
-1. 복합 위험 신호: 키워드와 메모를 교차 분석하여 단순 단일 이슈가 아닌 패턴/복합 리스크 파악
-2. CS 상태 종합 평가: 담당자 응대 태도, 클레임 빈도, 신뢰도 등 종합
-3. 채권 회수 영향도: 현재 CS 상태가 수금·채권 관리에 미치는 영향
-4. 우선순위 조치: 가장 시급한 대응 방향 1가지를 구체적으로 제시
+[CS 현황]
+- 키워드: {keywords}
+- 특이사항: {memo}
 
-분석은 객관적이고 실무적으로 작성하세요."""
+담보 수치와 CS 이슈를 함께 언급하며 2~3문장으로 간결하게 작성하세요.
+구체적 숫자를 포함하고 마지막엔 조치사항을 제시하세요.
+예시: "담보(180백만) 대비 채권(342백만)이 187% 초과 상태로 담보가 부족합니다. 채권 위기단계와 CS 클레임 반복, 담당자 연락두절이 복합적으로 작용하고 있어 즉각적인 현장 방문 및 담보 추가설정 검토가 필요합니다." """
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
         res = requests.post(url, json=body, timeout=15)
@@ -56,7 +62,7 @@ def gemini_analyze(store_name, keywords, memo, api_key):
         return data['candidates'][0]['content']['parts'][0]['text'].strip()
     except Exception:
         return f"키워드 [{keywords}] 기반 분석: 복합 이슈 확인 필요"
-def fetch_cs_data():
+def fetch_cs_data(store_debt_map={}):
     api_key = os.environ.get('GEMINI_API_KEY', '')
     try:
         records = fetch_sheet_data()
@@ -81,11 +87,12 @@ def fetch_cs_data():
 
     result = {}
     for name, data in merged.items():
-        keywords = ', '.join(merged[name]['keywords'])
-        memo = ' / '.join(merged[name]['memos'])
+        keywords = ', '.join(data['keywords'])
+        memo = ' / '.join(data['memos'])
         score = score_from_keywords(keywords, memo)
+        debt_info = store_debt_map.get(name, {})
         if api_key:
-            comment = gemini_analyze(name, keywords, memo, api_key)
+            comment = gemini_analyze(name, keywords, memo, api_key, debt_info)
         else:
             comment = f"키워드 분석: {keywords}"
         result[name] = {

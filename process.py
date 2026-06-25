@@ -31,16 +31,15 @@ RAW_FILES = {
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
 # 위험도 판정 기준 (채권잔액 / 담보금액 비율)
-# 회사 정책 확정되면 이 숫자만 바꾸면 전체 반영됨
 RISK_THRESHOLDS = {
-    'safe_max': 0.6,      # 이 이하면 '적정'
-    'caution_max': 1.0,   # 이 이하면 '주의' (위 초과는 일단 '경계')
-    'warning_max': 1.5,   # 이 이하면 '경계'
-    'danger_max': 2.0,    # 이 이하면 '위기' (이 초과도 '위기')
+    'safe_max': 0.6,
+    'caution_max': 1.0,
+    'warning_max': 1.5,
+    'danger_max': 2.0,
 }
 
-MIN_RECEIVABLE_THRESHOLD = 500_000   # 이 미만 채권은 '해당없음' 처리
-MIN_DISPLAY_THRESHOLD = 100_000      # 대시보드에 표시할 최소 채권 규모
+MIN_RECEIVABLE_THRESHOLD = 500_000
+MIN_DISPLAY_THRESHOLD = 100_000
 
 
 def classify_risk(collateral, receivable, ratio):
@@ -48,7 +47,7 @@ def classify_risk(collateral, receivable, ratio):
     if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
         return '해당없음'
     if collateral == 0 and receivable > 0:
-        return '관리'  # 담보없음
+        return '관리'
     if ratio <= RISK_THRESHOLDS['safe_max']:
         return '적정'
     elif ratio <= RISK_THRESHOLDS['caution_max']:
@@ -66,7 +65,6 @@ def process_raw(filepath):
     data = df.iloc[1:].copy()
     data.columns = range(len(data.columns))
 
-    # D코드(매장)만 필터링 — F코드(협회/단체/개인 등)는 제외
     mask = data[4].astype(str).str.match(r'^D\d+$', na=False)
     store_data = data[mask].copy()
 
@@ -122,7 +120,7 @@ def build_group_data(sub):
 
 
 def build_category_dashboard(filepath):
-    """raw 파일 하나(용품 또는 의류)를 부서별 4탭 dashboard dict로 변환"""
+    """raw 파일 하나(용품 또는 의류)를 부서별 탭 dashboard dict로 변환"""
     result = process_raw(filepath)
     dashboard = {}
     for dept in DEPT_TABS:
@@ -144,7 +142,6 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
     """최종 index.html 생성"""
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
     goods_raw = json.dumps(goods_dash, ensure_ascii=False)
-    cs_raw = json.dumps(cs_scores, ensure_ascii=False)
     update_date = get_update_timestamp()
 
     with open('template.html', encoding='utf-8') as f:
@@ -176,7 +173,26 @@ def main():
         s = d['summary']
         print(f"  {dept}: {len(d['stores'])}개 / 채권 {s['total_receivable']:,} / 초과 {s['total_excess']:,}")
 
-    cs_scores = fetch_cs_data()
+    # 전체 대리점 채권 데이터 딕셔너리 생성 (대리점명 → 채권정보)
+    store_debt_map = {}
+    for cat, dash in [('의류', clothing_dash), ('용품', goods_dash)]:
+        for dept, data in dash.items():
+            for s in data['stores']:
+                name = ' '.join(s['name'].split())
+                if name not in store_debt_map:
+                    store_debt_map[name] = {
+                        'collateral': s['collateral'],
+                        'receivable': s['receivable'],
+                        'ratio': s['ratio'],
+                        'risk': s['risk'],
+                        'cat': cat
+                    }
+                else:
+                    # 의류+용품 둘 다 있으면 채권 합산
+                    store_debt_map[name]['receivable'] += s['receivable']
+                    store_debt_map[name]['collateral'] += s['collateral']
+
+    cs_scores = fetch_cs_data(store_debt_map)
     generate_html(clothing_dash, goods_dash, cs_scores)
 
 
