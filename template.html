@@ -262,6 +262,50 @@ const excessOnly={};
 const builtPages={};
 const expandedRisk={};
 
+function gaugeHtml(risk){
+  const stages=['적정','주의','경계','위기','관리'];
+  const colors={
+    '적정':{fill:'#9FE1CB',tc:'#085041',sc:'#0F6E56'},
+    '주의':{fill:'#FAC775',tc:'#633806',sc:'#BA7517'},
+    '경계':{fill:'#F0997B',tc:'#712B13',sc:'#993C1D'},
+    '위기':{fill:'#F7C1C1',tc:'#791F1F',sc:'#A32D2D'},
+    '관리':{fill:'#D3D1C7',tc:'#444441',sc:'#5F5E5A'},
+  };
+  const pts={'적정':{nx:-72,ny:0,rot:-90},'주의':{nx:-51,ny:-51,rot:-45},'경계':{nx:0,ny:-72,rot:0},'위기':{nx:51,ny:-51,rot:45},'관리':{nx:72,ny:0,rot:90}};
+  const p=pts[risk]||pts['적정'];
+  const c=colors[risk]||colors['적정'];
+  const btns=stages.map(s=>`<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:${s===risk?'700':'400'};border:${s===risk?'1.5px':'0.5px'} solid ${colors[s].sc};background:${s===risk?colors[s].fill:'transparent'};color:${colors[s].tc};">${s}</span>`).join('');
+  return `<div style="display:flex;flex-direction:column;align-items:center;margin:12px 0 16px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">${btns}</div>
+    <svg width="220" viewBox="0 0 280 145" role="img">
+      <g transform="translate(140,125)">
+        <path d="M-120,0 A120,120 0 0,1 -84.9,-84.9" fill="#9FE1CB"/>
+        <path d="M-84.9,-84.9 A120,120 0 0,1 0,-120" fill="#FAC775"/>
+        <path d="M0,-120 A120,120 0 0,1 84.9,-84.9" fill="#F0997B"/>
+        <path d="M84.9,-84.9 A120,120 0 0,1 120,0" fill="#F7C1C1"/>
+        <path d="M-120,0 A120,120 0 0,1 120,0" fill="none" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="-84.9" y1="-84.9" x2="-53" y2="-53" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="0" y1="-120" x2="0" y2="-75" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="84.9" y1="-84.9" x2="53" y2="-53" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="-120" y1="0" x2="-75" y2="0" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="75" y1="0" x2="120" y2="0" stroke="#b4b2a9" stroke-width="0.8"/>
+        <path d="M-75,0 A75,75 0 0,1 75,0" fill="white" stroke="#b4b2a9" stroke-width="0.8"/>
+        <line x1="-120" y1="0" x2="120" y2="0" stroke="#b4b2a9" stroke-width="0.5"/>
+        <text x="-100" y="-28" font-size="11" font-weight="700" text-anchor="middle" fill="#085041" font-family="sans-serif">적정</text>
+        <text x="-74" y="-74" font-size="11" font-weight="700" text-anchor="middle" fill="#633806" font-family="sans-serif">주의</text>
+        <text x="0" y="-94" font-size="11" font-weight="700" text-anchor="middle" fill="#712B13" font-family="sans-serif">경계</text>
+        <text x="74" y="-74" font-size="11" font-weight="700" text-anchor="middle" fill="#791F1F" font-family="sans-serif">위기</text>
+        <text x="100" y="-28" font-size="11" font-weight="700" text-anchor="middle" fill="#444441" font-family="sans-serif">관리</text>
+        <line x1="0" y1="0" x2="${p.nx}" y2="${p.ny}" stroke="#2c2c2a" stroke-width="2" stroke-linecap="round"/>
+        <polygon points="0,-4 8,4 -8,4" fill="#2c2c2a" transform="translate(${p.nx},${p.ny}) rotate(${p.rot})"/>
+        <circle cx="0" cy="0" r="7" fill="#2c2c2a"/>
+        <circle cx="0" cy="0" r="3" fill="white"/>
+        <text x="0" y="18" font-size="13" font-weight="700" text-anchor="middle" fill="${c.tc}" font-family="sans-serif">${risk}</text>
+      </g>
+    </svg>
+  </div>`;
+}
+
 function getRiskClass(score){
   if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
   if(score>=60) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
@@ -384,6 +428,7 @@ function buildAiDash(){
         <div><div class="det-title">${s.name} 상세 분석</div><div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.catLabel}</div></div>
         <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
       </div>
+      ${gaugeHtml(s.worstRisk)}
       ${clSec}${gdSec}
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       <div style="margin-bottom:1rem">
