@@ -19,10 +19,6 @@ import sys
 from datetime import datetime, timezone, timedelta
 from fetch_cs_scores import fetch_cs_data
 
-# ──────────────────────────────────────────────
-# 설정값 (회사 정책에 맞게 이 부분만 수정하면 됨)
-# ──────────────────────────────────────────────
-
 RAW_FILES = {
     '의류': 'clothing_raw.xls',
     '용품': 'goods_raw.xls',
@@ -30,7 +26,6 @@ RAW_FILES = {
 
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
-# 위험도 판정 기준 (채권잔액 / 담보금액 비율)
 RISK_THRESHOLDS = {
     'safe_max': 0.6,
     'caution_max': 1.0,
@@ -43,7 +38,6 @@ MIN_DISPLAY_THRESHOLD = 100_000
 
 
 def classify_risk(collateral, receivable, ratio):
-    """위험도 5단계 분류: 적정/주의/경계/위기/관리"""
     if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
         return '해당없음'
     if collateral == 0 and receivable > 0:
@@ -59,7 +53,6 @@ def classify_risk(collateral, receivable, ratio):
 
 
 def process_raw(filepath):
-    """ERP raw export(.xls)를 읽어 매장(D코드) 단위 DataFrame으로 변환"""
     xl = pd.read_excel(filepath, engine='xlrd', sheet_name=None, header=None)
     df = xl['export']
     data = df.iloc[1:].copy()
@@ -89,7 +82,6 @@ def process_raw(filepath):
 
 
 def build_group_data(sub):
-    """부서별 서브셋을 대시보드용 JSON 구조로 변환"""
     sub = sub[sub['receivable'].abs() > MIN_DISPLAY_THRESHOLD].copy()
     stores = []
     for _, r in sub.iterrows():
@@ -120,7 +112,6 @@ def build_group_data(sub):
 
 
 def build_category_dashboard(filepath):
-    """raw 파일 하나(용품 또는 의류)를 부서별 탭 dashboard dict로 변환"""
     result = process_raw(filepath)
     dashboard = {}
     for dept in DEPT_TABS:
@@ -130,7 +121,6 @@ def build_category_dashboard(filepath):
 
 
 def get_update_timestamp():
-    """한국 시간(KST) 기준 업데이트 시각 문자열 생성"""
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
     weekdays = ['월', '화', '수', '목', '금', '토', '일']
@@ -138,15 +128,33 @@ def get_update_timestamp():
     return f"{now.year}.{now.month:02d}.{now.day:02d}({weekday}) {now.hour:02d}:{now.minute:02d}"
 
 
+def sanitize_text(text):
+    """JSON 파싱 오류 유발 특수문자 치환"""
+    if not text:
+        return text
+    return (text
+            .replace('<', '〈')
+            .replace('>', '〉')
+            .replace('"', '"')
+            .replace("'", "'"))
+
+
 def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'):
-    """최종 index.html 생성"""
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
     goods_raw = json.dumps(goods_dash, ensure_ascii=False)
     update_date = get_update_timestamp()
 
     with open('template.html', encoding='utf-8') as f:
         template = f.read()
+
     cs_scores = {' '.join(k.split()): v for k, v in cs_scores.items()}
+
+    # 특수문자 이스케이프 처리
+    for name, data in cs_scores.items():
+        for field in ['memo', 'ai_comment', 'keywords']:
+            if field in data and data[field]:
+                data[field] = sanitize_text(data[field])
+
     html = (template
             .replace('__CLOTHING_DATA__', clothing_raw)
             .replace('__GOODS_DATA__', goods_raw)
@@ -173,7 +181,6 @@ def main():
         s = d['summary']
         print(f"  {dept}: {len(d['stores'])}개 / 채권 {s['total_receivable']:,} / 초과 {s['total_excess']:,}")
 
-    # 전체 대리점 채권 데이터 딕셔너리 생성 (대리점명 → 채권정보)
     store_debt_map = {}
     for cat, dash in [('의류', clothing_dash), ('용품', goods_dash)]:
         for dept, data in dash.items():
@@ -188,7 +195,6 @@ def main():
                         'cat': cat
                     }
                 else:
-                    # 의류+용품 둘 다 있으면 채권 합산
                     store_debt_map[name]['receivable'] += s['receivable']
                     store_debt_map[name]['collateral'] += s['collateral']
 
