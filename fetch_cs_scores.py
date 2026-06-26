@@ -50,7 +50,7 @@ def score_partnership(p_goods, p_clothing):
     return goods_score + cloth_score
 
 def gemini_analyze(store_name, keywords, memo, api_key, debt_info={}):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     collateral = debt_info.get('collateral', 0)
     receivable = debt_info.get('receivable', 0)
     ratio = debt_info.get('ratio', 0)
