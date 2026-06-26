@@ -88,7 +88,6 @@ tbody tr:hover{background:#f9f8f4}
 .sp-exc{font-size:12px;color:#A32D2D;min-width:70px;text-align:right}
 .leg-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#888780;margin-bottom:5px}
 .leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-
 .cs-select{font-size:12px;padding:3px 6px;border-radius:6px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer;color:#1a1a18}
 .cs-label{display:flex;align-items:center;gap:6px}
 .cs-desc{font-size:11px;color:#888780}
@@ -143,9 +142,19 @@ tbody tr:hover{background:#f9f8f4}
 .kw-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#f1efe8;color:#5f5e5a;border:.5px solid #e0dfd8}
 .kw-tag.danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
 .kw-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+.partner-box{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.partner-item{display:flex;align-items:center;gap:8px;background:#f5f4f0;border-radius:8px;padding:10px 14px;min-width:130px}
+.partner-item.violation{background:#FCEBEB;border:.5px solid #F09595}
+.partner-label{font-size:12px;color:#5f5e5a}
+.partner-status{font-size:12px;font-weight:600}
+.partner-status.ok{color:#0F6E56}
+.partner-status.ng{color:#A32D2D}
+.partner-pts{font-size:11px;color:#888780;margin-left:2px}
+.partner-total{display:flex;align-items:center;gap:6px;background:#f5f4f0;border-radius:8px;padding:10px 14px}
 .gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:12px 0;}
 .gauge-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
-.gauge-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:sans-serif;transition:.15s;}@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}.cat-grid{grid-template-columns:1fr 1fr}}
+.gauge-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:sans-serif;transition:.15s;}
+@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}.cat-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -170,7 +179,6 @@ tbody tr:hover{background:#f9f8f4}
   <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
     <span class="icon">🏸</span> 용품
   </div>
-
 </div>
 
 <div class="main-content">
@@ -203,8 +211,6 @@ tbody tr:hover{background:#f9f8f4}
   <div id="page-용품-E-BIZ팀" class="page"></div>
 </div>
 
-
-
 </div>
 </div>
 
@@ -228,7 +234,6 @@ const allRisks=['위기','경계','주의','적정','관리'];
 const excessOnly={};
 const builtPages={};
 const expandedRisk={};
-
 
 function getRiskClass(score){
   if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
@@ -256,7 +261,10 @@ function buildAiDash(){
       if(!base) return;
       if(Math.abs((c||{}).receivable||0)<100000&&Math.abs((g||{}).receivable||0)<100000) return;
       const csData=CS_SHEET[base.name]||{};
-      const csScore=csData.score||50;
+      const csScore=csData.score!=null?csData.score:50;
+      const partnershipScore=csData.partnership_score!=null?csData.partnership_score:20;
+      const pGoods=csData.p_goods||'';
+      const pClothing=csData.p_clothing||'';
       const keywords=csData.keywords||'';
       const memo=csData.memo||'';
       const aiComment=csData.ai_comment||'';
@@ -268,9 +276,10 @@ function buildAiDash(){
       else if(worstRisk==='주의') erpScore=40;
       else if(worstRisk==='적정') erpScore=60;
       else if(worstRisk==='관리') erpScore=10;
-      const totalScore=Math.round(erpScore*0.6+csScore*0.4);
+      // 총점: ERP 60% + CS 20% + 파트너십 20%
+      const totalScore=Math.round(erpScore*0.6 + csScore*0.2 + partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,keywords,memo,aiComment,totalScore,worstRisk,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,pGoods,pClothing,keywords,memo,aiComment,totalScore,worstRisk,catLabel});
     });
   });
   allStores.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -337,6 +346,34 @@ function buildAiDash(){
     const aiLblColor=s.totalScore>=80?'#085041':'#0C447C';
     const aiTxtColor=s.totalScore>=80?'#0F6E56':'#185FA5';
 
+    const pGoodsViolation=s.pGoods&&['1','TRUE','true','미준수','Y','y'].includes(s.pGoods.trim());
+    const pClothingViolation=s.pClothing&&['1','TRUE','true','미준수','Y','y'].includes(s.pClothing.trim());
+
+    const partnerSec=`
+      <div style="margin-bottom:14px">
+        <div class="sec-label">🏢 본사 파트너십</div>
+        <div class="partner-box">
+          <div class="partner-item${pGoodsViolation?' violation':''}">
+            <span class="partner-label">🏸 용품</span>
+            <span class="partner-status ${pGoodsViolation?'ng':'ok'}">${pGoodsViolation?'미준수':'준수'}</span>
+            <span class="partner-pts">(${pGoodsViolation?'0':'10'}점)</span>
+          </div>
+          <div class="partner-item${pClothingViolation?' violation':''}">
+            <span class="partner-label">👔 의류</span>
+            <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?'미준수':'준수'}</span>
+            <span class="partner-pts">(${pClothingViolation?'0':'10'}점)</span>
+          </div>
+          <div class="partner-total">
+            <span style="font-size:12px;color:#5f5e5a">파트너십 점수</span>
+            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore<20?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/20</span></span>
+          </div>
+        </div>
+      </div>`;
+
+    const aiCommentHtml = s.aiComment
+      ? s.aiComment.replace(/\n/g,'<br>')
+      : '구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.';
+
     html+=`
     <div class="dealer-card" id="aicard-${i}" data-grade="${rc.label}" data-dept="${s.dept}" data-cat="${s.catLabel}" data-name="${s.name}" onclick="toggleAiDet(${i},this)">
       <div class="crow">
@@ -354,6 +391,8 @@ function buildAiDash(){
       </div>
       ${clSec}${gdSec}
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+      ${partnerSec}
+      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       <div style="margin-bottom:1rem">
         <div class="sec-label">🤝 CS 평가 (공통)</div>
         ${kwHtml?`<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">${kwHtml}</div></div>`:''}
@@ -362,7 +401,7 @@ function buildAiDash(){
       </div>
       <div style="background:${aiBoxBg};border-radius:8px;padding:14px 16px;border-left:3px solid ${aiBoxBd}">
         <div style="font-size:11px;font-weight:500;color:${aiLblColor};margin-bottom:5px">🤖 AI 위험탐지 분석</div>
-        <div style="font-size:13px;color:${aiTxtColor};line-height:1.6">${s.aiComment||'구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.'}</div>
+        <div style="font-size:13px;color:${aiTxtColor};line-height:1.7">${aiCommentHtml}</div>
       </div>
     </div>`;
   });
@@ -579,10 +618,7 @@ function switchCat(cat,el){
   el.classList.add('active');
   document.querySelectorAll('.cat-page').forEach(p=>p.classList.remove('active'));
   document.getElementById('cat-'+cat).classList.add('active');
-
 }
-
-
 
 buildAiDash();
 buildPage('의류','영업1팀');builtPages['의류-영업1팀']=true;

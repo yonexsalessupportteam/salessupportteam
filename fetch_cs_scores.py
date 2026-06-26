@@ -3,23 +3,32 @@ import json
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+
+# 읽기+쓰기 권한
+SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets'
+]
+
 RISK_KEYWORDS = {
     'high': ['연락두절', '약속불이행', '클레임다발', '폐업징후', '허위접수', '재고과다', '타사이탈', '무단온라인', '연락안됨', '잠수'],
     'mid':  ['연락지연', '가끔약속어김', '클레임', '재고증가', '매출감소', '응대느림', '불만'],
     'low':  ['협조적', '응대원활', '약속이행', '클레임없음', '재고적정', '매출안정', '신뢰']
 }
+
 def get_sheets_client():
     creds_json = os.environ.get('GOOGLE_SHEETS_CREDENTIALS', '')
     creds_dict = json.loads(creds_json)
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
-def fetch_sheet_data():
+
+def get_sheet():
     spreadsheet_id = os.environ.get('SPREADSHEET_ID', '')
     client = get_sheets_client()
-    sheet = client.open_by_key(spreadsheet_id).sheet1
-    records = sheet.get_all_records()
-    return records
+    return client.open_by_key(spreadsheet_id).sheet1
+
+def fetch_sheet_data():
+    return get_sheet().get_all_records()
+
 def score_from_keywords(keywords_str, memo):
     text = f"{keywords_str} {memo}".lower()
     score = 50
@@ -33,6 +42,13 @@ def score_from_keywords(keywords_str, memo):
         if kw in text:
             score += 10
     return max(0, min(100, score))
+
+def score_partnership(p_goods, p_clothing):
+    """본사 파트너십 점수 (20점 만점): 용품 10점 + 의류 10점, 미준수 시 0점"""
+    goods_score  = 0  if str(p_goods).strip()    in ['1', 'TRUE', 'true', '미준수', 'Y', 'y'] else 10
+    cloth_score  = 0  if str(p_clothing).strip()  in ['1', 'TRUE', 'true', '미준수', 'Y', 'y'] else 10
+    return goods_score + cloth_score
+
 def gemini_analyze(store_name, keywords, memo, api_key, debt_info={}):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     collateral = debt_info.get('collateral', 0)
@@ -83,6 +99,7 @@ def gemini_analyze(store_name, keywords, memo, api_key, debt_info={}):
     except Exception as e:
         print(f"Gemini 오류: {e}")
         return f"키워드 [{keywords}] 기반 분석: 복합 이슈 확인 필요"
+
 def fetch_cs_data(store_debt_map={}):
     api_key = os.environ.get('GEMINI_API_KEY', '')
     try:
@@ -91,26 +108,38 @@ def fetch_cs_data(store_debt_map={}):
         print(f"구글 시트 읽기 실패: {e}")
         return {}
 
-    # 같은 대리점 여러 행 → 키워드/메모 합산
+    # 같은 대리점 여러 행 → 키워드/메모/파트너십 합산
     merged = {}
     for row in records:
         name = ' '.join(str(row.get('대리점명', '')).split())
         keywords = str(row.get('키워드', '')).strip()
         memo = str(row.get('특이사항메모', '')).strip()
+        p_goods   = str(row.get('파트너십_용품', '')).strip()
+        p_clothing = str(row.get('파트너십_의류', '')).strip()
         if not name:
             continue
         if name not in merged:
-            merged[name] = {'keywords': [], 'memos': []}
+            merged[name] = {'keywords': [], 'memos': [], 'p_goods': '', 'p_clothing': ''}
         if keywords:
             merged[name]['keywords'].append(keywords)
         if memo:
             merged[name]['memos'].append(memo)
+        # 한 번이라도 미준수 체크되면 미준수로 처리
+        if p_goods:
+            merged[name]['p_goods'] = p_goods
+        if p_clothing:
+            merged[name]['p_clothing'] = p_clothing
 
     result = {}
     for name, data in merged.items():
         keywords = ', '.join(data['keywords'])
         memo = ' / '.join(data['memos'])
-        score = score_from_keywords(keywords, memo)
+        p_goods = data['p_goods']
+        p_clothing = data['p_clothing']
+
+        cs_score = score_from_keywords(keywords, memo)
+        partnership_score = score_partnership(p_goods, p_clothing)
+
         debt_info = store_debt_map.get(name, {})
         if api_key and (keywords or memo):
             comment = gemini_analyze(name, keywords, memo, api_key, debt_info)
@@ -118,11 +147,15 @@ def fetch_cs_data(store_debt_map={}):
             comment = f"키워드 분석: {keywords}"
         else:
             comment = ""
+
         result[name] = {
-            'score': score,
+            'score': cs_score,
+            'partnership_score': partnership_score,
+            'p_goods': p_goods,
+            'p_clothing': p_clothing,
             'keywords': keywords,
             'memo': memo,
             'ai_comment': comment
         }
-        print(f"  {name}: {score}점 분석 완료")
+        print(f"  {name}: CS {cs_score}점 / 파트너십 {partnership_score}점 분석 완료")
     return result
