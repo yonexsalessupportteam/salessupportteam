@@ -169,7 +169,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.06.26(금) 16:29 업데이트</span>
+  <span class="sub">2026.06.26(금) 16:31 업데이트</span>
 </div>
 
 <div class="layout">
@@ -420,28 +420,6 @@ function buildAiDash(){
           </div>
         </div>
         <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 '미준수' 입력</div>
-      </div>`;
-              <input type="checkbox" id="ptoggle-goods-${i}" ${pGoodsViolation?'checked':''} onchange="updatePartnership('${s.name}','p_goods',this.checked,${i})">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="partner-status ${pGoodsViolation?'ng':'ok'}" id="pstatus-goods-${i}">${pGoodsViolation?'미준수':'준수'}</span>
-            <span class="partner-pts" id="ppts-goods-${i}">(${pGoodsViolation?'0':'10'}점)</span>
-          </div>
-          <div class="partner-item${pClothingViolation?' violation':''}" id="pitem-clothing-${i}">
-            <span class="partner-label">👔 의류</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="ptoggle-clothing-${i}" ${pClothingViolation?'checked':''} onchange="updatePartnership('${s.name}','p_clothing',this.checked,${i})">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="partner-status ${pClothingViolation?'ng':'ok'}" id="pstatus-clothing-${i}">${pClothingViolation?'미준수':'준수'}</span>
-            <span class="partner-pts" id="ppts-clothing-${i}">(${pClothingViolation?'0':'10'}점)</span>
-          </div>
-          <div class="partner-total">
-            <span style="font-size:12px;color:#5f5e5a">파트너십 점수</span>
-            <span style="font-size:15px;font-weight:600" id="ptotal-${i}" style="color:${s.partnershipScore<20?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/20</span></span>
-            <span class="partner-saving" id="psaving-${i}">저장 중...</span>
-          </div>
-        </div>
       </div>`;
 
     const aiCommentHtml = s.aiComment
