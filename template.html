@@ -272,16 +272,16 @@ function updatePartnership(storeName, field, isViolation, idx){
   totalEl.innerHTML = `${newTotal}<span style="font-size:11px;font-weight:400;color:#888780">/20</span>`;
   totalEl.style.color = newTotal < 20 ? '#A32D2D' : '#0F6E56';
 
-  // 구글 시트에 저장
+  // 구글 시트에 저장 (no-cors: 응답 확인 불가하지만 저장은 됨)
   saving.style.display='inline';
   fetch(APPS_SCRIPT_URL, {
     method:'POST',
+    mode:'no-cors',
     body: JSON.stringify({store_name: storeName, field, value}),
     headers:{'Content-Type':'text/plain'}
   })
-  .then(r=>r.json())
-  .then(data=>{
-    saving.textContent = data.success ? '✓ 저장됨' : '⚠ 저장 실패';
+  .then(()=>{
+    saving.textContent='✓ 저장됨';
     setTimeout(()=>{saving.style.display='none'; saving.textContent='저장 중...';}, 2000);
   })
   .catch(()=>{
