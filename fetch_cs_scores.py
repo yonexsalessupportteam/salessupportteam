@@ -112,10 +112,12 @@ def fetch_cs_data(store_debt_map={}):
         memo = ' / '.join(data['memos'])
         score = score_from_keywords(keywords, memo)
         debt_info = store_debt_map.get(name, {})
-        if api_key:
+        if api_key and (keywords or memo):
             comment = gemini_analyze(name, keywords, memo, api_key, debt_info)
-        else:
+        elif keywords or memo:
             comment = f"키워드 분석: {keywords}"
+        else:
+            comment = ""
         result[name] = {
             'score': score,
             'keywords': keywords,
