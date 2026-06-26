@@ -242,7 +242,7 @@ const excessOnly={};
 const builtPages={};
 const expandedRisk={};
 
-const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbw9dY3FxCHCW99L-LRiyaG01w6Gc0Mw-cVrHwGNjtvxiR58ttB2pmkVFII86YWpvzTZ/exec';
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwW-qbFb95cNRfFTQ37-12xpFNIPHYroCO10dhe-VO1Ud5lPAOZsITNPrE7jmhcqYNu/exec';
 
 function updatePartnership(storeName, field, isViolation, idx){
   const value = isViolation ? '미준수' : '';
@@ -272,14 +272,10 @@ function updatePartnership(storeName, field, isViolation, idx){
   totalEl.innerHTML = `${newTotal}<span style="font-size:11px;font-weight:400;color:#888780">/20</span>`;
   totalEl.style.color = newTotal < 20 ? '#A32D2D' : '#0F6E56';
 
-  // 구글 시트에 저장 (no-cors: 응답 확인 불가하지만 저장은 됨)
+  // 구글 시트에 저장 (GET 방식)
   saving.style.display='inline';
-  fetch(APPS_SCRIPT_URL, {
-    method:'POST',
-    mode:'no-cors',
-    body: JSON.stringify({store_name: storeName, field, value}),
-    headers:{'Content-Type':'text/plain'}
-  })
+  const params = new URLSearchParams({store_name: storeName, field, value});
+  fetch(`${APPS_SCRIPT_URL}?${params}`, {method:'GET', mode:'no-cors'})
   .then(()=>{
     saving.textContent='✓ 저장됨';
     setTimeout(()=>{saving.style.display='none'; saving.textContent='저장 중...';}, 2000);
