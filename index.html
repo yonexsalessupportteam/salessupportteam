@@ -142,15 +142,22 @@ tbody tr:hover{background:#f9f8f4}
 .kw-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#f1efe8;color:#5f5e5a;border:.5px solid #e0dfd8}
 .kw-tag.danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
 .kw-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.partner-box{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.partner-item{display:flex;align-items:center;gap:8px;background:#f5f4f0;border-radius:8px;padding:10px 14px;min-width:130px}
+.partner-box{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.partner-item{display:flex;align-items:center;gap:10px;background:#f5f4f0;border-radius:8px;padding:10px 14px;min-width:160px;transition:.2s}
 .partner-item.violation{background:#FCEBEB;border:.5px solid #F09595}
-.partner-label{font-size:12px;color:#5f5e5a}
+.partner-label{font-size:12px;color:#5f5e5a;font-weight:500}
 .partner-status{font-size:12px;font-weight:600}
 .partner-status.ok{color:#0F6E56}
 .partner-status.ng{color:#A32D2D}
 .partner-pts{font-size:11px;color:#888780;margin-left:2px}
 .partner-total{display:flex;align-items:center;gap:6px;background:#f5f4f0;border-radius:8px;padding:10px 14px}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d3d1c7;border-radius:22px;transition:.2s}
+.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle-switch input:checked+.toggle-slider{background:#E24B4A}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(18px)}
+.partner-saving{font-size:11px;color:#888780;margin-left:4px;display:none}
 .gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:12px 0;}
 .gauge-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
 .gauge-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:sans-serif;transition:.15s;}
@@ -162,7 +169,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.06.26(금) 15:11 업데이트</span>
+  <span class="sub">2026.06.26(금) 15:13 업데이트</span>
 </div>
 
 <div class="layout">
@@ -234,6 +241,54 @@ const allRisks=['위기','경계','주의','적정','관리'];
 const excessOnly={};
 const builtPages={};
 const expandedRisk={};
+
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxUKsy3j1Ae-qbeCHe5Nr5Mruiwu_ao3T8_R7uy6XypHUqLdJcS8-iO0rjm4kPdEl8p/exec';
+
+function updatePartnership(storeName, field, isViolation, idx){
+  const value = isViolation ? '미준수' : '';
+  const cat = field === 'p_goods' ? 'goods' : 'clothing';
+
+  // UI 즉시 반영
+  const item = document.getElementById('pitem-'+cat+'-'+idx);
+  const status = document.getElementById('pstatus-'+cat+'-'+idx);
+  const pts = document.getElementById('ppts-'+cat+'-'+idx);
+  const saving = document.getElementById('psaving-'+idx);
+  const totalEl = document.getElementById('ptotal-'+idx);
+
+  if(isViolation){
+    item.classList.add('violation');
+    status.textContent='미준수'; status.className='partner-status ng';
+    pts.textContent='(0점)';
+  } else {
+    item.classList.remove('violation');
+    status.textContent='준수'; status.className='partner-status ok';
+    pts.textContent='(10점)';
+  }
+
+  // 파트너십 총점 재계산
+  const goodsChecked = document.getElementById('ptoggle-goods-'+idx).checked;
+  const clothingChecked = document.getElementById('ptoggle-clothing-'+idx).checked;
+  const newTotal = (goodsChecked?0:10) + (clothingChecked?0:10);
+  totalEl.innerHTML = `${newTotal}<span style="font-size:11px;font-weight:400;color:#888780">/20</span>`;
+  totalEl.style.color = newTotal < 20 ? '#A32D2D' : '#0F6E56';
+
+  // 구글 시트에 저장
+  saving.style.display='inline';
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST',
+    body: JSON.stringify({store_name: storeName, field, value}),
+    headers:{'Content-Type':'text/plain'}
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    saving.textContent = data.success ? '✓ 저장됨' : '⚠ 저장 실패';
+    setTimeout(()=>{saving.style.display='none'; saving.textContent='저장 중...';}, 2000);
+  })
+  .catch(()=>{
+    saving.textContent='⚠ 저장 실패';
+    setTimeout(()=>{saving.style.display='none'; saving.textContent='저장 중...';}, 2000);
+  });
+}
 
 function getRiskClass(score){
   if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
@@ -352,20 +407,29 @@ function buildAiDash(){
     const partnerSec=`
       <div style="margin-bottom:14px">
         <div class="sec-label">🏢 본사 파트너십</div>
-        <div class="partner-box">
-          <div class="partner-item${pGoodsViolation?' violation':''}">
+        <div class="partner-box" id="partner-box-${i}">
+          <div class="partner-item${pGoodsViolation?' violation':''}" id="pitem-goods-${i}">
             <span class="partner-label">🏸 용품</span>
-            <span class="partner-status ${pGoodsViolation?'ng':'ok'}">${pGoodsViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pGoodsViolation?'0':'10'}점)</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ptoggle-goods-${i}" ${pGoodsViolation?'checked':''} onchange="updatePartnership('${s.name}','p_goods',this.checked,${i})">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="partner-status ${pGoodsViolation?'ng':'ok'}" id="pstatus-goods-${i}">${pGoodsViolation?'미준수':'준수'}</span>
+            <span class="partner-pts" id="ppts-goods-${i}">(${pGoodsViolation?'0':'10'}점)</span>
           </div>
-          <div class="partner-item${pClothingViolation?' violation':''}">
+          <div class="partner-item${pClothingViolation?' violation':''}" id="pitem-clothing-${i}">
             <span class="partner-label">👔 의류</span>
-            <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pClothingViolation?'0':'10'}점)</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ptoggle-clothing-${i}" ${pClothingViolation?'checked':''} onchange="updatePartnership('${s.name}','p_clothing',this.checked,${i})">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="partner-status ${pClothingViolation?'ng':'ok'}" id="pstatus-clothing-${i}">${pClothingViolation?'미준수':'준수'}</span>
+            <span class="partner-pts" id="ppts-clothing-${i}">(${pClothingViolation?'0':'10'}점)</span>
           </div>
           <div class="partner-total">
             <span style="font-size:12px;color:#5f5e5a">파트너십 점수</span>
-            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore<20?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/20</span></span>
+            <span style="font-size:15px;font-weight:600" id="ptotal-${i}" style="color:${s.partnershipScore<20?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/20</span></span>
+            <span class="partner-saving" id="psaving-${i}">저장 중...</span>
           </div>
         </div>
       </div>`;
