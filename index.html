@@ -169,7 +169,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.06.29(월) 15:04 업데이트</span>
+  <span class="sub">2026.06.29(월) 15:08 업데이트</span>
 </div>
 
 <div class="layout">
@@ -480,45 +480,6 @@ function buildAiDash(){
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       ${buildScoreSection(s)}
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
-      <div style="margin-bottom:14px">
-        <div class="sec-label">📊 정량평가 (${s.quantScore}/60점)</div>
-        <div class="cat-grid" style="margin-top:8px">
-          <div class="dc">
-            <div class="dl">① 매출규모</div>
-            <div class="dv" style="color:${s.salesScore20>=20?'#0F6E56':s.salesScore20>=10?'#185FA5':'#854F0B'}">${s.salesScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
-            <div class="dsub">${[s.goodsSalesGrade?'용품 '+s.goodsSalesGrade:'',s.clothingSalesGrade?'의류 '+s.clothingSalesGrade:''].filter(Boolean).join(' / ')||'데이터 없음'}</div>
-          </div>
-          <div class="dc">
-            <div class="dl">② 회수일</div>
-            <div class="dv" style="color:${s.collectionScore20>=20?'#0F6E56':s.collectionScore20>=10?'#185FA5':s.collectionScore20>=5?'#854F0B':'#A32D2D'}">${s.collectionScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
-            <div class="dsub">${[s.cCollDays!=null?'의류 '+s.cCollDays+'일':'',s.gCollDays!=null?'용품 '+s.gCollDays+'일':''].filter(Boolean).join(' / ')||'-'}</div>
-          </div>
-          <div class="dc">
-            <div class="dl">③ 담보대비 채권</div>
-            <div class="dv" style="color:${s.collateralScore20>=20?'#0F6E56':s.collateralScore20>=15?'#185FA5':s.collateralScore20>=10?'#854F0B':'#A32D2D'}">${s.collateralScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
-            <div class="dsub">${s.clothing&&s.clothing.collateral>0?'의류 '+Math.round(s.clothing.receivable/s.clothing.collateral*100)+'%':''}${s.goods&&s.goods.collateral>0?(s.clothing&&s.clothing.collateral>0?' / ':'')+'용품 '+Math.round(s.goods.receivable/s.goods.collateral*100)+'%':''||'담보없음'}</div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-bottom:14px">
-        <div class="sec-label">💬 정성평가 (${s.qualScore}/40점)</div>
-        <div class="cat-grid" style="margin-top:8px">
-          <div class="dc">
-            <div class="dl">CS 평가</div>
-            <div class="dv" style="color:${s.csScore20>=16?'#0F6E56':s.csScore20>=10?'#185FA5':'#A32D2D'}">${s.csScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
-            <div class="dsub">원점수 ${s.csScore}점</div>
-          </div>
-          <div class="dc">
-            <div class="dl">본사 파트너십</div>
-            <div class="dv" style="color:${s.partnershipScore>=20?'#0F6E56':s.partnershipScore>=10?'#854F0B':'#A32D2D'}">${s.partnershipScore}점 <span style="font-size:11px;color:#888780">/20</span></div>
-            <div class="dsub">용품 ${s.pGoods&&['미준수','Y','y'].includes(s.pGoods.trim())?'미준수':'준수'} / 의류 ${s.pClothing&&['미준수','Y','y'].includes(s.pClothing.trim())?'미준수':'준수'}</div>
-          </div>
-          <div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">
-            <div class="dl" style="color:#185FA5">종합점수</div>
-            <div class="dv" style="color:#1a6abf;font-size:18px">${s.totalScore}<span style="font-size:11px;font-weight:400;color:#888780"> /100</span></div>
-            <div class="dsub">정량 ${s.quantScore} + 정성 ${s.qualScore}</div>
-          </div>
-        </div>
       </div>
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       ${partnerSec}
