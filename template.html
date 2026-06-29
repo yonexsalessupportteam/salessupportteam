@@ -321,16 +321,67 @@ function buildAiDash(){
       const aiComment=csData.ai_comment||'';
       const order=['위기','경계','주의','적정','관리','해당없음'];
       const worstRisk=[c,g].filter(Boolean).reduce((w,s)=>order.indexOf(s.risk)<order.indexOf(w)?s.risk:w,'해당없음');
-      let erpScore=60;
-      if(worstRisk==='위기') erpScore=0;
-      else if(worstRisk==='경계') erpScore=20;
-      else if(worstRisk==='주의') erpScore=40;
-      else if(worstRisk==='적정') erpScore=60;
-      else if(worstRisk==='관리') erpScore=10;
-      // 총점: ERP 60% + CS 20% + 파트너십 20%
-      const totalScore=Math.round(erpScore*0.6 + csScore*0.2 + partnershipScore);
+
+      // ── 정량평가 (60점) ──────────────────────────────
+      // ① 매출규모 (20점): CS데이터에서 용품/의류 각각 가져와 평균
+      const goodsSalesScore = csData.goods_sales_score!=null ? csData.goods_sales_score : null;
+      const clothingSalesScore = csData.clothing_sales_score!=null ? csData.clothing_sales_score : null;
+      const goodsSalesGrade = csData.goods_sales_grade||'';
+      const clothingSalesGrade = csData.clothing_sales_grade||'';
+      let salesScore20 = 0;
+      let salesScoreCount = 0;
+      if(g && goodsSalesScore!=null){ salesScore20+=goodsSalesScore; salesScoreCount++; }
+      if(c && clothingSalesScore!=null){ salesScore20+=clothingSalesScore; salesScoreCount++; }
+      if(salesScoreCount>0) salesScore20=Math.round(salesScore20/salesScoreCount);
+      else salesScore20=5; // 데이터 없으면 하 기본값
+
+      // ② 회수일 (20점): 의류/용품 중 나쁜 쪽 기준
+      const cCollDays = c ? (c.collection_days||0) : null;
+      const gCollDays = g ? (g.collection_days||0) : null;
+      const scoreCollDays = (days)=>{
+        if(days==null) return 20;
+        if(days<=20) return 20;
+        if(days<=40) return 10;
+        if(days<=60) return 5;
+        return 0;
+      };
+      const cCollScore = scoreCollDays(cCollDays);
+      const gCollScore = scoreCollDays(gCollDays);
+      // 의류/용품 둘 다 있으면 낮은 점수 기준
+      let collectionScore20 = 20;
+      if(c && g) collectionScore20 = Math.min(cCollScore, gCollScore);
+      else if(c) collectionScore20 = cCollScore;
+      else if(g) collectionScore20 = gCollScore;
+
+      // ③ 담보대비 채권잔액 (20점): process.py에서 계산된 값 사용
+      const cCollateralScore = csData.score_collateral!=null ? (c ? (c.score_collateral||0) : 0) : 0;
+      const gCollateralScore = csData.score_collateral!=null ? (g ? (g.score_collateral||0) : 0) : 0;
+      let collateralScore20 = 0;
+      let collateralCount = 0;
+      if(c){ collateralScore20 += (c.score_collateral||0); collateralCount++; }
+      if(g){ collateralScore20 += (g.score_collateral||0); collateralCount++; }
+      if(collateralCount>0) collateralScore20 = Math.round(collateralScore20/collateralCount);
+
+      const quantScore = salesScore20 + collectionScore20 + collateralScore20; // 최대 60점
+
+      // ── 정성평가 (40점) ──────────────────────────────
+      // CS평가(100점 → 20점 환산) + 파트너십(20점)
+      const csScore20 = Math.round(csScore * 0.2);
+      const qualScore = csScore20 + partnershipScore; // 최대 40점
+
+      const totalScore = quantScore + qualScore; // 최대 100점
+
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,pGoods,pClothing,keywords,memo,aiComment,totalScore,worstRisk,catLabel});
+      allStores.push({
+        code, name:base.name, salesperson:base.salesperson, dept,
+        clothing:c, goods:g,
+        csScore, csScore20, partnershipScore,
+        pGoods, pClothing, keywords, memo, aiComment,
+        salesScore20, goodsSalesGrade, clothingSalesGrade,
+        collectionScore20, cCollDays, gCollDays,
+        collateralScore20,
+        quantScore, qualScore, totalScore, worstRisk, catLabel
+      });
     });
   });
   allStores.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -376,7 +427,7 @@ function buildAiDash(){
       <div class="cat-grid">
         <div class="dc"><div class="dl">미수금 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
-        <div class="dc"><div class="dl">매출 (3개월 합계)</div><div class="dv" style="color:${s.clothing.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.clothing.sales)}</div></div>
+        <div class="dc"><div class="dl">당월 매출</div><div class="dv" style="color:${s.clothing.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.clothing.sales)}</div></div>
       </div>
     </div>`:'';
 
@@ -386,7 +437,7 @@ function buildAiDash(){
       <div class="cat-grid">
         <div class="dc"><div class="dl">미수금 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
-        <div class="dc"><div class="dl">매출 (3개월 합계)</div><div class="dv" style="color:${s.goods.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.goods.sales)}</div></div>
+        <div class="dc"><div class="dl">당월 매출</div><div class="dv" style="color:${s.goods.sales<0?'#A32D2D':'#1a1a18'}">${fmt(s.goods.sales)}</div></div>
       </div>
     </div>`:'';
 
@@ -442,6 +493,47 @@ function buildAiDash(){
         <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
       </div>
       ${clSec}${gdSec}
+      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+      <div style="margin-bottom:14px">
+        <div class="sec-label">📊 정량평가 (${s.quantScore}/60점)</div>
+        <div class="cat-grid" style="margin-top:8px">
+          <div class="dc">
+            <div class="dl">① 매출규모</div>
+            <div class="dv" style="color:${s.salesScore20>=20?'#0F6E56':s.salesScore20>=10?'#185FA5':'#854F0B'}">${s.salesScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
+            <div class="dsub">${[s.goodsSalesGrade?'용품 '+s.goodsSalesGrade:'',s.clothingSalesGrade?'의류 '+s.clothingSalesGrade:''].filter(Boolean).join(' / ')||'데이터 없음'}</div>
+          </div>
+          <div class="dc">
+            <div class="dl">② 회수일</div>
+            <div class="dv" style="color:${s.collectionScore20>=20?'#0F6E56':s.collectionScore20>=10?'#185FA5':s.collectionScore20>=5?'#854F0B':'#A32D2D'}">${s.collectionScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
+            <div class="dsub">${[s.cCollDays!=null?'의류 '+s.cCollDays+'일':'',s.gCollDays!=null?'용품 '+s.gCollDays+'일':''].filter(Boolean).join(' / ')||'-'}</div>
+          </div>
+          <div class="dc">
+            <div class="dl">③ 담보대비 채권</div>
+            <div class="dv" style="color:${s.collateralScore20>=20?'#0F6E56':s.collateralScore20>=15?'#185FA5':s.collateralScore20>=10?'#854F0B':'#A32D2D'}">${s.collateralScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
+            <div class="dsub">${s.clothing&&s.clothing.collateral>0?'의류 '+Math.round(s.clothing.receivable/s.clothing.collateral*100)+'%':''}${s.goods&&s.goods.collateral>0?(s.clothing&&s.clothing.collateral>0?' / ':'')+'용품 '+Math.round(s.goods.receivable/s.goods.collateral*100)+'%':''||'담보없음'}</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="sec-label">💬 정성평가 (${s.qualScore}/40점)</div>
+        <div class="cat-grid" style="margin-top:8px">
+          <div class="dc">
+            <div class="dl">CS 평가</div>
+            <div class="dv" style="color:${s.csScore20>=16?'#0F6E56':s.csScore20>=10?'#185FA5':'#A32D2D'}">${s.csScore20}점 <span style="font-size:11px;color:#888780">/20</span></div>
+            <div class="dsub">원점수 ${s.csScore}점</div>
+          </div>
+          <div class="dc">
+            <div class="dl">본사 파트너십</div>
+            <div class="dv" style="color:${s.partnershipScore>=20?'#0F6E56':s.partnershipScore>=10?'#854F0B':'#A32D2D'}">${s.partnershipScore}점 <span style="font-size:11px;color:#888780">/20</span></div>
+            <div class="dsub">용품 ${s.pGoods&&['미준수','Y','y'].includes(s.pGoods.trim())?'미준수':'준수'} / 의류 ${s.pClothing&&['미준수','Y','y'].includes(s.pClothing.trim())?'미준수':'준수'}</div>
+          </div>
+          <div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">
+            <div class="dl" style="color:#185FA5">종합점수</div>
+            <div class="dv" style="color:#1a6abf;font-size:18px">${s.totalScore}<span style="font-size:11px;font-weight:400;color:#888780"> /100</span></div>
+            <div class="dsub">정량 ${s.quantScore} + 정성 ${s.qualScore}</div>
+          </div>
+        </div>
+      </div>
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       ${partnerSec}
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
