@@ -6,7 +6,7 @@
 
 전제조건:
   - 저장소 루트에 clothing_raw.xls (의류), goods_raw.xls (용품) 파일이 있어야 함
-  - 두 파일 모두 ERP에서 export한 동일한 컬럼 구조 (부서/영업사원/매장/담보금액/.../미수채권잔액)
+  - 두 파일 모두 ERP에서 export한 동일한 컬럼 구조 (부서/영업사원/매장/담보금액/.../미수채권잔액/회수일)
 
 출력:
   - index.html (저장소 루트에 생성/덮어쓰기)
@@ -36,6 +36,47 @@ RISK_THRESHOLDS = {
 MIN_RECEIVABLE_THRESHOLD = 500_000
 MIN_DISPLAY_THRESHOLD = 100_000
 
+# ───────────────────────────────────────────
+# 정량평가 배점 기준
+# ───────────────────────────────────────────
+
+# 회수일 배점 (20점 만점)
+def score_collection_days(days):
+    """당월 회수일 기준 배점"""
+    try:
+        days = float(days)
+    except (TypeError, ValueError):
+        return 0
+    if days <= 20:
+        return 20
+    elif days <= 40:
+        return 10
+    elif days <= 60:
+        return 5
+    else:
+        return 0
+
+# 담보대비 채권잔액 배점 (20점 만점)
+def score_collateral_ratio(collateral, receivable):
+    """현재 채권잔액 ÷ 현재 담보금액 기준 배점"""
+    # 무담보 & 채권 없음 → 20점
+    if collateral == 0 and receivable <= 0:
+        return 20
+    # 무담보 & 채권 있음 → 0점
+    if collateral == 0 and receivable > 0:
+        return 0
+    ratio = receivable / collateral * 100
+    if ratio <= 50:
+        return 20
+    elif ratio <= 100:
+        return 15
+    elif ratio <= 150:
+        return 10
+    elif ratio <= 200:
+        return 5
+    else:
+        return 0
+
 
 def classify_risk(collateral, receivable, ratio):
     if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
@@ -62,22 +103,32 @@ def process_raw(filepath):
     store_data = data[mask].copy()
 
     result = pd.DataFrame()
-    result['code'] = store_data[4].astype(str)
-    result['name'] = store_data[5].astype(str)
+    result['code']        = store_data[4].astype(str)
+    result['name']        = store_data[5].astype(str)
     result['salesperson'] = store_data[3].astype(str).str.strip()
-    result['dept_code'] = store_data[0].astype(str)
-    result['dept_name'] = store_data[1].astype(str)
-    result['collateral'] = pd.to_numeric(store_data[6], errors='coerce').fillna(0)
-    result['receivable'] = pd.to_numeric(store_data[13], errors='coerce').fillna(0)
-    result['sales'] = pd.to_numeric(store_data[11], errors='coerce').fillna(0)
-    result['collection'] = pd.to_numeric(store_data[12], errors='coerce').fillna(0)
+    result['dept_code']   = store_data[0].astype(str)
+    result['dept_name']   = store_data[1].astype(str)
+    result['collateral']  = pd.to_numeric(store_data[6], errors='coerce').fillna(0)
+    result['receivable']  = pd.to_numeric(store_data[13], errors='coerce').fillna(0)
+    result['sales']       = pd.to_numeric(store_data[11], errors='coerce').fillna(0)
+    result['collection']  = pd.to_numeric(store_data[12], errors='coerce').fillna(0)
+    result['collection_days'] = pd.to_numeric(store_data[14], errors='coerce').fillna(0)
 
     result['excess'] = result['receivable'] - result['collateral']
-    result['ratio'] = np.where(result['collateral'] > 0,
-                                result['receivable'] / result['collateral'], 0.0)
+    result['ratio']  = np.where(
+        result['collateral'] > 0,
+        result['receivable'] / result['collateral'], 0.0
+    )
     result['risk'] = result.apply(
         lambda r: classify_risk(r['collateral'], r['receivable'], r['ratio']), axis=1
     )
+
+    # 정량평가 — 회수일 배점, 담보대비채권 배점
+    result['score_collection'] = result['collection_days'].apply(score_collection_days)
+    result['score_collateral']  = result.apply(
+        lambda r: score_collateral_ratio(r['collateral'], r['receivable']), axis=1
+    )
+
     return result
 
 
@@ -86,18 +137,26 @@ def build_group_data(sub):
     stores = []
     for _, r in sub.iterrows():
         stores.append({
-            'code': r['code'], 'name': r['name'], 'salesperson': r['salesperson'],
-            'collateral': int(r['collateral']), 'receivable': int(r['receivable']),
-            'excess': int(r['excess']), 'ratio': round(float(r['ratio']), 2),
-            'risk': r['risk']
+            'code':        r['code'],
+            'name':        r['name'],
+            'salesperson': r['salesperson'],
+            'collateral':  int(r['collateral']),
+            'receivable':  int(r['receivable']),
+            'excess':      int(r['excess']),
+            'ratio':       round(float(r['ratio']), 2),
+            'risk':        r['risk'],
+            'collection_days': int(r['collection_days']),
+            # 정량평가 배점
+            'score_collection': int(r['score_collection']),
+            'score_collateral':  int(r['score_collateral']),
         })
     stores = sorted(stores, key=lambda x: -x['receivable'])
 
     summary = {
         'total_collateral': int(sub['collateral'].sum()),
         'total_receivable': int(sub['receivable'].sum()),
-        'total_excess': int(sub[sub['excess'] > 0]['excess'].sum()),
-        'risk_counts': {k: int(v) for k, v in sub['risk'].value_counts().to_dict().items()}
+        'total_excess':     int(sub[sub['excess'] > 0]['excess'].sum()),
+        'risk_counts':      {k: int(v) for k, v in sub['risk'].value_counts().to_dict().items()}
     }
 
     sp_summary = {}
@@ -105,8 +164,8 @@ def build_group_data(sub):
         sp_summary[sp] = {
             'collateral': int(g['collateral'].sum()),
             'receivable': int(g['receivable'].sum()),
-            'excess': int(g[g['excess'] > 0]['excess'].sum()),
-            'stores': len(g)
+            'excess':     int(g[g['excess'] > 0]['excess'].sum()),
+            'stores':     len(g)
         }
     return {'stores': stores, 'summary': summary, 'by_salesperson': sp_summary}
 
@@ -141,15 +200,14 @@ def sanitize_text(text):
 
 def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'):
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
-    goods_raw = json.dumps(goods_dash, ensure_ascii=False)
-    update_date = get_update_timestamp()
+    goods_raw    = json.dumps(goods_dash, ensure_ascii=False)
+    update_date  = get_update_timestamp()
 
     with open('template.html', encoding='utf-8') as f:
         template = f.read()
 
     cs_scores = {' '.join(k.split()): v for k, v in cs_scores.items()}
 
-    # 특수문자 이스케이프 처리
     for name, data in cs_scores.items():
         for field in ['memo', 'ai_comment', 'keywords']:
             if field in data and data[field]:
@@ -157,9 +215,9 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
 
     html = (template
             .replace('__CLOTHING_DATA__', clothing_raw)
-            .replace('__GOODS_DATA__', goods_raw)
-            .replace('__CS_DATA__', json.dumps(cs_scores, ensure_ascii=False))
-            .replace('__UPDATE_DATE__', update_date))
+            .replace('__GOODS_DATA__',    goods_raw)
+            .replace('__CS_DATA__',       json.dumps(cs_scores, ensure_ascii=False))
+            .replace('__UPDATE_DATE__',   update_date))
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
@@ -169,7 +227,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
 def main():
     print("raw 파일 처리 시작...")
     clothing_dash = build_category_dashboard(RAW_FILES['의류'])
-    goods_dash = build_category_dashboard(RAW_FILES['용품'])
+    goods_dash    = build_category_dashboard(RAW_FILES['용품'])
 
     print("\n=== 의류 ===")
     for dept, d in clothing_dash.items():
@@ -188,17 +246,36 @@ def main():
                 name = ' '.join(s['name'].split())
                 if name not in store_debt_map:
                     store_debt_map[name] = {
-                        'collateral': s['collateral'],
-                        'receivable': s['receivable'],
-                        'ratio': s['ratio'],
-                        'risk': s['risk'],
-                        'cat': cat
+                        'collateral':       s['collateral'],
+                        'receivable':       s['receivable'],
+                        'ratio':            s['ratio'],
+                        'risk':             s['risk'],
+                        'cat':              cat,
+                        'score_collection': s['score_collection'],
+                        'score_collateral':  s['score_collateral'],
                     }
                 else:
-                    store_debt_map[name]['receivable'] += s['receivable']
-                    store_debt_map[name]['collateral'] += s['collateral']
+                    store_debt_map[name]['receivable']  += s['receivable']
+                    store_debt_map[name]['collateral']  += s['collateral']
 
     cs_scores = fetch_cs_data(store_debt_map)
+
+    # cs_scores에 정량평가 회수일·담보 배점 병합
+    for name, debt in store_debt_map.items():
+        if name in cs_scores:
+            cs_scores[name]['score_collection'] = debt.get('score_collection', 0)
+            cs_scores[name]['score_collateral']  = debt.get('score_collateral', 0)
+        else:
+            cs_scores[name] = {
+                'score': 0, 'partnership_score': 0,
+                'p_goods': '', 'p_clothing': '',
+                'keywords': '', 'memo': '', 'ai_comment': '',
+                'goods_sales_grade': '', 'goods_sales_score': 0,
+                'clothing_sales_grade': '', 'clothing_sales_score': 0,
+                'score_collection': debt.get('score_collection', 0),
+                'score_collateral':  debt.get('score_collateral', 0),
+            }
+
     generate_html(clothing_dash, goods_dash, cs_scores)
 
 
