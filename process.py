@@ -1,15 +1,13 @@
 """
 채권 위험도 대시보드 자동 생성 스크립트
 
-사용법:
-  python process.py
-
-전제조건:
-  - 저장소 루트에 clothing_raw.xls (의류), goods_raw.xls (용품) 파일이 있어야 함
-  - 두 파일 모두 ERP에서 export한 동일한 컬럼 구조 (부서/영업사원/매장/담보금액/.../미수채권잔액/회수일)
-
-출력:
-  - index.html (저장소 루트에 생성/덮어쓰기)
+총점 구조:
+  기본 80점
+  + CS 코멘트  최대 +20점
+  + 파트너십   최대 +20점
+  - 회수일 초과 최대 -20점
+  - 담보대비채권 최대 -20점
+  = 최대 100점
 """
 
 import pandas as pd
@@ -36,46 +34,46 @@ RISK_THRESHOLDS = {
 MIN_RECEIVABLE_THRESHOLD = 500_000
 MIN_DISPLAY_THRESHOLD = 100_000
 
+
 # ───────────────────────────────────────────
-# 정량평가 배점 기준
+# 감점 기준
 # ───────────────────────────────────────────
 
-# 회수일 배점 (20점 만점)
-def score_collection_days(days):
-    """당월 회수일 기준 배점"""
+def deduct_collection_days(days):
+    """회수일 감점 (60일 기준 초과시 감점)"""
     try:
         days = float(days)
     except (TypeError, ValueError):
         return 0
-    if days <= 20:
-        return 20
-    elif days <= 40:
-        return 10
-    elif days <= 60:
+    if days <= 60:
+        return 0
+    elif days <= 80:
         return 5
+    elif days <= 90:
+        return 10
     else:
-        return 0
-
-# 담보대비 채권잔액 배점 (20점 만점)
-def score_collateral_ratio(collateral, receivable):
-    """현재 채권잔액 ÷ 현재 담보금액 기준 배점"""
-    # 무담보 & 채권 없음 → 20점
-    if collateral == 0 and receivable <= 0:
         return 20
-    # 무담보 & 채권 있음 → 0점
-    if collateral == 0 and receivable > 0:
+
+
+def deduct_collateral_ratio(collateral, receivable):
+    """담보대비 채권잔액 감점"""
+    # 무담보 & 채권 없음 → 감점 없음
+    if collateral == 0 and receivable <= 0:
         return 0
+    # 무담보 & 채권 있음 → 최대 감점
+    if collateral == 0 and receivable > 0:
+        return 20
     ratio = receivable / collateral * 100
     if ratio <= 50:
-        return 20
+        return 0
     elif ratio <= 100:
-        return 15
+        return 5
     elif ratio <= 150:
         return 10
     elif ratio <= 200:
-        return 5
+        return 15
     else:
-        return 0
+        return 20
 
 
 def classify_risk(collateral, receivable, ratio):
@@ -103,15 +101,15 @@ def process_raw(filepath):
     store_data = data[mask].copy()
 
     result = pd.DataFrame()
-    result['code']        = store_data[4].astype(str)
-    result['name']        = store_data[5].astype(str)
-    result['salesperson'] = store_data[3].astype(str).str.strip()
-    result['dept_code']   = store_data[0].astype(str)
-    result['dept_name']   = store_data[1].astype(str)
-    result['collateral']  = pd.to_numeric(store_data[6], errors='coerce').fillna(0)
-    result['receivable']  = pd.to_numeric(store_data[13], errors='coerce').fillna(0)
-    result['sales']       = pd.to_numeric(store_data[11], errors='coerce').fillna(0)
-    result['collection']  = pd.to_numeric(store_data[12], errors='coerce').fillna(0)
+    result['code']            = store_data[4].astype(str)
+    result['name']            = store_data[5].astype(str)
+    result['salesperson']     = store_data[3].astype(str).str.strip()
+    result['dept_code']       = store_data[0].astype(str)
+    result['dept_name']       = store_data[1].astype(str)
+    result['collateral']      = pd.to_numeric(store_data[6],  errors='coerce').fillna(0)
+    result['receivable']      = pd.to_numeric(store_data[13], errors='coerce').fillna(0)
+    result['sales']           = pd.to_numeric(store_data[11], errors='coerce').fillna(0)
+    result['collection']      = pd.to_numeric(store_data[12], errors='coerce').fillna(0)
     result['collection_days'] = pd.to_numeric(store_data[14], errors='coerce').fillna(0)
 
     result['excess'] = result['receivable'] - result['collateral']
@@ -123,10 +121,10 @@ def process_raw(filepath):
         lambda r: classify_risk(r['collateral'], r['receivable'], r['ratio']), axis=1
     )
 
-    # 정량평가 — 회수일 배점, 담보대비채권 배점
-    result['score_collection'] = result['collection_days'].apply(score_collection_days)
-    result['score_collateral']  = result.apply(
-        lambda r: score_collateral_ratio(r['collateral'], r['receivable']), axis=1
+    # 감점 계산
+    result['deduct_collection'] = result['collection_days'].apply(deduct_collection_days)
+    result['deduct_collateral'] = result.apply(
+        lambda r: deduct_collateral_ratio(r['collateral'], r['receivable']), axis=1
     )
 
     return result
@@ -137,18 +135,17 @@ def build_group_data(sub):
     stores = []
     for _, r in sub.iterrows():
         stores.append({
-            'code':        r['code'],
-            'name':        r['name'],
-            'salesperson': r['salesperson'],
-            'collateral':  int(r['collateral']),
-            'receivable':  int(r['receivable']),
-            'excess':      int(r['excess']),
-            'ratio':       round(float(r['ratio']), 2),
-            'risk':        r['risk'],
-            'collection_days': int(r['collection_days']),
-            # 정량평가 배점
-            'score_collection': int(r['score_collection']),
-            'score_collateral':  int(r['score_collateral']),
+            'code':             r['code'],
+            'name':             r['name'],
+            'salesperson':      r['salesperson'],
+            'collateral':       int(r['collateral']),
+            'receivable':       int(r['receivable']),
+            'excess':           int(r['excess']),
+            'ratio':            round(float(r['ratio']), 2),
+            'risk':             r['risk'],
+            'collection_days':  int(r['collection_days']),
+            'deduct_collection': int(r['deduct_collection']),
+            'deduct_collateral': int(r['deduct_collateral']),
         })
     stores = sorted(stores, key=lambda x: -x['receivable'])
 
@@ -188,7 +185,6 @@ def get_update_timestamp():
 
 
 def sanitize_text(text):
-    """JSON 파싱 오류 유발 특수문자 치환"""
     if not text:
         return text
     return (text
@@ -239,6 +235,7 @@ def main():
         s = d['summary']
         print(f"  {dept}: {len(d['stores'])}개 / 채권 {s['total_receivable']:,} / 초과 {s['total_excess']:,}")
 
+    # 대리점별 감점 정보 수집
     store_debt_map = {}
     for cat, dash in [('의류', clothing_dash), ('용품', goods_dash)]:
         for dept, data in dash.items():
@@ -246,34 +243,38 @@ def main():
                 name = ' '.join(s['name'].split())
                 if name not in store_debt_map:
                     store_debt_map[name] = {
-                        'collateral':       s['collateral'],
-                        'receivable':       s['receivable'],
-                        'ratio':            s['ratio'],
-                        'risk':             s['risk'],
-                        'cat':              cat,
-                        'score_collection': s['score_collection'],
-                        'score_collateral':  s['score_collateral'],
+                        'collateral':        s['collateral'],
+                        'receivable':        s['receivable'],
+                        'ratio':             s['ratio'],
+                        'risk':              s['risk'],
+                        'cat':               cat,
+                        'deduct_collection': s['deduct_collection'],
+                        'deduct_collateral': s['deduct_collateral'],
+                        'collection_days':   s['collection_days'],
                     }
                 else:
-                    store_debt_map[name]['receivable']  += s['receivable']
-                    store_debt_map[name]['collateral']  += s['collateral']
+                    # 의류+용품 둘 다 있으면 나쁜 쪽 감점 기준
+                    store_debt_map[name]['deduct_collection'] = max(
+                        store_debt_map[name]['deduct_collection'], s['deduct_collection'])
+                    store_debt_map[name]['deduct_collateral'] = max(
+                        store_debt_map[name]['deduct_collateral'], s['deduct_collateral'])
 
     cs_scores = fetch_cs_data(store_debt_map)
 
-    # cs_scores에 정량평가 회수일·담보 배점 병합
+    # 감점 정보 병합
     for name, debt in store_debt_map.items():
         if name in cs_scores:
-            cs_scores[name]['score_collection'] = debt.get('score_collection', 0)
-            cs_scores[name]['score_collateral']  = debt.get('score_collateral', 0)
+            cs_scores[name]['deduct_collection'] = debt.get('deduct_collection', 0)
+            cs_scores[name]['deduct_collateral']  = debt.get('deduct_collateral', 0)
+            cs_scores[name]['collection_days']    = debt.get('collection_days', 0)
         else:
             cs_scores[name] = {
-                'score': 0, 'partnership_score': 0,
+                'score': 50, 'partnership_score': 20,
                 'p_goods': '', 'p_clothing': '',
                 'keywords': '', 'memo': '', 'ai_comment': '',
-                'goods_sales_grade': '', 'goods_sales_score': 0,
-                'clothing_sales_grade': '', 'clothing_sales_score': 0,
-                'score_collection': debt.get('score_collection', 0),
-                'score_collateral':  debt.get('score_collateral', 0),
+                'deduct_collection': debt.get('deduct_collection', 0),
+                'deduct_collateral': debt.get('deduct_collateral', 0),
+                'collection_days':   debt.get('collection_days', 0),
             }
 
     generate_html(clothing_dash, goods_dash, cs_scores)
