@@ -224,41 +224,51 @@ tbody tr:hover{background:#f9f8f4}
 <script>
 
 function buildScoreSection(s){
-  const dcStyle = function(deduct){ return deduct>0 ? 'background:#FCEBEB;border:.5px solid #F09595' : ''; };
-  const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
-  const collLabel = s.collectionDays<=60 ? '✓ 60일이내' : s.collectionDays<=80 ? '60~80일' : s.collectionDays<=90 ? '80~90일' : '90일초과';
-  const collRatio = s.clothing&&s.clothing.collateral>0 ? '의류 '+Math.round(s.clothing.receivable/s.clothing.collateral*100)+'%' : s.goods&&s.goods.collateral>0 ? '용품 '+Math.round(s.goods.receivable/s.goods.collateral*100)+'%' : '담보없음';
-  const goodsPartner = s.pGoods&&s.pGoods.trim()==='미준수' ? '미준수' : '준수';
-  const clothPartner = s.pClothing&&s.pClothing.trim()==='미준수' ? '미준수' : '준수';
-  const memoLabel = s.memo ? '메모기반AI분석' : '메모없음(만점)';
-  return '<div style="margin-bottom:14px">'
-    +'<div class="sec-label">📊 평가 점수 현황</div>'
-    +'<div class="cat-grid" style="margin-top:8px">'
-    +'<div class="dc" style="'+dcStyle(s.deductCollection)+'">'
-    +'<div class="dl">회수일 감점</div>'
-    +'<div class="dv" style="color:'+(s.deductCollection===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollection===0?'없음':'-'+s.deductCollection+'점')+'</div>'
-    +'<div class="dsub">당월 '+s.collectionDays+'일 '+collLabel+'</div></div>'
-    +'<div class="dc" style="'+dcStyle(s.deductCollateral)+'">'
-    +'<div class="dl">담보대비 채권 감점</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateral===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateral===0?'없음':'-'+s.deductCollateral+'점')+'</div>'
-    +'<div class="dsub">'+collRatio+'</div></div>'
-    +'<div class="dc">'
-    +'<div class="dl">정량점수</div>'
-    +'<div class="dv" style="color:'+dvColor(s.quantScore,50,40)+'">'+s.quantScore+'점 <span style="font-size:11px;color:#888780">/60</span></div>'
-    +'<div class="dsub">60-'+s.deductCollection+'-'+s.deductCollateral+'</div></div>'
-    +'<div class="dc">'
-    +'<div class="dl">CS 코멘트</div>'
-    +'<div class="dv" style="color:'+dvColor(s.csScore,16,10)+'">'+s.csScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
-    +'<div class="dsub">'+memoLabel+'</div></div>'
-    +'<div class="dc">'
-    +'<div class="dl">파트너십</div>'
-    +'<div class="dv" style="color:'+(s.partnershipScore>=20?'#0F6E56':s.partnershipScore>=10?'#854F0B':'#A32D2D')+'">'+s.partnershipScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
-    +'<div class="dsub">용품 '+goodsPartner+' / 의류 '+clothPartner+'</div></div>'
-    +'<div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">'
-    +'<div class="dl" style="color:#185FA5">종합점수</div>'
-    +'<div class="dv" style="color:#1a6abf;font-size:18px">'+s.totalScore+'<span style="font-size:11px;font-weight:400;color:#888780"> /100</span></div>'
-    +'<div class="dsub">'+s.quantScore+'(정량)+'+s.csScore+'(CS)+'+s.partnershipScore+'(파트너십)</div></div>'
-    +'</div></div>';
+  var dc1='',dc2='';
+  if(s.deductCollection>0) dc1='background:#FCEBEB;border:.5px solid #F09595';
+  if(s.deductCollateral>0) dc2='background:#FCEBEB;border:.5px solid #F09595';
+  var cl='';
+  if(s.collectionDays<=60) cl='OK 60일이내';
+  else if(s.collectionDays<=80) cl='60-80일';
+  else if(s.collectionDays<=90) cl='80-90일';
+  else cl='90일초과';
+  var cr='담보없음';
+  if(s.clothing&&s.clothing.collateral>0) cr='의류 '+Math.round(s.clothing.receivable/s.clothing.collateral*100)+'%';
+  else if(s.goods&&s.goods.collateral>0) cr='용품 '+Math.round(s.goods.receivable/s.goods.collateral*100)+'%';
+  var gp=s.pGoods&&s.pGoods.trim()==='미준수'?'미준수':'준수';
+  var cp=s.pClothing&&s.pClothing.trim()==='미준수'?'미준수':'준수';
+  var ml=s.memo?'메모기반':'메모없음(만점)';
+  var qc=s.quantScore>=50?'#0F6E56':s.quantScore>=40?'#185FA5':'#A32D2D';
+  var cc=s.csScore>=16?'#0F6E56':s.csScore>=10?'#185FA5':'#A32D2D';
+  var pc=s.partnershipScore>=20?'#0F6E56':s.partnershipScore>=10?'#854F0B':'#A32D2D';
+  var dc=s.deductCollection===0?'없음':'-'+s.deductCollection+'점';
+  var dl=s.deductCollateral===0?'없음':'-'+s.deductCollateral+'점';
+  var h='<div style="margin-bottom:14px">';
+  h+='<div class="sec-label">점수 현황</div>';
+  h+='<div class="cat-grid" style="margin-top:8px">';
+  h+='<div class="dc" style="'+dc1+'">';
+  h+='<div class="dl">회수일 감점</div>';
+  h+='<div class="dv" style="color:'+(s.deductCollection===0?'#0F6E56':'#A32D2D')+'">'+dc+'</div>';
+  h+='<div class="dsub">'+s.collectionDays+'일 '+cl+'</div></div>';
+  h+='<div class="dc" style="'+dc2+'">';
+  h+='<div class="dl">담보대비 채권 감점</div>';
+  h+='<div class="dv" style="color:'+(s.deductCollateral===0?'#0F6E56':'#A32D2D')+'">'+dl+'</div>';
+  h+='<div class="dsub">'+cr+'</div></div>';
+  h+='<div class="dc"><div class="dl">정량점수</div>';
+  h+='<div class="dv" style="color:'+qc+'">'+s.quantScore+'점</div>';
+  h+='<div class="dsub">/60점</div></div>';
+  h+='<div class="dc"><div class="dl">CS 코멘트</div>';
+  h+='<div class="dv" style="color:'+cc+'">'+s.csScore+'점</div>';
+  h+='<div class="dsub">'+ml+'</div></div>';
+  h+='<div class="dc"><div class="dl">파트너십</div>';
+  h+='<div class="dv" style="color:'+pc+'">'+s.partnershipScore+'점</div>';
+  h+='<div class="dsub">용품'+gp+'/의류'+cp+'</div></div>';
+  h+='<div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">';
+  h+='<div class="dl" style="color:#185FA5">종합점수</div>';
+  h+='<div class="dv" style="color:#1a6abf;font-size:18px">'+s.totalScore+'<span style="font-size:11px;color:#888780">/100</span></div>';
+  h+='<div class="dsub">'+s.quantScore+'+'+s.csScore+'+'+s.partnershipScore+'</div></div>';
+  h+='</div></div>';
+  return h;
 }
 
 const clothingData=__CLOTHING_DATA__;
