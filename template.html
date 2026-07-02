@@ -228,8 +228,8 @@ function buildScoreSection(s){
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
   const collLabel = s.collectionDays<=60 ? '✓ 60일이내' : s.collectionDays<=80 ? '60~80일' : s.collectionDays<=90 ? '80~90일' : '90일초과';
   const collRatio = s.clothing&&s.clothing.collateral>0 ? '의류 '+Math.round(s.clothing.receivable/s.clothing.collateral*100)+'%' : s.goods&&s.goods.collateral>0 ? '용품 '+Math.round(s.goods.receivable/s.goods.collateral*100)+'%' : '담보없음';
-  const goodsPartner = s.pGoods&&s.pGoods.trim()==='미준수' ? '미준수' : '준수';
-  const clothPartner = s.pClothing&&s.pClothing.trim()==='미준수' ? '미준수' : '준수';
+  const goodsPartner = s.pGoods&&s.pGoods.trim() ? '미준수' : '준수';
+  const clothPartner = s.pClothing&&s.pClothing.trim() ? '미준수' : '준수';
   const memoLabel = s.memo ? '메모기반AI분석' : '메모없음(만점)';
   return '<div style="margin-bottom:14px">'
     +'<div class="sec-label">📊 평가 점수 현황</div>'
@@ -431,8 +431,8 @@ function buildAiDash(){
     const aiLblColor=s.totalScore>=80?'#085041':'#0C447C';
     const aiTxtColor=s.totalScore>=80?'#0F6E56':'#185FA5';
 
-    const pGoodsViolation=s.pGoods&&['1','TRUE','true','미준수','Y','y'].includes(s.pGoods.trim());
-    const pClothingViolation=s.pClothing&&['1','TRUE','true','미준수','Y','y'].includes(s.pClothing.trim());
+    const pGoodsViolation=!!(s.pGoods&&s.pGoods.trim());
+    const pClothingViolation=!!(s.pClothing&&s.pClothing.trim());
 
     const partnerSec=`
       <div style="margin-bottom:14px">
