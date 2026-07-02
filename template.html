@@ -338,7 +338,7 @@ function buildAiDash(){
   const cont=document.getElementById('ai-dash-content');
   const allStores=[];
   const seen={};
-  ['영업1팀'].forEach(dept=>{
+  ['영업1팀','영업2팀','E-BIZ팀'].forEach(dept=>{
     const cl=(DATA['의류'][dept]||{stores:[]}).stores;
     const gd=(DATA['용품'][dept]||{stores:[]}).stores;
     const codes=new Set([...cl.map(s=>s.code),...gd.map(s=>s.code)]);
@@ -367,6 +367,7 @@ function buildAiDash(){
       const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
       allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,pGoods,pClothing,keywords,memo,aiComment,deductCollection,deductCollateral,collectionDays,quantScore,totalScore,worstRisk,catLabel});
+    });
   });
   allStores.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
 
