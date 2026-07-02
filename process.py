@@ -54,23 +54,21 @@ def deduct_collection_days(days):
 
 
 def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 채권잔액 감점 (최대 15점)"""
+    """담보대비 채권잔액 감점 (최대 15점). classify_risk() 등급 기준(60/100/150%)과 동일하게 정렬."""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
-    # 무담보 & 채권 있음 → 최대 감점
+    # 무담보 & 채권 있음 (=관리 등급) → 최대 감점
     if collateral == 0 and receivable > 0:
         return 15
     ratio = receivable / collateral * 100
-    if ratio <= 50:
+    if ratio <= RISK_THRESHOLDS['safe_max'] * 100:      # 적정 (≤60%)
         return 0
-    elif ratio <= 100:
+    elif ratio <= RISK_THRESHOLDS['caution_max'] * 100:  # 주의 (60~100%)
         return 5
-    elif ratio <= 150:
+    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (100~150%)
         return 10
-    elif ratio <= 200:
-        return 12
-    else:
+    else:                                                # 위기 (150% 초과)
         return 15
 
 
