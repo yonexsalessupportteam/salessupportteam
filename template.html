@@ -229,8 +229,8 @@ function buildScoreSection(s){
   const collLabelFor = function(days){ return days<=60 ? '✓ 60일이내' : days<=80 ? '60~80일' : days<=90 ? '80~90일' : '90일초과'; };
   const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.receivable/s.clothing.collateral*100) : null;
   const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.receivable/s.goods.collateral*100) : null;
-  const deductCollateral = Math.min(15, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
-  const deductCollection = Math.min(15, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
+  const deductCollateral = Math.min(25, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
+  const deductCollection = Math.min(25, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
   const goodsPartner = s.pGoods&&s.pGoods.trim() ? '미준수' : '준수';
   const clothPartner = s.pClothing&&s.pClothing.trim() ? '미준수' : '준수';
   const memoLabel = s.memo ? '메모기반AI분석' : '메모없음(만점)';
@@ -240,25 +240,25 @@ function buildScoreSection(s){
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionClothing)+'">'
     +'<div class="dl">회수일 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점')+' <span style="font-size:11px;color:#888780">/'+(s.goods?'8':'15')+'</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollectionClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점')+' <span style="font-size:11px;color:#888780">/'+(s.goods?'15':'25')+'</span></div>'
     +'<div class="dsub">당월 '+(s.collectionDaysClothing||0)+'일 '+collLabelFor(s.collectionDaysClothing||0)+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionGoods)+'">'
     +'<div class="dl">회수일 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점')+' <span style="font-size:11px;color:#888780">/'+(s.clothing?'8':'15')+'</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollectionGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점')+' <span style="font-size:11px;color:#888780">/'+(s.clothing?'15':'25')+'</span></div>'
     +'<div class="dsub">당월 '+(s.collectionDaysGoods||0)+'일 '+collLabelFor(s.collectionDaysGoods||0)+'</div></div>'
     ):'')
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollateralClothing)+'">'
     +'<div class="dl">담보대비 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점')+' <span style="font-size:11px;color:#888780">/'+(s.goods?'8':'15')+'</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollateralClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점')+' <span style="font-size:11px;color:#888780">/'+(s.goods?'15':'25')+'</span></div>'
     +'<div class="dsub">'+(clRatioVal!=null?clRatioVal+'%':'담보없음')+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc" style="'+dcStyle(s.deductCollateralGoods)+'">'
     +'<div class="dl">담보대비 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/'+(s.clothing?'8':'15')+'</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/'+(s.clothing?'15':'25')+'</span></div>'
     +'<div class="dsub">'+(gdRatioVal!=null?gdRatioVal+'%':'담보없음')+'</div></div>'
     ):'')
     +'<div class="dc">'
@@ -391,7 +391,7 @@ function buildAiDash(){
       const collectionDays=csData.collection_days!=null?csData.collection_days:0;
       const collectionDaysClothing=csData.collection_days_clothing!=null?csData.collection_days_clothing:0;
       const collectionDaysGoods=csData.collection_days_goods!=null?csData.collection_days_goods:0;
-      const quantScore=Math.min(50,Math.max(20,50-deductCollection-deductCollateral));
+      const quantScore=Math.min(50,Math.max(0,50-deductCollection-deductCollateral));
       const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
       allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,pGoods,pClothing,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});

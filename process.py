@@ -38,7 +38,24 @@ MIN_DISPLAY_THRESHOLD = 100_000
 # ───────────────────────────────────────────
 
 def deduct_collection_days(days):
-    """회수일 감점 (60일 기준 초과시 감점, 최대 15점, 카테고리 1개만 있는 대리점용)"""
+    """회수일 감점 (60일 기준 초과시 감점, 최대 25점, 카테고리 1개만 있는 대리점용)"""
+    try:
+        days = float(days)
+    except (TypeError, ValueError):
+        return 0
+    if days <= 60:
+        return 0
+    elif days <= 80:
+        return 10
+    elif days <= 90:
+        return 15
+    else:
+        return 25
+
+
+def deduct_collection_days_half(days):
+    """회수일 감점 (최대 15점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용).
+    둘을 합산했을 때 최대 25점(15+15=30→25 캡)이 되도록 절반 스케일."""
     try:
         days = float(days)
     except (TypeError, ValueError):
@@ -53,57 +70,42 @@ def deduct_collection_days(days):
         return 15
 
 
-def deduct_collection_days_half(days):
-    """회수일 감점 (최대 8점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용)"""
-    try:
-        days = float(days)
-    except (TypeError, ValueError):
-        return 0
-    if days <= 60:
-        return 0
-    elif days <= 80:
-        return 3
-    elif days <= 90:
-        return 5
-    else:
-        return 8
-
-
 def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 채권잔액 감점 (최대 15점, 카테고리 1개만 있는 대리점용). classify_risk() 등급 기준(60/100/150%)과 동일하게 정렬."""
+    """담보대비 채권잔액 감점 (최대 25점, 카테고리 1개만 있는 대리점용). classify_risk() 등급 기준(60/100/150%)과 동일하게 정렬."""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
     # 무담보 & 채권 있음 (=관리 등급) → 최대 감점
     if collateral == 0 and receivable > 0:
-        return 15
+        return 25
     ratio = receivable / collateral * 100
     if ratio <= RISK_THRESHOLDS['safe_max'] * 100:      # 적정 (≤60%)
         return 0
     elif ratio <= RISK_THRESHOLDS['caution_max'] * 100:  # 주의 (60~100%)
-        return 5
-    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (100~150%)
         return 10
-    else:                                                # 위기 (150% 초과)
+    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (100~150%)
         return 15
+    else:                                                # 위기 (150% 초과)
+        return 25
 
 
 def deduct_collateral_ratio_half(collateral, receivable):
-    """담보대비 채권잔액 감점 (최대 8점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용).
-    둘을 합산했을 때 최대 15점(8+8=16→15 캡)이 되도록 절반 스케일."""
+    """담보대비 채권잔액 감점 (최대 15점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용).
+    둘을 합산했을 때 최대 25점(15+15=30→25 캡)이 되도록 절반 스케일."""
     if collateral == 0 and receivable <= 0:
         return 0
     if collateral == 0 and receivable > 0:
-        return 8
+        return 15
     ratio = receivable / collateral * 100
     if ratio <= RISK_THRESHOLDS['safe_max'] * 100:
         return 0
     elif ratio <= RISK_THRESHOLDS['caution_max'] * 100:
-        return 3
-    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:
         return 5
+    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:
+        return 10
     else:
-        return 8
+        return 15
+
 
 
 def classify_risk(collateral, receivable, ratio):
@@ -312,8 +314,8 @@ def main():
     for name, entry in store_debt_map.items():
         if len(entry['cats_seen']) >= 2:
             # 의류+용품 둘 다 있음 → 각 카테고리 감점(최대 8점씩) 합산, 합계 최대 15점
-            entry['deduct_collateral'] = min(15, entry['deduct_collateral_clothing'] + entry['deduct_collateral_goods'])
-            entry['deduct_collection'] = min(15, entry['deduct_collection_clothing'] + entry['deduct_collection_goods'])
+            entry['deduct_collateral'] = min(25, entry['deduct_collateral_clothing'] + entry['deduct_collateral_goods'])
+            entry['deduct_collection'] = min(25, entry['deduct_collection_clothing'] + entry['deduct_collection_goods'])
             entry['collection_days'] = max(entry['collection_days_clothing'], entry['collection_days_goods'])
         else:
             # 카테고리 1개뿐 → 원래 스케일(최대 15점) 그대로, 표시용 분해값도 채워줌
