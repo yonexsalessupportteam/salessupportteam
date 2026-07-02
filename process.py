@@ -1,12 +1,10 @@
 """
 채권 위험도 대시보드 자동 생성 스크립트
 
-총점 구조:
-  기본 80점
-  + CS 코멘트  최대 +20점
-  + 파트너십   최대 +20점
-  - 회수일 초과 최대 -20점
-  - 담보대비채권 최대 -20점
+총점 구조 (최대 100점):
+  정량점수  기본 50점 - 회수일 감점(최대 15) - 담보대비채권 감점(최대 15), 하한 20점
+  + CS 코멘트  최대 20점
+  + 파트너십   최대 30점 (용품 15 + 의류 15)
   = 최대 100점
 """
 
@@ -40,7 +38,7 @@ MIN_DISPLAY_THRESHOLD = 100_000
 # ───────────────────────────────────────────
 
 def deduct_collection_days(days):
-    """회수일 감점 (60일 기준 초과시 감점)"""
+    """회수일 감점 (60일 기준 초과시 감점, 최대 15점)"""
     try:
         days = float(days)
     except (TypeError, ValueError):
@@ -52,17 +50,17 @@ def deduct_collection_days(days):
     elif days <= 90:
         return 10
     else:
-        return 20
+        return 15
 
 
 def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 채권잔액 감점"""
+    """담보대비 채권잔액 감점 (최대 15점)"""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
     # 무담보 & 채권 있음 → 최대 감점
     if collateral == 0 and receivable > 0:
-        return 20
+        return 15
     ratio = receivable / collateral * 100
     if ratio <= 50:
         return 0
@@ -71,9 +69,9 @@ def deduct_collateral_ratio(collateral, receivable):
     elif ratio <= 150:
         return 10
     elif ratio <= 200:
-        return 15
+        return 12
     else:
-        return 20
+        return 15
 
 
 def classify_risk(collateral, receivable, ratio):
@@ -269,7 +267,7 @@ def main():
             cs_scores[name]['collection_days']    = debt.get('collection_days', 0)
         else:
             cs_scores[name] = {
-                'score': 50, 'partnership_score': 20,
+                'score': 20, 'partnership_score': 30,
                 'p_goods': '', 'p_clothing': '',
                 'keywords': '', 'memo': '', 'ai_comment': '',
                 'deduct_collection': debt.get('deduct_collection', 0),

@@ -244,15 +244,15 @@ function buildScoreSection(s){
     +'<div class="dsub">'+collRatio+'</div></div>'
     +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
-    +'<div class="dv" style="color:'+dvColor(s.quantScore,50,40)+'">'+s.quantScore+'점 <span style="font-size:11px;color:#888780">/60</span></div>'
-    +'<div class="dsub">60-'+s.deductCollection+'-'+s.deductCollateral+'</div></div>'
+    +'<div class="dv" style="color:'+dvColor(s.quantScore,42,33)+'">'+s.quantScore+'점 <span style="font-size:11px;color:#888780">/50</span></div>'
+    +'<div class="dsub">50-'+s.deductCollection+'-'+s.deductCollateral+'</div></div>'
     +'<div class="dc">'
     +'<div class="dl">CS 코멘트</div>'
     +'<div class="dv" style="color:'+dvColor(s.csScore,16,10)+'">'+s.csScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
     +'<div class="dsub">'+memoLabel+'</div></div>'
     +'<div class="dc">'
     +'<div class="dl">파트너십</div>'
-    +'<div class="dv" style="color:'+(s.partnershipScore>=20?'#0F6E56':s.partnershipScore>=10?'#854F0B':'#A32D2D')+'">'+s.partnershipScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
+    +'<div class="dv" style="color:'+(s.partnershipScore>=30?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+s.partnershipScore+'점 <span style="font-size:11px;color:#888780">/30</span></div>'
     +'<div class="dsub">용품 '+goodsPartner+' / 의류 '+clothPartner+'</div></div>'
     +'<div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">'
     +'<div class="dl" style="color:#185FA5">종합점수</div>'
@@ -301,15 +301,15 @@ function updatePartnership(storeName, field, isViolation, idx){
   } else {
     item.classList.remove('violation');
     status.textContent='준수'; status.className='partner-status ok';
-    pts.textContent='(10점)';
+    pts.textContent='(15점)';
   }
 
   // 파트너십 총점 재계산
   const goodsChecked = document.getElementById('ptoggle-goods-'+idx).checked;
   const clothingChecked = document.getElementById('ptoggle-clothing-'+idx).checked;
-  const newTotal = (goodsChecked?0:10) + (clothingChecked?0:10);
-  totalEl.innerHTML = `${newTotal}<span style="font-size:11px;font-weight:400;color:#888780">/20</span>`;
-  totalEl.style.color = newTotal < 20 ? '#A32D2D' : '#0F6E56';
+  const newTotal = (goodsChecked?0:15) + (clothingChecked?0:15);
+  totalEl.innerHTML = `${newTotal}<span style="font-size:11px;font-weight:400;color:#888780">/30</span>`;
+  totalEl.style.color = newTotal < 30 ? '#A32D2D' : '#0F6E56';
 
   // 구글 시트에 저장 (GET 방식)
   saving.style.display='inline';
@@ -352,7 +352,7 @@ function buildAiDash(){
       if(Math.abs((c||{}).receivable||0)<100000&&Math.abs((g||{}).receivable||0)<100000) return;
       const csData=CS_SHEET[base.name]||{};
       const csScore=Math.min(20,Math.max(0,csData.score!=null?csData.score:20));
-      const partnershipScore=Math.min(20,Math.max(0,csData.partnership_score!=null?csData.partnership_score:20));
+      const partnershipScore=Math.min(30,Math.max(0,csData.partnership_score!=null?csData.partnership_score:30));
       const pGoods=csData.p_goods||'';
       const pClothing=csData.p_clothing||'';
       const keywords=csData.keywords||'';
@@ -363,7 +363,7 @@ function buildAiDash(){
       const deductCollection=csData.deduct_collection!=null?csData.deduct_collection:0;
       const deductCollateral=csData.deduct_collateral!=null?csData.deduct_collateral:0;
       const collectionDays=csData.collection_days!=null?csData.collection_days:0;
-      const quantScore=Math.min(60,Math.max(20,60-deductCollection-deductCollateral));
+      const quantScore=Math.min(50,Math.max(20,50-deductCollection-deductCollateral));
       const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
       allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,pGoods,pClothing,keywords,memo,aiComment,deductCollection,deductCollateral,collectionDays,quantScore,totalScore,worstRisk,catLabel});
@@ -441,19 +441,19 @@ function buildAiDash(){
           <div class="partner-item${pGoodsViolation?' violation':''}">
             <span class="partner-label">🏸 용품</span>
             <span class="partner-status ${pGoodsViolation?'ng':'ok'}">${pGoodsViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pGoodsViolation?'0':'10'}점)</span>
+            <span class="partner-pts">(${pGoodsViolation?'0':'15'}점)</span>
           </div>
           <div class="partner-item${pClothingViolation?' violation':''}">
             <span class="partner-label">👔 의류</span>
             <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pClothingViolation?'0':'10'}점)</span>
+            <span class="partner-pts">(${pClothingViolation?'0':'15'}점)</span>
           </div>
           <div class="partner-total">
             <span style="font-size:12px;color:#5f5e5a">파트너십 점수</span>
-            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore<20?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/20</span></span>
+            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore<30?'#A32D2D':'#0F6E56'}">${s.partnershipScore}<span style="font-size:11px;font-weight:400;color:#888780">/30</span></span>
           </div>
         </div>
-        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 '미준수' 입력</div>
+        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등)</div>
       </div>`;
 
     const aiCommentHtml = s.aiComment

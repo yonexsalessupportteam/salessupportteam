@@ -81,9 +81,9 @@ def score_cs(keywords_str, memo):
 
 
 def score_partnership(p_goods, p_clothing):
-    """파트너십 점수 (20점 만점). 컬럼에 값이 있으면(공백 아니면) 위반으로 처리."""
-    goods_score = 0 if str(p_goods).strip() else 10
-    cloth_score = 0 if str(p_clothing).strip() else 10
+    """파트너십 점수 (30점 만점, 용품 15 + 의류 15). 컬럼에 값이 있으면(공백 아니면) 위반으로 처리."""
+    goods_score = 0 if str(p_goods).strip() else 15
+    cloth_score = 0 if str(p_clothing).strip() else 15
     return goods_score + cloth_score
 
 
