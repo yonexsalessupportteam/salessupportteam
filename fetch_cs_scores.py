@@ -89,6 +89,53 @@ def score_partnership(p_goods, p_clothing):
 
 
 # ───────────────────────────────────────────
+# 매출규모 감점 (3개월 매출 합계, 용품 10점 + 의류 10점 = 20점 만점)
+# 구글시트 '매출3개월_용품' / '매출3개월_의류' 컬럼(각 사업부 3개월 합계 금액)을 기준으로
+# 3구간 감점 방식 채점 (10점 만점에서 감점).
+# 근거: 채권관리_배포자료(실측 3개월 합계, 114개 매장, 4~6월 기준)
+# ───────────────────────────────────────────
+SALES_DEDUCT_BRACKETS_GOODS = [
+    (100_000_000, 0),
+    (20_000_000,  4),
+]  # 그 미만은 10점 감점
+SALES_DEDUCT_BRACKETS_CLOTHING = [
+    (50_000_000, 0),
+    (4_000_000,  4),
+]  # 그 미만은 10점 감점
+
+
+def parse_amount(val):
+    """'12,000,000' 같은 문자열/숫자를 금액(float)으로 변환. 실패하면 0."""
+    s = str(val).strip().replace(',', '').replace('원', '')
+    if not s:
+        return 0
+    try:
+        return float(s)
+    except ValueError:
+        return 0
+
+
+def deduct_sales(amount, brackets):
+    """3개월 매출 합계 구간 감점 (10점 만점에서 감점할 점수 반환)."""
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return 10
+    for threshold, deduct in brackets:
+        if amount >= threshold:
+            return deduct
+    return 10
+
+
+def score_sales_tier_goods(amount):
+    return 10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_GOODS)
+
+
+def score_sales_tier_clothing(amount):
+    return 10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_CLOTHING)
+
+
+# ───────────────────────────────────────────
 # ───────────────────────────────────────────
 # AI 키워드 추출 + 리스크 분석 (Gemini, 1회 호출로 통합)
 # ───────────────────────────────────────────
@@ -196,13 +243,20 @@ def fetch_cs_data(store_debt_map={}):
         written   = parse_sheet_date(row.get('작성일', ''))
         if not name:
             continue
+        sales_3m_goods    = parse_amount(row.get('매출3개월_용품', ''))
+        sales_3m_clothing = parse_amount(row.get('매출3개월_의류', ''))
         if name not in merged:
-            merged[name] = {'memos': [], 'p_goods': '', 'p_clothing': ''}
-        # 파트너십은 월 필터 없이 항상 최신 행 값으로 덮어씀
+            merged[name] = {'memos': [], 'p_goods': '', 'p_clothing': '',
+                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
+        # 파트너십/3개월매출은 월 필터 없이 항상 최신 행 값으로 덮어씀
         if p_goods:
             merged[name]['p_goods'] = p_goods
         if p_cloth:
             merged[name]['p_clothing'] = p_cloth
+        if sales_3m_goods:
+            merged[name]['sales_3m_goods'] = sales_3m_goods
+        if sales_3m_clothing:
+            merged[name]['sales_3m_clothing'] = sales_3m_clothing
         # 메모는 이번 달 작성분만 반영 (과거 메모 누적 방지)
         if written and (written.year != cur_year or written.month != cur_month):
             skipped_old_memo += 1
@@ -218,6 +272,8 @@ def fetch_cs_data(store_debt_map={}):
         memo      = ' / '.join(data['memos'])
         p_goods   = data['p_goods']
         p_clothing = data['p_clothing']
+        sales_3m_goods    = data.get('sales_3m_goods', 0)
+        sales_3m_clothing = data.get('sales_3m_clothing', 0)
 
         # AI 키워드 추출 + 리스크 분석 (메모 있을 때만, 1회 호출로 통합)
         debt_info = store_debt_map.get(name, {})
@@ -246,9 +302,18 @@ def fetch_cs_data(store_debt_map={}):
         # 파트너십 점수 (30점 만점)
         partnership_score = score_partnership(p_goods, p_clothing)
 
+        # 매출규모 점수 (3개월 합계, 용품10+의류10=20점 만점)
+        sales_score_goods    = score_sales_tier_goods(sales_3m_goods)
+        sales_score_clothing = score_sales_tier_clothing(sales_3m_clothing)
+
         result[name] = {
             'score':                  cs_score,
             'partnership_score':      partnership_score,
+            'sales_score':            sales_score_goods + sales_score_clothing,
+            'sales_score_goods':      sales_score_goods,
+            'sales_score_clothing':   sales_score_clothing,
+            'sales_3m_goods':         sales_3m_goods,
+            'sales_3m_clothing':      sales_3m_clothing,
             'p_goods':                p_goods,
             'p_clothing':             p_clothing,
             'keywords':               keywords,
