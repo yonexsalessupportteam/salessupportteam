@@ -115,8 +115,8 @@ def deduct_collateral_ratio_half(collateral, receivable):
 def classify_risk(collateral, receivable):
     if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
         return '해당없음'
-    if collateral == 0 and receivable > 0:
-        return '관리'
+    if collateral == 0:
+        return '관리' if receivable > 0 else '적정'
     excess_rate = (receivable - collateral) / collateral
     if excess_rate <= RISK_THRESHOLDS['safe_max']:
         return '적정'
