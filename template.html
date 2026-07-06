@@ -265,14 +265,6 @@ function buildScoreSection(s){
     +'<div class="dsub">'+(gdRatioVal!=null?gdRatioVal+'%':'담보없음')+'</div></div>'
     ):'')
     +'<div class="dc">'
-    +'<div class="dl">매출규모 (용품,3개월)</div>'
-    +'<div class="dv" style="color:'+dvColor(salesScoreGoods,8,5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
-    +'<div class="dsub">'+(s.sales3mGoods?fmt(s.sales3mGoods):'미입력')+'</div></div>'
-    +'<div class="dc">'
-    +'<div class="dl">매출규모 (의류,3개월)</div>'
-    +'<div class="dv" style="color:'+dvColor(salesScoreClothing,8,5)+'">'+salesScoreClothing+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
-    +'<div class="dsub">'+(s.sales3mClothing?fmt(s.sales3mClothing):'미입력')+'</div></div>'
-    +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
     +'<div class="dv" style="color:'+dvColor(s.quantScore,42,33)+'">'+s.quantScore+'점 <span style="font-size:11px;color:#888780">/50</span></div>'
     +'<div class="dsub">건전성(30-'+deductCollection+'-'+deductCollateral+')+매출('+salesScore+')</div></div>'
@@ -457,6 +449,7 @@ function buildAiDash(){
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">매출규모 (3개월)</div><div class="dv" style="color:${dvColor(s.salesScoreClothing,8,5)}">${s.salesScoreClothing}점 <span style="font-size:11px;color:#888780">/10</span></div><div class="dsub">${s.sales3mClothing?fmt(s.sales3mClothing):'미입력'}</div></div>
       </div>
     </div>`:'';
 
@@ -466,6 +459,7 @@ function buildAiDash(){
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">매출규모 (3개월)</div><div class="dv" style="color:${dvColor(s.salesScoreGoods,8,5)}">${s.salesScoreGoods}점 <span style="font-size:11px;color:#888780">/10</span></div><div class="dsub">${s.sales3mGoods?fmt(s.sales3mGoods):'미입력'}</div></div>
       </div>
     </div>`:'';
 
