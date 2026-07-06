@@ -72,12 +72,13 @@ def score_cs(keywords_str, memo):
 
     for kw in RISK_KEYWORDS['high']:
         if kw in text:
-            score -= 8   # 고위험 -8점
+            score -= 20   # 고위험 -20점
     for kw in RISK_KEYWORDS['mid']:
         if kw in text:
-            score -= 5   # 중위험 -5점
+            score -= 10   # 중위험 -10점
+    # 저위험(RISK_KEYWORDS['low'])은 감점 없음
 
-    return max(0, score)
+    return max(0, score)  # 중복 감점 누적, 만점(20점) 구조상 최대 감점은 자동으로 -20점(=0점)까지로 제한됨
 
 
 def score_partnership(p_goods, p_clothing):
