@@ -227,8 +227,8 @@ function buildScoreSection(s){
   const dcStyle = function(deduct){ return deduct>0 ? 'background:#FCEBEB;border:.5px solid #F09595' : ''; };
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
   const collLabelFor = function(days){ return days<=60 ? '✓ 60일이내' : days<=80 ? '60~80일' : days<=90 ? '80~90일' : '90일초과'; };
-  const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.receivable/s.clothing.collateral*100) : null;
-  const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.receivable/s.goods.collateral*100) : null;
+  const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.excess/s.clothing.collateral*100) : null;
+  const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.excess/s.goods.collateral*100) : null;
   const deductCollateral = Math.min(15, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
   const deductCollection = Math.min(15, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
   const salesScoreGoods = Math.min(10, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
