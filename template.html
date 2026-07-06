@@ -357,6 +357,7 @@ function getRiskClass(score){
 let currentAiGrade='전체';
 
 function buildAiDash(){
+  const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
   const cont=document.getElementById('ai-dash-content');
   const allStores=[];
   const seen={};
