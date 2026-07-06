@@ -21,6 +21,22 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#f5f4f0;colo
 .sidebar-item.active{background:#f5f4f0;color:#1a1a18;font-weight:500;border-left-color:#1a1a18}
 .sidebar-item .icon{font-size:16px;width:20px;text-align:center}
 .sidebar-divider{height:.5px;background:#e0dfd8;margin:8px 0}
+.crit-wrap{padding:24px;max-width:820px}
+.crit-intro{font-size:13px;color:#5f5e5a;margin-bottom:20px;line-height:1.6}
+.crit-block{background:#fff;border:.5px solid #e0dfd8;border-radius:10px;margin-bottom:12px;overflow:hidden}
+.crit-block summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:15px;font-weight:600;color:#1a1a18;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.crit-block summary::-webkit-details-marker{display:none}
+.crit-block summary::after{content:'▾';font-size:12px;color:#b4b2a9;transition:.2s;margin-left:auto}
+.crit-block[open] summary::after{transform:rotate(180deg)}
+.crit-block summary:hover{background:#f5f4f0}
+.crit-body{padding:0 18px 18px;font-size:13px;color:#3a3a38}
+.crit-body p{margin:8px 0;color:#5f5e5a}
+.crit-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.crit-table th{background:#1a1a18;color:#fff;padding:8px 12px;text-align:center;font-weight:600}
+.crit-table td{padding:8px 12px;text-align:center;border-bottom:.5px solid #e0dfd8}
+.crit-table tr:nth-child(even) td{background:#f9f8f5}
+.crit-table td.neg{color:#A32D2D;font-weight:600}
+.crit-sub{font-size:12px;color:#888780;margin-top:6px}
 .main-content{flex:1;overflow:visible}
 .cat-page{display:none}
 .cat-page.active{display:block}
@@ -106,6 +122,7 @@ tbody tr:hover{background:#f9f8f4}
 .ai-filter-tag.caution{background:#FAEEDA;color:#633806;border-color:#FAC775}
 .ai-filter-tag.border2{background:#FAECE7;color:#712B13;border-color:#F5C4B3}
 .ai-filter-tag.crisis{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.ai-filter-tag.manage{background:#F1E5F5;color:#4A1758;border-color:#DCB8E8}
 .dealer-card{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .dealer-card:hover{border-color:#b4b2a9}
 .dealer-card.sel{border:1.5px solid #185FA5}
@@ -125,6 +142,7 @@ tbody tr:hover{background:#f9f8f4}
 .rp-caution{background:#FAEEDA;color:#633806}
 .rp-border{background:#FAECE7;color:#712B13}
 .rp-crisis{background:#FCEBEB;color:#791F1F}
+.rp-manage{background:#F1E5F5;color:#4A1758}
 .det-panel{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:18px 20px;margin-bottom:8px}
 .det-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:.5px solid #e0dfd8}
 .det-title{font-size:15px;font-weight:500;color:#1a1a18}
@@ -186,6 +204,11 @@ tbody tr:hover{background:#f9f8f4}
   <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
     <span class="icon">🏸</span> 용품
   </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">기준 안내</div>
+  <div class="sidebar-item" id="menu-criteria" onclick="switchCat('criteria',this)">
+    <span class="icon">📋</span> 대리점 종합평가 기준
+  </div>
 </div>
 
 <div class="main-content">
@@ -216,6 +239,109 @@ tbody tr:hover{background:#f9f8f4}
   <div id="page-용품-영업1팀" class="page active"></div>
   <div id="page-용품-영업2팀" class="page"></div>
   <div id="page-용품-E-BIZ팀" class="page"></div>
+</div>
+
+<div id="cat-criteria" class="cat-page">
+  <div class="crit-wrap">
+    <div class="crit-intro">대리점 종합평가는 <b>정량점수(50) + CS 코멘트(20) + 파트너십(30) = 100점</b> 만점으로 구성됩니다. 각 항목을 클릭하면 세부 기준이 펼쳐집니다.</div>
+
+    <details class="crit-block" open>
+      <summary>총점 구조 (최대 100점)</summary>
+      <div class="crit-body">
+        <table class="crit-table">
+          <tr><th>구분</th><th>배점</th><th>구성</th></tr>
+          <tr><td>정량점수</td><td>50점</td><td>채권건전성(30) + 매출규모(20)</td></tr>
+          <tr><td>CS 코멘트</td><td>20점</td><td>특이사항 메모 기반 감점</td></tr>
+          <tr><td>파트너십</td><td>30점</td><td>용품(15) + 의류(15)</td></tr>
+          <tr><td><b>합계</b></td><td><b>100점</b></td><td>정량 + CS코멘트 + 파트너십</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>① 채권건전성 (30점)</summary>
+      <div class="crit-body">
+        <p>채권건전성 = 30 − 회수일 감점(최대15) − 담보대비 초과율 감점(최대15)</p>
+        <p><b>회수일 감점 (60일 기준)</b></p>
+        <table class="crit-table">
+          <tr><th>회수일</th><th>감점</th></tr>
+          <tr><td>60일 이하</td><td>0점</td></tr>
+          <tr><td>61~80일</td><td class="neg">-6점</td></tr>
+          <tr><td>81~90일</td><td class="neg">-9점</td></tr>
+          <tr><td>91일 초과</td><td class="neg">-15점</td></tr>
+        </table>
+        <p><b>담보대비 초과율 감점</b> (초과율 = (채권잔액-담보)/담보)</p>
+        <table class="crit-table">
+          <tr><th>담보대비 초과율</th><th>등급</th><th>감점</th></tr>
+          <tr><td>0% 이하</td><td>적정</td><td>0점</td></tr>
+          <tr><td>0~30%</td><td>주의</td><td class="neg">-6점</td></tr>
+          <tr><td>30~120%</td><td>경계</td><td class="neg">-9점</td></tr>
+          <tr><td>120% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-15점</td></tr>
+        </table>
+        <div class="crit-sub">※ 의류+용품 둘 다 있는 대리점은 카테고리별 감점을 합산하되, 회수일/담보 각 항목 최대 15점으로 제한</div>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>② 매출규모 (20점 = 용품10 + 의류10)</summary>
+      <div class="crit-body">
+        <p>최근 3개월 매출 합계 기준, 10점 만점에서 감점하는 방식</p>
+        <p><b>용품</b></p>
+        <table class="crit-table">
+          <tr><th>3개월 매출 합계</th><th>감점</th><th>최종점수</th></tr>
+          <tr><td>1억 이상</td><td>0점</td><td>10점</td></tr>
+          <tr><td>2,000만~1억</td><td class="neg">-4점</td><td>6점</td></tr>
+          <tr><td>2,000만 미만</td><td class="neg">-10점</td><td>0점</td></tr>
+        </table>
+        <p><b>의류</b></p>
+        <table class="crit-table">
+          <tr><th>3개월 매출 합계</th><th>감점</th><th>최종점수</th></tr>
+          <tr><td>5,000만 이상</td><td>0점</td><td>10점</td></tr>
+          <tr><td>400만~5,000만</td><td class="neg">-4점</td><td>6점</td></tr>
+          <tr><td>400만 미만</td><td class="neg">-10점</td><td>0점</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>CS 코멘트 (20점)</summary>
+      <div class="crit-body">
+        <table class="crit-table">
+          <tr><th>조건</th><th>점수</th></tr>
+          <tr><td>메모 없음 / 감점 키워드 없음</td><td>20점 (만점)</td></tr>
+          <tr><td>고위험 키워드 1개당</td><td class="neg">-20점</td></tr>
+          <tr><td>중위험 키워드 1개당</td><td class="neg">-10점</td></tr>
+          <tr><td>저위험 키워드</td><td>감점 없음</td></tr>
+        </table>
+        <div class="crit-sub">※ 키워드 중복 시 누적 감점(중복 적용), 단 최종 점수는 0점 하한</div>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>파트너십 (30점 = 용품15 + 의류15)</summary>
+      <div class="crit-body">
+        <table class="crit-table">
+          <tr><th>조건</th><th>점수</th></tr>
+          <tr><td>온라인 최저가 준수</td><td>15점</td></tr>
+          <tr><td>위반</td><td class="neg">0점</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>종합점수 등급 (0~100점)</summary>
+      <div class="crit-body">
+        <table class="crit-table">
+          <tr><th>등급</th><th>종합점수 구간</th></tr>
+          <tr><td>적정</td><td>80점 이상</td></tr>
+          <tr><td>주의</td><td>60~79점</td></tr>
+          <tr><td>경계</td><td>40~59점</td></tr>
+          <tr><td>위기</td><td>20~39점</td></tr>
+          <tr><td>관리</td><td>20점 미만</td></tr>
+        </table>
+      </div>
+    </details>
+  </div>
 </div>
 
 </div>
@@ -348,10 +474,11 @@ function updatePartnership(storeName, field, isViolation, idx){
 }
 
 function getRiskClass(score){
-  if(score>=80) return {label:'안전',cls:'rp-safe',bar:'#1D9E75'};
+  if(score>=80) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
   if(score>=60) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
   if(score>=40) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
-  return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
+  if(score>=20) return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
+  return {label:'관리',cls:'rp-manage',bar:'#7A2E8C'};
 }
 
 let currentAiGrade='전체';
@@ -413,15 +540,17 @@ function buildAiDash(){
   const safe=allStores.filter(s=>s.totalScore>=80).length;
   const caution=allStores.filter(s=>s.totalScore>=60&&s.totalScore<80).length;
   const border=allStores.filter(s=>s.totalScore>=40&&s.totalScore<60).length;
-  const crisis=allStores.filter(s=>s.totalScore<40).length;
+  const crisis=allStores.filter(s=>s.totalScore>=20&&s.totalScore<40).length;
+  const manage=allStores.filter(s=>s.totalScore<20).length;
 
   let html=`
   <div class="ai-kpi-grid">
     <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div></div>
-    <div class="ai-kpi"><div class="lbl">안전</div><div class="val g">${safe}</div></div>
+    <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div></div>
     <div class="ai-kpi"><div class="lbl">주의</div><div class="val a">${caution}</div></div>
     <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div></div>
     <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div></div>
+    <div class="ai-kpi"><div class="lbl">관리</div><div class="val r">${manage}</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
     <input id="ai-search" type="text" placeholder="매장명 검색..." style="font-size:13px;padding:6px 12px;border-radius:8px;border:.5px solid #d3d1c7;outline:none;width:180px;">
@@ -433,10 +562,11 @@ function buildAiDash(){
     </select>
     <span style="font-size:12px;color:#888780;">등급</span>
     <span class="ai-filter-tag active" id="aitag-전체" onclick="filterAiTag('전체')">전체</span>
-    <span class="ai-filter-tag safe" id="aitag-안전" onclick="filterAiTag('안전')">안전</span>
+    <span class="ai-filter-tag safe" id="aitag-적정" onclick="filterAiTag('적정')">적정</span>
     <span class="ai-filter-tag caution" id="aitag-주의" onclick="filterAiTag('주의')">주의</span>
     <span class="ai-filter-tag border2" id="aitag-경계" onclick="filterAiTag('경계')">경계</span>
     <span class="ai-filter-tag crisis" id="aitag-위기" onclick="filterAiTag('위기')">위기</span>
+    <span class="ai-filter-tag manage" id="aitag-관리" onclick="filterAiTag('관리')">관리</span>
   </div>
   <div id="ai-dealer-list">`;
 
@@ -551,7 +681,7 @@ function buildAiDash(){
 
 function filterAiTag(grade){
   currentAiGrade=grade;
-  ['전체','안전','주의','경계','위기'].forEach(g=>{
+  ['전체','적정','주의','경계','위기','관리'].forEach(g=>{
     const el=document.getElementById('aitag-'+g);
     if(el) el.classList.toggle('active',g===grade);
   });
