@@ -25,10 +25,10 @@ RAW_FILES = {
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
 RISK_THRESHOLDS = {
-    'safe_max': 0.6,
-    'caution_max': 1.0,
-    'warning_max': 1.5,
-    'danger_max': 2.0,
+    'safe_max': 0.0,    # 초과율 ≤0% → 적정
+    'caution_max': 0.3,  # 0~30% → 주의
+    'warning_max': 1.2,  # 30~120% → 경계
+    'danger_max': 1.5,   # 120% 초과 → 위기
 }
 
 MIN_RECEIVABLE_THRESHOLD = 500_000
@@ -74,54 +74,55 @@ def deduct_collection_days_half(days):
 
 
 def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 채권잔액 감점 (최대 15점, 카테고리 1개만 있는 대리점용). classify_risk() 등급 기준(60/100/150%)과 동일하게 정렬.
-    채권건전성 30점(회수일15+담보15) 구조에 맞춰 최대 15점으로 스케일됨."""
+    """담보대비 초과율 감점 (최대 15점, 카테고리 1개만 있는 대리점용). classify_risk() 등급 기준(0/30/120%)과 동일하게 정렬.
+    초과율 = (채권잔액-담보)/담보. 채권건전성 30점(회수일15+담보15) 구조에 맞춰 최대 15점으로 스케일됨."""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
     # 무담보 & 채권 있음 (=관리 등급) → 최대 감점
     if collateral == 0 and receivable > 0:
         return 15
-    ratio = receivable / collateral * 100
-    if ratio <= RISK_THRESHOLDS['safe_max'] * 100:      # 적정 (≤60%)
+    excess_rate = (receivable - collateral) / collateral * 100
+    if excess_rate <= RISK_THRESHOLDS['safe_max'] * 100:      # 적정 (초과율 ≤0%)
         return 0
-    elif ratio <= RISK_THRESHOLDS['caution_max'] * 100:  # 주의 (60~100%)
+    elif excess_rate <= RISK_THRESHOLDS['caution_max'] * 100:  # 주의 (0~30%)
         return 6
-    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (100~150%)
+    elif excess_rate <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (30~120%)
         return 9
-    else:                                                # 위기 (150% 초과)
+    else:                                                       # 위기 (120% 초과)
         return 15
 
 
 def deduct_collateral_ratio_half(collateral, receivable):
-    """담보대비 채권잔액 감점 (최대 15점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용).
+    """담보대비 초과율 감점 (최대 15점, 의류+용품 둘 다 있는 대리점의 카테고리별 감점용).
     둘을 합산했을 때 최대 25점(15+15=30→25 캡)이 되도록 절반 스케일."""
     if collateral == 0 and receivable <= 0:
         return 0
     if collateral == 0 and receivable > 0:
         return 15
-    ratio = receivable / collateral * 100
-    if ratio <= RISK_THRESHOLDS['safe_max'] * 100:
+    excess_rate = (receivable - collateral) / collateral * 100
+    if excess_rate <= RISK_THRESHOLDS['safe_max'] * 100:
         return 0
-    elif ratio <= RISK_THRESHOLDS['caution_max'] * 100:
+    elif excess_rate <= RISK_THRESHOLDS['caution_max'] * 100:
         return 5
-    elif ratio <= RISK_THRESHOLDS['warning_max'] * 100:
+    elif excess_rate <= RISK_THRESHOLDS['warning_max'] * 100:
         return 10
     else:
         return 15
 
 
 
-def classify_risk(collateral, receivable, ratio):
+def classify_risk(collateral, receivable):
     if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
         return '해당없음'
     if collateral == 0 and receivable > 0:
         return '관리'
-    if ratio <= RISK_THRESHOLDS['safe_max']:
+    excess_rate = (receivable - collateral) / collateral
+    if excess_rate <= RISK_THRESHOLDS['safe_max']:
         return '적정'
-    elif ratio <= RISK_THRESHOLDS['caution_max']:
+    elif excess_rate <= RISK_THRESHOLDS['caution_max']:
         return '주의'
-    elif ratio <= RISK_THRESHOLDS['warning_max']:
+    elif excess_rate <= RISK_THRESHOLDS['warning_max']:
         return '경계'
     else:
         return '위기'
@@ -154,7 +155,7 @@ def process_raw(filepath):
         result['receivable'] / result['collateral'], 0.0
     )
     result['risk'] = result.apply(
-        lambda r: classify_risk(r['collateral'], r['receivable'], r['ratio']), axis=1
+        lambda r: classify_risk(r['collateral'], r['receivable']), axis=1
     )
 
     # 감점 계산
