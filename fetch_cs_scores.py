@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
@@ -54,6 +55,70 @@ def fetch_sheet_data():
     spreadsheet_id = os.environ.get('SPREADSHEET_ID', '')
     client = get_sheets_client()
     return client.open_by_key(spreadsheet_id).sheet1.get_all_records()
+
+
+def parse_month_header(header):
+    """'26.04', '2026.04월', '2026-04' 등의 헤더에서 (year, month) 추출. 실패하면 None."""
+    m = re.search(r'(\d{2,4})[.\-](\d{1,2})', str(header))
+    if not m:
+        return None
+    year, month = int(m.group(1)), int(m.group(2))
+    if year < 100:
+        year += 2000
+    if not (1 <= month <= 12):
+        return None
+    return (year, month)
+
+
+def fetch_sales_tab(tab_name, name_col='매장명'):
+    """'용품_3개월 매출' / '의류_3개월 매출' 같은 탭에서 최근 3개월 합계를 계산.
+    탭 구조: 매장명 컬럼 + 월별 매출 컬럼(예: 26.04, 26.05, 26.06 ...).
+    가장 최근 3개 월 컬럼을 자동 판별해 합산. 반환: {대리점명: 3개월합계}"""
+    spreadsheet_id = os.environ.get('SPREADSHEET_ID', '')
+    client = get_sheets_client()
+    try:
+        ws = client.open_by_key(spreadsheet_id).worksheet(tab_name)
+    except Exception as e:
+        print(f"'{tab_name}' 탭 읽기 실패: {e}")
+        return {}
+
+    values = ws.get_all_values()
+    if not values:
+        return {}
+    header = values[0]
+
+    try:
+        name_idx = header.index(name_col)
+    except ValueError:
+        print(f"'{tab_name}' 탭에서 '{name_col}' 컬럼을 찾지 못함")
+        return {}
+
+    month_cols = []  # (year, month, col_idx)
+    for idx, h in enumerate(header):
+        parsed = parse_month_header(h)
+        if parsed:
+            month_cols.append((parsed[0], parsed[1], idx))
+    if not month_cols:
+        print(f"'{tab_name}' 탭에서 월별 컬럼을 찾지 못함")
+        return {}
+
+    # 최근 3개 월만 사용 (연/월 기준 정렬 후 마지막 3개)
+    month_cols.sort(key=lambda x: (x[0], x[1]))
+    recent_cols = month_cols[-3:]
+
+    result = {}
+    for row in values[1:]:
+        if len(row) <= name_idx:
+            continue
+        name = ' '.join(str(row[name_idx]).split())
+        if not name:
+            continue
+        total = 0
+        for _, _, idx in recent_cols:
+            if idx < len(row):
+                total += parse_amount(row[idx])
+        result[name] = total
+    return result
 
 
 # ───────────────────────────────────────────
@@ -231,6 +296,18 @@ def fetch_cs_data(store_debt_map={}):
     cur_year, cur_month = today.year, today.month
     skipped_old_memo = 0
 
+    # 별도 탭('용품_3개월 매출' / '의류_3개월 매출')에서 최근 3개월 합계 조회
+    try:
+        sales_3m_goods_tab = fetch_sales_tab('용품_3개월 매출')
+    except Exception as e:
+        print(f"용품 3개월 매출 탭 조회 실패: {e}")
+        sales_3m_goods_tab = {}
+    try:
+        sales_3m_clothing_tab = fetch_sales_tab('의류_3개월 매출')
+    except Exception as e:
+        print(f"의류 3개월 매출 탭 조회 실패: {e}")
+        sales_3m_clothing_tab = {}
+
     # CS 시트 병합 (대리점명 기준)
     # - 특이사항메모: 이번 달 작성건만 반영 (매달 리셋)
     # - 파트너십(용품/의류): 작성일과 무관하게 항상 최신 값 반영 (상태값이라 월 필터 미적용)
@@ -266,6 +343,18 @@ def fetch_cs_data(store_debt_map={}):
 
     if skipped_old_memo:
         print(f"  이번 달({cur_year}-{cur_month:02d}) 이전 작성 메모 {skipped_old_memo}건 제외 (파트너십은 반영됨)")
+
+    # '용품_3개월 매출'/'의류_3개월 매출' 탭 값을 우선 반영 (있으면 덮어씀, 탭에만 있는 대리점은 새로 추가)
+    for name, total in sales_3m_goods_tab.items():
+        if name not in merged:
+            merged[name] = {'memos': [], 'p_goods': '', 'p_clothing': '',
+                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
+        merged[name]['sales_3m_goods'] = total
+    for name, total in sales_3m_clothing_tab.items():
+        if name not in merged:
+            merged[name] = {'memos': [], 'p_goods': '', 'p_clothing': '',
+                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
+        merged[name]['sales_3m_clothing'] = total
 
     result = {}
     for name, data in merged.items():
