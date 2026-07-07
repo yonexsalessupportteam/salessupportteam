@@ -207,6 +207,15 @@ tbody tr:hover{background:#f9f8f4}
 <div class="layout">
 <div class="sidebar">
   <div class="sidebar-block">
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">기준 안내<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-group">
+      <div class="sidebar-item" id="menu-criteria" onclick="toggleCriteria(this)">
+        <span class="icon">📋</span> 대리점 종합평가 기준
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+  </div>
+  <div class="sidebar-block">
     <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">AI 리스크<span class="sidebar-caret">▾</span></div>
     <div class="sidebar-group">
       <div class="sidebar-item active" id="menu-ai-risk" onclick="switchCat('ai-risk',this)">
@@ -226,14 +235,6 @@ tbody tr:hover{background:#f9f8f4}
       </div>
     </div>
     <div class="sidebar-divider"></div>
-  </div>
-  <div class="sidebar-block">
-    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">기준 안내<span class="sidebar-caret">▾</span></div>
-    <div class="sidebar-group">
-      <div class="sidebar-item" id="menu-criteria" onclick="toggleCriteria(this)">
-        <span class="icon">📋</span> 대리점 종합평가 기준
-      </div>
-    </div>
   </div>
   <div class="sidebar-restore" id="sidebar-restore" onclick="restoreSidebarBlocks()" style="display:none">＋ 숨긴 섹션 보기</div>
 </div>
