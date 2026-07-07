@@ -2,12 +2,33 @@ import os
 import json
 import re
 import time
+import hashlib
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+AI_CACHE_FILE = 'ai_cache.json'
+
+def load_ai_cache():
+    """이전 실행에서 저장한 AI 분석 결과 캐시를 불러옴. 메모가 안 바뀐 대리점은 재호출하지 않기 위함."""
+    try:
+        with open(AI_CACHE_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def save_ai_cache(cache):
+    try:
+        with open(AI_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"  ⚠️ AI 캐시 저장 실패: {e}")
+
+def memo_hash(memo):
+    return hashlib.md5(memo.encode('utf-8')).hexdigest()
 
 def parse_sheet_date(date_str):
     """구글 시트 '작성일' 컬럼 값을 date 객체로 파싱. 실패하면 None."""
@@ -307,6 +328,10 @@ def fetch_cs_data(store_debt_map={}):
     if not api_key:
         print("  ⚠️ GEMINI_API_KEY가 비어있음 - 모든 대리점의 AI 분석이 건너뛰어집니다. GitHub Secrets 설정을 확인하세요.")
 
+    ai_cache = load_ai_cache()
+    cache_hits = 0
+    cache_calls = 0
+
     try:
         records = fetch_sheet_data()
     except Exception as e:
@@ -389,9 +414,20 @@ def fetch_cs_data(store_debt_map={}):
         debt_info = store_debt_map.get(name, {})
         mechanical_risk = debt_info.get('risk', '')
         if api_key and memo:
-            keywords, comment, assessed_risk = gemini_analyze(name, memo, api_key, debt_info)
-            print(f"  {name} 키워드 추출: {keywords if keywords else '없음'}")
-            time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
+            h = memo_hash(memo)
+            cached = ai_cache.get(name)
+            if cached and cached.get('memo_hash') == h:
+                keywords = cached.get('keywords', '')
+                comment = cached.get('comment', '')
+                assessed_risk = cached.get('assessed_risk', '')
+                cache_hits += 1
+                print(f"  {name} 키워드 추출 (캐시 재사용): {keywords if keywords else '없음'}")
+            else:
+                cache_calls += 1
+                keywords, comment, assessed_risk = gemini_analyze(name, memo, api_key, debt_info)
+                print(f"  {name} 키워드 추출: {keywords if keywords else '없음'}")
+                ai_cache[name] = {'memo_hash': h, 'keywords': keywords, 'comment': comment, 'assessed_risk': assessed_risk}
+                time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
         else:
             keywords, comment, assessed_risk = '', '', ''
 
@@ -438,5 +474,8 @@ def fetch_cs_data(store_debt_map={}):
             arrow = '⬆️더 심각' if ai_mismatch_direction == 'severe' else '⬇️더 완화'
             print(f"  ⚠️ {name}: AI판단({assessed_risk}) vs 기계적등급({mechanical_risk}) 불일치 {arrow}")
         print(f"  {name}: CS {cs_score}점 / 파트너십 {partnership_score}점 완료")
+
+    save_ai_cache(ai_cache)
+    print(f"  📦 AI 캐시: 재사용 {cache_hits}건 / 신규 호출 {cache_calls}건")
 
     return result
