@@ -15,7 +15,14 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#f5f4f0;colo
 .topbar .sub{font-size:12px;color:rgba(255,255,255,0.7)}
 .layout{display:flex;min-height:calc(100vh - 57px)}
 .sidebar{width:200px;flex-shrink:0;background:#fff;border-right:.5px solid #e0dfd8;position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto}
-.sidebar-section{padding:16px 12px 8px;font-size:11px;font-weight:600;color:#b4b2a9;text-transform:uppercase;letter-spacing:0.06em}
+.sidebar-section{padding:16px 12px 8px;font-size:11px;font-weight:600;color:#b4b2a9;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
+.sidebar-section:hover{color:#5f5e5a}
+.sidebar-caret{font-size:10px;transition:.15s;color:#b4b2a9}
+.sidebar-section.collapsed .sidebar-caret{transform:rotate(-90deg)}
+.sidebar-group{max-height:500px;overflow:hidden;transition:max-height .2s ease}
+.sidebar-group.collapsed{max-height:0}
+.sidebar-restore{padding:10px 16px;font-size:12px;color:#888780;cursor:pointer;user-select:none}
+.sidebar-restore:hover{color:#1a1a18}
 .sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;cursor:pointer;color:#5f5e5a;font-weight:400;transition:.15s;border-left:3px solid transparent}
 .sidebar-item:hover{background:#f5f4f0;color:#1a1a18}
 .sidebar-item.active{background:#f5f4f0;color:#1a1a18;font-weight:500;border-left-color:#1a1a18}
@@ -199,23 +206,36 @@ tbody tr:hover{background:#f9f8f4}
 
 <div class="layout">
 <div class="sidebar">
-  <div class="sidebar-section">AI 리스크</div>
-  <div class="sidebar-item active" id="menu-ai-risk" onclick="switchCat('ai-risk',this)">
-    <span class="icon">🤖</span> AI 위험탐지
+  <div class="sidebar-block">
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">AI 리스크<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-group">
+      <div class="sidebar-item active" id="menu-ai-risk" onclick="switchCat('ai-risk',this)">
+        <span class="icon">🤖</span> AI 위험탐지
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
   </div>
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-section">팀별 채권잔액</div>
-  <div class="sidebar-item" id="menu-의류" onclick="switchCat('의류',this)">
-    <span class="icon">👔</span> 의류
+  <div class="sidebar-block">
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">팀별 채권잔액<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-group">
+      <div class="sidebar-item" id="menu-의류" onclick="switchCat('의류',this)">
+        <span class="icon">👔</span> 의류
+      </div>
+      <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
+        <span class="icon">🏸</span> 용품
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
   </div>
-  <div class="sidebar-item" id="menu-용품" onclick="switchCat('용품',this)">
-    <span class="icon">🏸</span> 용품
+  <div class="sidebar-block">
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">기준 안내<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-group">
+      <div class="sidebar-item" id="menu-criteria" onclick="toggleCriteria(this)">
+        <span class="icon">📋</span> 대리점 종합평가 기준
+      </div>
+    </div>
   </div>
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-section">기준 안내</div>
-  <div class="sidebar-item" id="menu-criteria" onclick="switchCat('criteria',this)">
-    <span class="icon">📋</span> 대리점 종합평가 기준
-  </div>
+  <div class="sidebar-restore" id="sidebar-restore" onclick="restoreSidebarBlocks()" style="display:none">＋ 숨긴 섹션 보기</div>
 </div>
 
 <div class="main-content">
@@ -897,11 +917,44 @@ function switchTab(cat,dept,el){
   if(!builtPages[key]){buildPage(cat,dept);builtPages[key]=true;}
 }
 
+function toggleSidebarGroup(sectionEl){
+  sectionEl.classList.toggle('collapsed');
+  const group=sectionEl.nextElementSibling && sectionEl.nextElementSibling.classList.contains('sidebar-group')
+    ? sectionEl.nextElementSibling
+    : sectionEl.parentElement.querySelector('.sidebar-group');
+  if(group) group.classList.toggle('collapsed');
+}
+
+function hideSidebarBlock(sectionEl){
+  const block=sectionEl.closest('.sidebar-block');
+  if(!block) return;
+  block.style.display='none';
+  document.getElementById('sidebar-restore').style.display='block';
+}
+
+function restoreSidebarBlocks(){
+  document.querySelectorAll('.sidebar-block').forEach(b=>b.style.display='');
+  document.getElementById('sidebar-restore').style.display='none';
+}
+
+let lastNonCriteriaCat='ai-risk', lastNonCriteriaEl=null;
+
 function switchCat(cat,el){
+  if(cat!=='criteria'){lastNonCriteriaCat=cat;lastNonCriteriaEl=el;}
   document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.cat-page').forEach(p=>p.classList.remove('active'));
   document.getElementById('cat-'+cat).classList.add('active');
+}
+
+function toggleCriteria(el){
+  const isOpen=document.getElementById('cat-criteria').classList.contains('active');
+  if(isOpen){
+    const backEl=lastNonCriteriaEl||document.getElementById('menu-ai-risk');
+    switchCat(lastNonCriteriaCat,backEl);
+  }else{
+    switchCat('criteria',el);
+  }
 }
 
 buildAiDash();
