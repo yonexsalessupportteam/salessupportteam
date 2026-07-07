@@ -228,6 +228,8 @@ def score_sales_tier_clothing(amount):
 # ───────────────────────────────────────────
 RISK_ORDER = ['적정', '주의', '경계', '위기']  # 심각도 오름차순 (관리/해당없음은 별도 취급)
 
+_quota_exhausted = False  # 이번 실행 중 하루 할당량 초과가 한 번이라도 확인되면 True (이후 재시도 없이 바로 대체 분석 사용)
+
 
 def extract_keywords_rule_based(memo):
     """메모 텍스트에서 회사 키워드 목록을 직접 문자열 매칭으로 추출.
@@ -341,19 +343,27 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
 반드시 아래 JSON 형식으로만 출력하세요. 다른 텍스트 일절 금지:
 {{"keywords": "쉼표로 구분된 키워드 또는 빈 문자열", "assessed_risk": "적정|주의|경계|위기 중 하나", "comment": "작업3 분석 보고 전문"}}"""
 
+    global _quota_exhausted
+    if _quota_exhausted:
+        return '', '', ''  # 이번 실행 중 이미 할당량 초과 확인됨 - 재시도 없이 즉시 대체 분석으로
+
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"maxOutputTokens": 700},
     }
     try:
         res = None
-        for attempt in range(3):
+        for attempt in range(2):
             res = requests.post(url, json=body, timeout=30)
             if res.status_code == 429:
-                wait = 20 * (attempt + 1)  # 20s, 40s, 60s
-                print(f"  ⏳ Gemini 할당량 대기 ({store_name}) - {wait}초 후 재시도 ({attempt+1}/3)")
-                time.sleep(wait)
-                continue
+                if attempt == 0:
+                    print(f"  ⏳ Gemini 순간 한도 대기 ({store_name}) - 15초 후 1회 재시도")
+                    time.sleep(15)
+                    continue
+                err = res.json().get('error', {}) if res.content else {}
+                if err.get('status') == 'RESOURCE_EXHAUSTED':
+                    _quota_exhausted = True
+                    print(f"  ⚠️ Gemini 하루 할당량 소진 확인 ({store_name}) - 이후 대리점은 재시도 없이 대체 분석 사용")
             break
         data = res.json()
         if res.status_code != 200:
@@ -497,7 +507,8 @@ def fetch_cs_data(store_debt_map={}):
                     if gemini_comment:
                         comment, assessed_risk = gemini_comment, gemini_risk
                         print(f"  {name} AI 분석: Gemini 성공")
-                    time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
+                    if not _quota_exhausted:
+                        time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
 
             if not comment:
                 comment = generate_rule_based_comment(name, memo, rule_keywords_list, mechanical_risk, debt_info)
