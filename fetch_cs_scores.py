@@ -262,9 +262,17 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
     try:
         res = requests.post(url, json=body, timeout=30)
         data = res.json()
+        if res.status_code != 200:
+            err = data.get('error', {})
+            print(f"  ⚠️ Gemini API 오류 ({store_name}): HTTP {res.status_code} / {err.get('status','')} / {err.get('message','')[:200]}")
+            return '', '', ''
         candidates = data.get('candidates', [])
         if not candidates:
+            print(f"  ⚠️ Gemini 응답에 candidates 없음 ({store_name}): {json.dumps(data, ensure_ascii=False)[:300]}")
             return '', '', ''
+        finish_reason = candidates[0].get('finishReason', '')
+        if finish_reason and finish_reason not in ('STOP', 'MAX_TOKENS'):
+            print(f"  ⚠️ Gemini 응답 비정상 종료 ({store_name}): finishReason={finish_reason}")
         raw = candidates[0]['content']['parts'][0]['text'].strip()
         raw = raw.strip('`').replace('json\n', '', 1).strip()
         parsed = json.loads(raw)
@@ -274,9 +282,11 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
         assessed_risk = parsed.get('assessed_risk', '').strip()
         if assessed_risk not in RISK_ORDER:
             assessed_risk = ''
+        if not comment:
+            print(f"  ⚠️ Gemini comment 비어있음 ({store_name}) - 원본 응답: {raw[:400]}")
         return ', '.join(valid), comment, assessed_risk
     except Exception as e:
-        print(f"Gemini 오류 ({store_name}): {e}")
+        print(f"  ⚠️ Gemini 오류 ({store_name}): {type(e).__name__}: {e}")
         return '', '', ''
 
 
@@ -285,6 +295,8 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
 # ───────────────────────────────────────────
 def fetch_cs_data(store_debt_map={}):
     api_key = os.environ.get('GEMINI_API_KEY', '')
+    if not api_key:
+        print("  ⚠️ GEMINI_API_KEY가 비어있음 - 모든 대리점의 AI 분석이 건너뛰어집니다. GitHub Secrets 설정을 확인하세요.")
 
     try:
         records = fetch_sheet_data()
