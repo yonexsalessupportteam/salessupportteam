@@ -150,6 +150,12 @@ tbody tr:hover{background:#f9f8f4}
 .sec-label{font-size:11px;font-weight:500;color:#5f5e5a;letter-spacing:0.03em;margin-bottom:8px;padding:3px 8px;background:#f5f4f0;border-radius:6px;display:inline-block}
 .cat-section{margin-bottom:14px}
 .cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.score-total-bar{background:#1a6abf0d;border:.5px solid #1a6abf33;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.score-total-label{font-size:12px;color:#185FA5;font-weight:600;margin-bottom:3px}
+.score-total-sub{font-size:11px;color:#888780}
+.subgroup-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:#5f5e5a;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e0dfd8}
+.subgroup-label:first-of-type{margin-top:2px}
+.subgroup-badge{font-size:12px;font-weight:600}
 .dc{background:#f5f4f0;border-radius:8px;padding:12px}
 .dc .dl{font-size:11px;color:#888780;margin-bottom:3px}
 .dc .dv{font-size:14px;font-weight:500;color:#1a1a18}
@@ -187,7 +193,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.07(화) 10:21 업데이트</span>
+  <span class="sub">2026.07.07(화) 11:11 업데이트</span>
 </div>
 
 <div class="layout">
@@ -363,9 +369,17 @@ function buildScoreSection(s){
   const goodsPartner = s.pGoods&&s.pGoods.trim() ? '미준수' : '준수';
   const clothPartner = s.pClothing&&s.pClothing.trim() ? '미준수' : '준수';
   const memoLabel = s.memo ? '메모기반AI분석' : '메모없음(만점)';
+  const qualScore = s.csScore + s.partnershipScore;
+  const totalColor = s.totalScore>=80?'#0F6E56':s.totalScore>=60?'#185FA5':s.totalScore>=40?'#854F0B':'#A32D2D';
   return '<div style="margin-bottom:14px">'
     +'<div class="sec-label">📊 평가 점수 현황</div>'
-    +'<div class="cat-grid" style="margin-top:8px">'
+    +'<div class="score-total-bar" style="margin-top:8px">'
+    +'<div><div class="score-total-label">종합점수</div>'
+    +'<div class="score-total-sub">정량 '+s.quantScore+'/50 · 정성 '+qualScore+'/50</div></div>'
+    +'<div style="text-align:right"><span style="font-size:26px;font-weight:700;color:'+totalColor+'">'+s.totalScore+'</span><span style="font-size:12px;color:#888780">/100</span></div>'
+    +'</div>'
+    +'<div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:'+dvColor(s.quantScore,42,33)+'">'+s.quantScore+'점 / 50</span></div>'
+    +'<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionClothing)+'">'
     +'<div class="dl">회수일 감점 (의류)</div>'
@@ -393,7 +407,10 @@ function buildScoreSection(s){
     +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
     +'<div class="dv" style="color:'+dvColor(s.quantScore,42,33)+'">'+s.quantScore+'점 <span style="font-size:11px;color:#888780">/50</span></div>'
-    +'<div class="dsub">건전성(30-'+deductCollection+'-'+deductCollateral+')+매출('+salesScore+')</div></div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:'+dvColor(qualScore,42,33)+'">'+qualScore+'점 / 50</span></div>'
+    +'<div class="cat-grid">'
     +'<div class="dc">'
     +'<div class="dl">CS 코멘트</div>'
     +'<div class="dv" style="color:'+dvColor(s.csScore,16,10)+'">'+s.csScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
@@ -402,10 +419,6 @@ function buildScoreSection(s){
     +'<div class="dl">파트너십</div>'
     +'<div class="dv" style="color:'+(s.partnershipScore>=30?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+s.partnershipScore+'점 <span style="font-size:11px;color:#888780">/30</span></div>'
     +'<div class="dsub">용품 '+goodsPartner+' / 의류 '+clothPartner+'</div></div>'
-    +'<div class="dc" style="background:#1a6abf10;border:.5px solid #1a6abf30">'
-    +'<div class="dl" style="color:#185FA5">종합점수</div>'
-    +'<div class="dv" style="color:#1a6abf;font-size:18px">'+s.totalScore+'<span style="font-size:11px;font-weight:400;color:#888780"> /100</span></div>'
-    +'<div class="dsub">'+s.quantScore+'(정량)+'+s.csScore+'(CS)+'+s.partnershipScore+'(파트너십)</div></div>'
     +'</div></div>';
 }
 
