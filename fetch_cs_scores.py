@@ -229,6 +229,70 @@ def score_sales_tier_clothing(amount):
 RISK_ORDER = ['적정', '주의', '경계', '위기']  # 심각도 오름차순 (관리/해당없음은 별도 취급)
 
 
+def extract_keywords_rule_based(memo):
+    """메모 텍스트에서 회사 키워드 목록을 직접 문자열 매칭으로 추출.
+    Gemini 호출 여부와 무관하게 항상 동작 (CS 점수 감점의 근거가 되므로 API 의존 없이 안정적이어야 함)."""
+    if not memo:
+        return []
+    all_kw = RISK_KEYWORDS['high'] + RISK_KEYWORDS['mid'] + RISK_KEYWORDS['low']
+    return [kw for kw in all_kw if kw in memo]
+
+
+def generate_rule_based_comment(store_name, memo, keywords, mechanical_risk, debt_info):
+    """Gemini 호출 없이 숫자+키워드만으로 리스크 분석 코멘트를 생성.
+    Gemini가 실패하거나 API 키가 없을 때도 AI 위험탐지 분석 박스가 항상 채워지도록 하는 대체 로직."""
+    collateral = debt_info.get('collateral', 0)
+    receivable = debt_info.get('receivable', 0)
+    ratio = debt_info.get('ratio', 0)
+    ratio_pct = int(ratio * 100)
+    collection_days = max(debt_info.get('collection_days_clothing', 0), debt_info.get('collection_days_goods', 0))
+
+    high_hits = [k for k in keywords if k in RISK_KEYWORDS['high']]
+    mid_hits = [k for k in keywords if k in RISK_KEYWORDS['mid']]
+    low_hits = [k for k in keywords if k in RISK_KEYWORDS['low']]
+
+    # 리스크 요인
+    risk_parts = []
+    if collateral == 0 and receivable > 0:
+        risk_parts.append(f"담보 없이 채권 {receivable:,}원이 발생한 상태로 회수 안전장치가 없습니다.")
+    elif collateral:
+        if ratio_pct > 0:
+            risk_parts.append(f"담보 대비 채권 초과율 {ratio_pct}%로 담보금액을 채권잔액이 초과하고 있습니다.")
+    if collection_days and collection_days > 60:
+        risk_parts.append(f"회수일이 {collection_days}일로 기준(60일)을 초과했습니다.")
+    if high_hits:
+        risk_parts.append(f"CS 메모에 고위험 키워드({', '.join(high_hits)})가 확인됩니다.")
+    if mid_hits:
+        risk_parts.append(f"중위험 키워드({', '.join(mid_hits)})가 확인됩니다.")
+    if not risk_parts:
+        risk_parts.append("현재 수치상 뚜렷한 위험 요인은 확인되지 않습니다.")
+    risk_line = ' '.join(risk_parts)
+
+    # 긍정 요인
+    good_parts = []
+    if collateral and ratio_pct <= 0:
+        good_parts.append(f"담보금액이 채권잔액보다 커서({abs(ratio_pct)}% 여유) 회수 안전성이 확보되어 있습니다.")
+    if collection_days and collection_days <= 60:
+        good_parts.append(f"회수일 {collection_days}일로 기준 이내를 유지하고 있습니다.")
+    if low_hits:
+        good_parts.append(f"CS상 긍정 신호({', '.join(low_hits)})가 확인됩니다.")
+    good_line = ' '.join(good_parts) if good_parts else "해당 없음."
+
+    # 권고사항
+    rec_parts = []
+    if mechanical_risk in ('위기', '관리'):
+        rec_parts.append("담보 보강 또는 채권 회수 조치를 즉시 진행하고, 담당 영업사원의 대면 확인이 필요합니다.")
+    elif mechanical_risk == '경계':
+        rec_parts.append("담보대비 초과율과 회수 현황을 주 단위로 재점검하고 다음 달 매출 추이를 함께 모니터링하세요.")
+    elif high_hits or mid_hits:
+        rec_parts.append("CS 이슈 재발 여부를 담당 영업사원이 직접 확인하고 후속 조치 결과를 메모에 남겨주세요.")
+    else:
+        rec_parts.append("현재 특별한 조치는 필요하지 않으며, 정기 모니터링을 유지하세요.")
+    rec_line = ' '.join(rec_parts)
+
+    return f"🔴 리스크 요인: {risk_line}\n🟢 긍정 요인: {good_line}\n📋 권고사항: {rec_line}\n(※ 이 분석은 자동 규칙 기반으로 생성되었습니다)"
+
+
 def gemini_analyze(store_name, memo, api_key, debt_info={}):
     """키워드 추출 + AI 자체 위험도 판단 + 분석 보고를 한 번의 API 호출로 처리.
     기계적 등급(classify_risk)은 프롬프트에 알려주지 않고, AI가 원본 숫자만으로 스스로 판단하게 함."""
@@ -410,24 +474,41 @@ def fetch_cs_data(store_debt_map={}):
         sales_3m_goods    = data.get('sales_3m_goods', 0)
         sales_3m_clothing = data.get('sales_3m_clothing', 0)
 
-        # AI 키워드 추출 + 리스크 분석 (메모 있을 때만, 1회 호출로 통합)
+        # AI 키워드 추출 + 리스크 분석 (메모 있을 때만)
         debt_info = store_debt_map.get(name, {})
         mechanical_risk = debt_info.get('risk', '')
-        if api_key and memo:
-            h = memo_hash(memo)
-            cached = ai_cache.get(name)
-            if cached and cached.get('memo_hash') == h:
-                keywords = cached.get('keywords', '')
-                comment = cached.get('comment', '')
-                assessed_risk = cached.get('assessed_risk', '')
-                cache_hits += 1
-                print(f"  {name} 키워드 추출 (캐시 재사용): {keywords if keywords else '없음'}")
-            else:
-                cache_calls += 1
-                keywords, comment, assessed_risk = gemini_analyze(name, memo, api_key, debt_info)
-                print(f"  {name} 키워드 추출: {keywords if keywords else '없음'}")
-                ai_cache[name] = {'memo_hash': h, 'keywords': keywords, 'comment': comment, 'assessed_risk': assessed_risk}
-                time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
+        if memo:
+            # 키워드는 Gemini 성패와 무관하게 항상 규칙 기반으로 추출 (CS 점수 감점의 근거이므로 API 의존 금지)
+            rule_keywords_list = extract_keywords_rule_based(memo)
+            rule_keywords = ', '.join(rule_keywords_list)
+
+            comment, assessed_risk = '', ''
+            if api_key:
+                h = memo_hash(memo)
+                cached = ai_cache.get(name)
+                if cached and cached.get('memo_hash') == h:
+                    comment = cached.get('comment', '')
+                    assessed_risk = cached.get('assessed_risk', '')
+                    cache_hits += 1
+                    print(f"  {name} AI 분석 (캐시 재사용)")
+                else:
+                    cache_calls += 1
+                    _, gemini_comment, gemini_risk = gemini_analyze(name, memo, api_key, debt_info)
+                    if gemini_comment:
+                        comment, assessed_risk = gemini_comment, gemini_risk
+                        print(f"  {name} AI 분석: Gemini 성공")
+                    time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
+
+            if not comment:
+                comment = generate_rule_based_comment(name, memo, rule_keywords_list, mechanical_risk, debt_info)
+                if not assessed_risk:
+                    assessed_risk = mechanical_risk if mechanical_risk in RISK_ORDER else ''
+                print(f"  {name} AI 분석: 규칙 기반 대체 생성 사용")
+
+            if api_key:
+                ai_cache[name] = {'memo_hash': memo_hash(memo), 'keywords': rule_keywords, 'comment': comment, 'assessed_risk': assessed_risk}
+
+            keywords = rule_keywords
         else:
             keywords, comment, assessed_risk = '', '', ''
 
