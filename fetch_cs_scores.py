@@ -303,40 +303,57 @@ def generate_rule_based_comment(store_name, memo, keywords, mechanical_risk, deb
     return f"🔴 리스크 요인: {risk_line}\n🟢 긍정 요인: {good_line}\n📋 권고사항: {rec_line}\n(※ 이 분석은 자동 규칙 기반으로 생성되었습니다)"
 
 
-def gemini_analyze(store_name, memo, api_key, debt_info={}):
-    """키워드 추출 + AI 자체 위험도 판단 + 분석 보고를 한 번의 API 호출로 처리.
+# ───────────────────────────────────────────
+# AI 키워드 추출 + 리스크 분석 (Gemini, 여러 대리점을 한 번에 묶어서 호출)
+# RPD(일일 요청수) 한도가 20으로 매우 낮아서(gemini-2.5-flash, 무료 등급),
+# 대리점 1개당 1회 호출이 아니라 BATCH_SIZE개씩 묶어 1회 호출로 처리해 하루 처리 가능 대리점 수를 늘림.
+# ───────────────────────────────────────────
+BATCH_SIZE = 8  # 한 번의 Gemini 호출에 묶어서 보낼 대리점 수
+
+
+def gemini_analyze_batch(stores, api_key):
+    """stores: [{'name':..., 'memo':..., 'debt_info':...}, ...] (최대 BATCH_SIZE개)
+    반환: {대리점명: (keywords, comment, assessed_risk)} — 판단 성공한 대리점만 포함.
     기계적 등급(classify_risk)은 프롬프트에 알려주지 않고, AI가 원본 숫자만으로 스스로 판단하게 함."""
+    global _quota_exhausted
+    if _quota_exhausted or not stores:
+        return {}
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     all_keywords = RISK_KEYWORDS['high'] + RISK_KEYWORDS['mid'] + RISK_KEYWORDS['low']
     keyword_list = ', '.join(all_keywords)
 
-    collateral = debt_info.get('collateral', 0)
-    receivable = debt_info.get('receivable', 0)
-    ratio      = debt_info.get('ratio', 0)
-    ratio_pct  = int(ratio * 100)
-    col_str    = f"{collateral:,}원 ({collateral//10000:,}만원)" if collateral else "없음"
-    rec_str    = f"{receivable:,}원 ({receivable//10000:,}만원)" if receivable else "없음"
-    excess     = receivable - collateral
-    excess_str = f"{excess:,}원 ({excess//10000:,}만원)" if excess > 0 else "초과 없음"
-
-    prompt = f"""당신은 스포츠용품 유통사의 대리점 채권·CS 리스크 전담 분석가입니다.
-아래 원본 데이터만 보고, 회사가 정한 등급 기준을 참고하여 이 대리점의 위험도를 직접 판단하세요.
-(주의: 아래엔 최종 위험단계를 알려주지 않습니다 — 반드시 스스로 판단하세요)
-
-[채권 현황 - 원본 수치]
+    store_blocks = []
+    for i, s in enumerate(stores, 1):
+        debt_info = s.get('debt_info', {})
+        collateral = debt_info.get('collateral', 0)
+        receivable = debt_info.get('receivable', 0)
+        ratio      = debt_info.get('ratio', 0)
+        ratio_pct  = int(ratio * 100)
+        col_str    = f"{collateral:,}원 ({collateral//10000:,}만원)" if collateral else "없음"
+        rec_str    = f"{receivable:,}원 ({receivable//10000:,}만원)" if receivable else "없음"
+        excess     = receivable - collateral
+        excess_str = f"{excess:,}원 ({excess//10000:,}만원)" if excess > 0 else "초과 없음"
+        store_blocks.append(f"""[대리점 {i}] name: "{s['name']}"
 - 담보금액: {col_str}
 - 채권잔액: {rec_str}
 - 담보초과액: {excess_str}
 - 담보대비 채권비율: {ratio_pct}%
+- CS 특이사항 메모: {s['memo']}""")
+    stores_text = '\n\n'.join(store_blocks)
 
-[CS 특이사항 메모]
-{memo}
+    prompt = f"""당신은 스포츠용품 유통사의 대리점 채권·CS 리스크 전담 분석가입니다.
+아래에 여러 대리점의 원본 데이터가 나열되어 있습니다. 각 대리점마다 회사가 정한 등급 기준을 참고하여 위험도를 직접 판단하세요.
+(주의: 아래엔 최종 위험단계를 알려주지 않습니다 — 반드시 각 대리점별로 스스로 판단하세요)
+
+{stores_text}
 
 [참고: 회사 등급 기준 (담보대비 채권비율)]
 - 적정: 60% 이하 / 주의: 60~100% / 경계: 100~150% / 위기: 150% 초과
 - 단, 이 기준은 참고용이며 CS 메모의 심각도(연락두절, 폐업징후 등)를 종합적으로 고려해 기계적 기준보다 더 엄격하게(또는 완화해서) 판단해도 됩니다. 판단 근거를 반드시 밝히세요.
 
-작업1) 위 메모에 해당하는 키워드를 아래 목록에서만 골라 쉼표로 구분해 추출 (해당 없으면 빈 문자열)
+각 대리점마다 아래 작업을 수행하세요:
+작업1) 해당 대리점 메모에 해당하는 키워드를 아래 목록에서만 골라 쉼표로 구분해 추출 (해당 없으면 빈 문자열)
 사용 가능한 키워드 목록: {keyword_list}
 
 작업2) 당신이 직접 판단한 위험단계를 "적정","주의","경계","위기" 중 하나로 선택
@@ -348,58 +365,77 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
 - 각 항목은 1~2문장으로 간결하되 수치 근거 포함, 불필요한 인사말/서론 없이 바로 본문 시작
 - 만약 작업2에서 기계적 기준(비율 구간)과 다르게 판단했다면, 리스크 요인 첫 문장에 왜 다르게 판단했는지 명시
 
-반드시 아래 JSON 형식으로만 출력하세요. 다른 텍스트 일절 금지:
-{{"keywords": "쉼표로 구분된 키워드 또는 빈 문자열", "assessed_risk": "적정|주의|경계|위기 중 하나", "comment": "작업3 분석 보고 전문"}}"""
-
-    global _quota_exhausted
-    if _quota_exhausted:
-        return '', '', ''  # 이번 실행 중 이미 할당량 초과 확인됨 - 재시도 없이 즉시 대체 분석으로
+반드시 아래 JSON 배열 형식으로만, 대리점 순서대로 모두 출력하세요. 다른 텍스트 일절 금지:
+[{{"name": "대리점명(위에 준 name 값과 정확히 동일하게)", "keywords": "쉼표로 구분된 키워드 또는 빈 문자열", "assessed_risk": "적정|주의|경계|위기 중 하나", "comment": "작업3 분석 보고 전문"}}, ...]"""
 
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": 700},
+        "generationConfig": {"maxOutputTokens": min(8192, 250 * len(stores) + 200)},
     }
+    store_names = [s['name'] for s in stores]
     try:
         res = None
         for attempt in range(2):
-            res = requests.post(url, json=body, timeout=30)
+            res = requests.post(url, json=body, timeout=60)
             if res.status_code == 429:
                 if attempt == 0:
-                    print(f"  ⏳ Gemini 순간 한도 대기 ({store_name}) - 15초 후 1회 재시도")
+                    print(f"  ⏳ Gemini 순간 한도 대기 (배치 {len(stores)}건) - 15초 후 1회 재시도")
                     time.sleep(15)
                     continue
                 err = res.json().get('error', {}) if res.content else {}
                 if err.get('status') == 'RESOURCE_EXHAUSTED':
                     _quota_exhausted = True
-                    print(f"  ⚠️ Gemini 하루 할당량 소진 확인 ({store_name}) - 이후 대리점은 재시도 없이 대체 분석 사용")
+                    print(f"  ⚠️ Gemini 하루 할당량 소진 확인 (배치 {len(stores)}건) - 이후 대리점은 재시도 없이 대체 분석 사용")
             break
         data = res.json()
         if res.status_code != 200:
             err = data.get('error', {})
-            print(f"  ⚠️ Gemini API 오류 ({store_name}): HTTP {res.status_code} / {err.get('status','')} / {err.get('message','')[:200]}")
-            return '', '', ''
+            print(f"  ⚠️ Gemini API 오류 (배치 {store_names}): HTTP {res.status_code} / {err.get('status','')} / {err.get('message','')[:200]}")
+            return {}
         candidates = data.get('candidates', [])
         if not candidates:
-            print(f"  ⚠️ Gemini 응답에 candidates 없음 ({store_name}): {json.dumps(data, ensure_ascii=False)[:300]}")
-            return '', '', ''
+            print(f"  ⚠️ Gemini 응답에 candidates 없음 (배치 {store_names}): {json.dumps(data, ensure_ascii=False)[:300]}")
+            return {}
         finish_reason = candidates[0].get('finishReason', '')
         if finish_reason and finish_reason not in ('STOP', 'MAX_TOKENS'):
-            print(f"  ⚠️ Gemini 응답 비정상 종료 ({store_name}): finishReason={finish_reason}")
+            print(f"  ⚠️ Gemini 응답 비정상 종료 (배치 {store_names}): finishReason={finish_reason}")
         raw = candidates[0]['content']['parts'][0]['text'].strip()
         raw = raw.strip('`').replace('json\n', '', 1).strip()
-        parsed = json.loads(raw)
-        keywords = parsed.get('keywords', '').strip()
-        valid = [k.strip() for k in keywords.split(',') if k.strip() in all_keywords]
-        comment = parsed.get('comment', '').strip()
-        assessed_risk = parsed.get('assessed_risk', '').strip()
-        if assessed_risk not in RISK_ORDER:
-            assessed_risk = ''
-        if not comment:
-            print(f"  ⚠️ Gemini comment 비어있음 ({store_name}) - 원본 응답: {raw[:400]}")
-        return ', '.join(valid), comment, assessed_risk
+        parsed_list = json.loads(raw)
+        if not isinstance(parsed_list, list):
+            print(f"  ⚠️ Gemini 배치 응답이 배열이 아님 (배치 {store_names})")
+            return {}
+
+        results = {}
+        used_idx = set()
+        # 1차: name 값이 정확히 일치하는 항목끼리 매칭
+        for item in parsed_list:
+            item_name = ' '.join(str(item.get('name', '')).split())
+            if item_name in store_names and item_name not in results:
+                results[item_name] = item
+        # 2차: 이름 매칭이 안 된 대리점이 남아있고 응답 개수가 동일하면 순서대로 매칭 (최후 안전장치)
+        if len(results) < len(stores) and len(parsed_list) == len(stores):
+            for name, item in zip(store_names, parsed_list):
+                if name not in results:
+                    results[name] = item
+
+        out = {}
+        for name, item in results.items():
+            keywords = str(item.get('keywords', '')).strip()
+            valid = [k.strip() for k in keywords.split(',') if k.strip() in all_keywords]
+            comment = str(item.get('comment', '')).strip()
+            assessed_risk = str(item.get('assessed_risk', '')).strip()
+            if assessed_risk not in RISK_ORDER:
+                assessed_risk = ''
+            if comment:
+                out[name] = (', '.join(valid), comment, assessed_risk)
+        missing = [n for n in store_names if n not in out]
+        if missing:
+            print(f"  ⚠️ Gemini 배치 응답에서 판단 누락: {missing}")
+        return out
     except Exception as e:
-        print(f"  ⚠️ Gemini 오류 ({store_name}): {type(e).__name__}: {e}")
-        return '', '', ''
+        print(f"  ⚠️ Gemini 배치 오류 ({store_names}): {type(e).__name__}: {e}")
+        return {}
 
 
 # ───────────────────────────────────────────
@@ -484,6 +520,55 @@ def fetch_cs_data(store_debt_map={}):
                              'sales_3m_goods': 0, 'sales_3m_clothing': 0}
         merged[name]['sales_3m_clothing'] = total
 
+    # ── 1단계: 캐시 확인, 새로 분석이 필요한 대리점만 모으기 ──
+    analysis = {}  # name -> {'keywords', 'comment', 'assessed_risk', 'ai_judged'}
+    to_call = []   # 캐시 미스: [{'name', 'memo', 'debt_info'}, ...]
+    for name, data in merged.items():
+        memo = ' / '.join(data['memos'])
+        if not memo:
+            continue
+        debt_info = store_debt_map.get(name, {})
+        rule_keywords = ', '.join(extract_keywords_rule_based(memo))
+        if api_key:
+            h = memo_hash(memo)
+            cached = ai_cache.get(name)
+            if cached and cached.get('memo_hash') == h and cached.get('assessed_risk') in RISK_ORDER:
+                analysis[name] = {
+                    'keywords': rule_keywords,
+                    'comment': cached.get('comment', ''),
+                    'assessed_risk': cached.get('assessed_risk', ''),
+                    'ai_judged': True,
+                }
+                cache_hits += 1
+                print(f"  {name} AI 분석 (캐시 재사용)")
+                continue
+        to_call.append({'name': name, 'memo': memo, 'debt_info': debt_info, 'rule_keywords': rule_keywords})
+
+    # ── 2단계: 캐시 미스 대리점을 BATCH_SIZE씩 묶어 Gemini 호출 (RPD 20 한도 대응) ──
+    for i in range(0, len(to_call), BATCH_SIZE):
+        batch = to_call[i:i + BATCH_SIZE]
+        if not api_key:
+            break
+        cache_calls += 1
+        batch_results = gemini_analyze_batch(
+            [{'name': s['name'], 'memo': s['memo'], 'debt_info': s['debt_info']} for s in batch],
+            api_key,
+        )
+        for s in batch:
+            name = s['name']
+            if name in batch_results:
+                keywords, comment, assessed_risk = batch_results[name]
+                analysis[name] = {
+                    'keywords': s['rule_keywords'],  # 감점 근거 키워드는 항상 규칙 기반 추출값 사용
+                    'comment': comment,
+                    'assessed_risk': assessed_risk,
+                    'ai_judged': assessed_risk in RISK_ORDER,
+                }
+                print(f"  {name} AI 분석: Gemini 성공 (배치)")
+        if not _quota_exhausted and i + BATCH_SIZE < len(to_call):
+            time.sleep(13)  # RPM 5 안전 마진 확보 (배치 단위이므로 호출 자체는 훨씬 적음)
+
+    # ── 3단계: 점수 계산 ──
     result = {}
     for name, data in merged.items():
         memo      = ' / '.join(data['memos'])
@@ -492,34 +577,20 @@ def fetch_cs_data(store_debt_map={}):
         sales_3m_goods    = data.get('sales_3m_goods', 0)
         sales_3m_clothing = data.get('sales_3m_clothing', 0)
 
-        # AI 키워드 추출 + 리스크 분석 (메모 있을 때만)
         debt_info = store_debt_map.get(name, {})
         mechanical_risk = debt_info.get('risk', '')
+
         if memo:
-            # 키워드는 Gemini 성패와 무관하게 항상 규칙 기반으로 추출 (CS 점수 감점의 근거이므로 API 의존 금지)
+            a = analysis.get(name)
             rule_keywords_list = extract_keywords_rule_based(memo)
             rule_keywords = ', '.join(rule_keywords_list)
+            keywords = rule_keywords
 
-            comment, assessed_risk = '', ''
-            ai_judged = False  # Gemini(또는 캐시된 Gemini 결과)가 실제로 이 메모를 판단했는지 여부
-            if api_key:
-                h = memo_hash(memo)
-                cached = ai_cache.get(name)
-                if cached and cached.get('memo_hash') == h and cached.get('assessed_risk') in RISK_ORDER:
-                    comment = cached.get('comment', '')
-                    assessed_risk = cached.get('assessed_risk', '')
-                    ai_judged = True
-                    cache_hits += 1
-                    print(f"  {name} AI 분석 (캐시 재사용)")
-                else:
-                    cache_calls += 1
-                    _, gemini_comment, gemini_risk = gemini_analyze(name, memo, api_key, debt_info)
-                    if gemini_comment:
-                        comment, assessed_risk = gemini_comment, gemini_risk
-                        ai_judged = gemini_risk in RISK_ORDER
-                        print(f"  {name} AI 분석: Gemini 성공")
-                    if not _quota_exhausted:
-                        time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
+            if a:
+                comment, assessed_risk, ai_judged = a['comment'], a['assessed_risk'], a['ai_judged']
+            else:
+                comment, assessed_risk, ai_judged = '', '', False
+                print(f"  {name} AI 분석: Gemini 미판단 (쿼터 소진 등)")
 
             # CS 점수 산정용 위험단계: Gemini가 실제로 메모를 읽고 판단했으면 그 결과를 그대로 사용.
             # Gemini가 실패/미판단이면 점수만은 키워드 기반으로 대체 추정 (표시용 assessed_risk와는 별개).
@@ -534,8 +605,6 @@ def fetch_cs_data(store_debt_map={}):
 
             if api_key:
                 ai_cache[name] = {'memo_hash': memo_hash(memo), 'keywords': rule_keywords, 'comment': comment, 'assessed_risk': assessed_risk if ai_judged else ''}
-
-            keywords = rule_keywords
         else:
             keywords, comment, assessed_risk, cs_risk = '', '', '', ''
 
@@ -584,6 +653,6 @@ def fetch_cs_data(store_debt_map={}):
         print(f"  {name}: CS {cs_score}점 / 파트너십 {partnership_score}점 완료")
 
     save_ai_cache(ai_cache)
-    print(f"  📦 AI 캐시: 재사용 {cache_hits}건 / 신규 호출 {cache_calls}건")
+    print(f"  📦 AI 캐시: 재사용 {cache_hits}건 / 신규 배치 호출 {cache_calls}건 (대리점 {len(to_call)}곳을 배치 {BATCH_SIZE}개씩 묶어 처리)")
 
     return result
