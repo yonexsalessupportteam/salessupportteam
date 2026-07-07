@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
@@ -260,7 +261,15 @@ def gemini_analyze(store_name, memo, api_key, debt_info={}):
         "generationConfig": {"maxOutputTokens": 700},
     }
     try:
-        res = requests.post(url, json=body, timeout=30)
+        res = None
+        for attempt in range(3):
+            res = requests.post(url, json=body, timeout=30)
+            if res.status_code == 429:
+                wait = 20 * (attempt + 1)  # 20s, 40s, 60s
+                print(f"  ⏳ Gemini 할당량 대기 ({store_name}) - {wait}초 후 재시도 ({attempt+1}/3)")
+                time.sleep(wait)
+                continue
+            break
         data = res.json()
         if res.status_code != 200:
             err = data.get('error', {})
@@ -382,6 +391,7 @@ def fetch_cs_data(store_debt_map={}):
         if api_key and memo:
             keywords, comment, assessed_risk = gemini_analyze(name, memo, api_key, debt_info)
             print(f"  {name} 키워드 추출: {keywords if keywords else '없음'}")
+            time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
         else:
             keywords, comment, assessed_risk = '', '', ''
 
