@@ -146,26 +146,34 @@ def fetch_sales_tab(tab_name, name_col='매장명'):
 # ───────────────────────────────────────────
 # CS 점수 계산 (20점 만점)
 # 메모 없음 → 20점 (이슈 없음으로 간주)
-# 메모 있음 → 20점 기본에서 키워드 감점
+# 메모 있음 → AI(Gemini)가 메모 텍스트를 읽고 직접 판단한 위험단계(assessed_risk)를 기준으로 배점
+#             (고정 키워드 리스트와의 문자열 일치가 아니라, 자유 서술 메모의 맥락을 보고 판단)
 # ───────────────────────────────────────────
-def score_cs(keywords_str, memo):
-    """CS 점수 계산 (20점 만점)"""
+CS_RISK_SCORE = {'적정': 20, '주의': 15, '경계': 10, '위기': 5}
+
+
+def classify_cs_risk_fallback(memo):
+    """Gemini 판단이 없을 때(API 실패 등)의 최후 대체 위험단계 추정.
+    고정 키워드 매칭으로 대략적인 위험단계('적정'/'경계'/'위기')를 반환."""
+    text = memo.lower()
+    if any(kw in text for kw in RISK_KEYWORDS['high']):
+        return '위기'
+    if any(kw in text for kw in RISK_KEYWORDS['mid']):
+        return '경계'
+    return '적정'
+
+
+def score_cs(memo, cs_risk):
+    """CS 점수 계산 (20점 만점). cs_risk는 이 대리점의 CS 위험단계('적정'/'주의'/'경계'/'위기')."""
     # 메모 없으면 만점
     if not memo or not memo.strip():
         return 20
 
-    text = f"{keywords_str} {memo}".lower()
-    score = 20  # 기본 20점
+    if cs_risk in CS_RISK_SCORE:
+        return CS_RISK_SCORE[cs_risk]
 
-    for kw in RISK_KEYWORDS['high']:
-        if kw in text:
-            score -= 20   # 고위험 -20점
-    for kw in RISK_KEYWORDS['mid']:
-        if kw in text:
-            score -= 10   # 중위험 -10점
-    # 저위험(RISK_KEYWORDS['low'])은 감점 없음
-
-    return max(0, score)  # 중복 감점 누적, 만점(20점) 구조상 최대 감점은 자동으로 -20점(=0점)까지로 제한됨
+    # 위험단계를 판단하지 못한 예외적인 경우 최후의 키워드 기반 추정
+    return CS_RISK_SCORE[classify_cs_risk_fallback(memo)]
 
 
 def score_partnership(p_goods, p_clothing):
@@ -493,12 +501,14 @@ def fetch_cs_data(store_debt_map={}):
             rule_keywords = ', '.join(rule_keywords_list)
 
             comment, assessed_risk = '', ''
+            ai_judged = False  # Gemini(또는 캐시된 Gemini 결과)가 실제로 이 메모를 판단했는지 여부
             if api_key:
                 h = memo_hash(memo)
                 cached = ai_cache.get(name)
-                if cached and cached.get('memo_hash') == h:
+                if cached and cached.get('memo_hash') == h and cached.get('assessed_risk') in RISK_ORDER:
                     comment = cached.get('comment', '')
                     assessed_risk = cached.get('assessed_risk', '')
+                    ai_judged = True
                     cache_hits += 1
                     print(f"  {name} AI 분석 (캐시 재사용)")
                 else:
@@ -506,22 +516,28 @@ def fetch_cs_data(store_debt_map={}):
                     _, gemini_comment, gemini_risk = gemini_analyze(name, memo, api_key, debt_info)
                     if gemini_comment:
                         comment, assessed_risk = gemini_comment, gemini_risk
+                        ai_judged = gemini_risk in RISK_ORDER
                         print(f"  {name} AI 분석: Gemini 성공")
                     if not _quota_exhausted:
                         time.sleep(7)  # 무료 티어 분당 요청수 제한(RPM) 안전 마진 확보
 
+            # CS 점수 산정용 위험단계: Gemini가 실제로 메모를 읽고 판단했으면 그 결과를 그대로 사용.
+            # Gemini가 실패/미판단이면 점수만은 키워드 기반으로 대체 추정 (표시용 assessed_risk와는 별개).
+            cs_risk = assessed_risk if ai_judged else classify_cs_risk_fallback(memo)
+
             if not comment:
                 comment = generate_rule_based_comment(name, memo, rule_keywords_list, mechanical_risk, debt_info)
                 if not assessed_risk:
+                    # 표시(미스매치 비교)용 assessed_risk는 기존과 동일하게 채권등급으로 대체
                     assessed_risk = mechanical_risk if mechanical_risk in RISK_ORDER else ''
                 print(f"  {name} AI 분석: 규칙 기반 대체 생성 사용")
 
             if api_key:
-                ai_cache[name] = {'memo_hash': memo_hash(memo), 'keywords': rule_keywords, 'comment': comment, 'assessed_risk': assessed_risk}
+                ai_cache[name] = {'memo_hash': memo_hash(memo), 'keywords': rule_keywords, 'comment': comment, 'assessed_risk': assessed_risk if ai_judged else ''}
 
             keywords = rule_keywords
         else:
-            keywords, comment, assessed_risk = '', '', ''
+            keywords, comment, assessed_risk, cs_risk = '', '', '', ''
 
         # AI 자체 판단과 기계적 등급(classify_risk) 불일치 체크
         # (관리/해당없음 등 4단계 스케일 밖의 등급은 비교 대상에서 제외)
@@ -536,7 +552,7 @@ def fetch_cs_data(store_debt_map={}):
                     ai_mismatch_direction = 'mild'
 
         # CS 점수 (20점 만점, 메모 없으면 20점)
-        cs_score = score_cs(keywords, memo)
+        cs_score = score_cs(memo, cs_risk)
 
         # 파트너십 점수 (30점 만점)
         partnership_score = score_partnership(p_goods, p_clothing)
