@@ -37,6 +37,7 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#f5f4f0;colo
 .crit-table tr:nth-child(even) td{background:#f9f8f5}
 .crit-table td.neg{color:#A32D2D;font-weight:600}
 .crit-sub{font-size:12px;color:#888780;margin-top:6px}
+.crit-group-label{font-size:13px;font-weight:700;color:#185FA5;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #1a6abf30}
 .main-content{flex:1;overflow:visible}
 .cat-page{display:none}
 .cat-page.active{display:block}
@@ -193,7 +194,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.07(화) 12:12 업데이트</span>
+  <span class="sub">2026.07.07(화) 13:42 업데이트</span>
 </div>
 
 <div class="layout">
@@ -249,20 +250,23 @@ tbody tr:hover{background:#f9f8f4}
 
 <div id="cat-criteria" class="cat-page">
   <div class="crit-wrap">
-    <div class="crit-intro">대리점 종합평가는 <b>정량점수(50) + CS 코멘트(20) + 파트너십(30) = 100점</b> 만점으로 구성됩니다. 각 항목을 클릭하면 세부 기준이 펼쳐집니다.</div>
+    <div class="crit-intro">대리점 종합평가는 <b>정량점수(50) + 정성점수(50) = 100점</b> 만점으로 구성됩니다. 각 항목을 클릭하면 세부 기준이 펼쳐집니다.</div>
 
     <details class="crit-block" open>
       <summary>총점 구조 (최대 100점)</summary>
       <div class="crit-body">
         <table class="crit-table">
-          <tr><th>구분</th><th>배점</th><th>구성</th></tr>
-          <tr><td>정량점수</td><td>50점</td><td>채권건전성(30) + 매출규모(20)</td></tr>
-          <tr><td>CS 코멘트</td><td>20점</td><td>특이사항 메모 기반 감점</td></tr>
-          <tr><td>파트너십</td><td>30점</td><td>용품(15) + 의류(15)</td></tr>
-          <tr><td><b>합계</b></td><td><b>100점</b></td><td>정량 + CS코멘트 + 파트너십</td></tr>
+          <tr><th>구분</th><th>세부항목</th><th>배점</th></tr>
+          <tr><td rowspan="2">📈 정량점수 (50점)</td><td>채권건전성</td><td>30점</td></tr>
+          <tr><td>매출규모</td><td>20점</td></tr>
+          <tr><td rowspan="2">🤝 정성점수 (50점)</td><td>CS 코멘트</td><td>20점</td></tr>
+          <tr><td>파트너십 (용품15+의류15)</td><td>30점</td></tr>
+          <tr><td colspan="2"><b>합계</b></td><td><b>100점</b></td></tr>
         </table>
       </div>
     </details>
+
+    <div class="crit-group-label">📈 정량평가</div>
 
     <details class="crit-block">
       <summary>① 채권건전성 (30점)</summary>
@@ -309,6 +313,8 @@ tbody tr:hover{background:#f9f8f4}
       </div>
     </details>
 
+    <div class="crit-group-label">🤝 정성평가</div>
+
     <details class="crit-block">
       <summary>CS 코멘트 (20점)</summary>
       <div class="crit-body">
@@ -328,7 +334,7 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>조건</th><th>점수</th></tr>
-          <tr><td>온라인 최저가 준수</td><td>15점</td></tr>
+          <tr><td>권장가격 준수</td><td>15점</td></tr>
           <tr><td>위반</td><td class="neg">0점</td></tr>
         </table>
       </div>
