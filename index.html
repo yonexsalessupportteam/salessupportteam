@@ -201,7 +201,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.07(화) 15:44 업데이트</span>
+  <span class="sub">2026.07.07(화) 15:47 업데이트</span>
 </div>
 
 <div class="layout">
@@ -340,12 +340,13 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>조건</th><th>점수</th></tr>
-          <tr><td>메모 없음 / 감점 키워드 없음</td><td>20점 (만점)</td></tr>
-          <tr><td>고위험 키워드 1개당</td><td class="neg">-20점</td></tr>
-          <tr><td>중위험 키워드 1개당</td><td class="neg">-10점</td></tr>
-          <tr><td>저위험 키워드</td><td>감점 없음</td></tr>
+          <tr><td>메모 없음</td><td>20점 (만점)</td></tr>
+          <tr><td>AI 판단: 적정</td><td>20점</td></tr>
+          <tr><td>AI 판단: 주의</td><td class="neg">15점</td></tr>
+          <tr><td>AI 판단: 경계</td><td class="neg">10점</td></tr>
+          <tr><td>AI 판단: 위기</td><td class="neg">5점</td></tr>
         </table>
-        <div class="crit-sub">※ 키워드 중복 시 누적 감점(중복 적용), 단 최종 점수는 0점 하한</div>
+        <div class="crit-sub">※ 담당자가 남긴 특이사항메모를 Gemini AI가 읽고 위험단계를 직접 판단해 배점. AI가 판단하지 못한 경우(쿼터 소진 등)에만 고정 키워드 매칭으로 대체 추정(위기/경계/적정 3단계).</div>
       </div>
     </details>
 
