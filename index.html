@@ -201,7 +201,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.22(수) 10:06 업데이트</span>
+  <span class="sub">2026.07.22(수) 10:12 업데이트</span>
 </div>
 
 <div class="layout">
@@ -434,6 +434,18 @@ function buildScoreSection(s){
     +'<div class="dl">담보대비 감점 (용품)</div>'
     +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/15</span></div>'
     +'<div class="dsub">'+(gdRatioVal!=null?gdRatioVal+'%':'담보없음')+'</div></div>'
+    ):'')
+    +(s.clothing?(
+    '<div class="dc">'
+    +'<div class="dl">매출규모 (의류, 3개월)</div>'
+    +'<div class="dv" style="color:'+dvColor(salesScoreClothing,8,5)+'">'+salesScoreClothing+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
+    +'<div class="dsub">'+(s.sales3mClothing?fmt(s.sales3mClothing):'미입력')+'</div></div>'
+    ):'')
+    +(s.goods?(
+    '<div class="dc">'
+    +'<div class="dl">매출규모 (용품, 3개월)</div>'
+    +'<div class="dv" style="color:'+dvColor(salesScoreGoods,8,5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
+    +'<div class="dsub">'+(s.sales3mGoods?fmt(s.sales3mGoods):'미입력')+'</div></div>'
     ):'')
     +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
