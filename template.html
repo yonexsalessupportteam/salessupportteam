@@ -526,7 +526,7 @@ function getRiskClass(score,worstRisk){
 }
 
 function makeScoreGauge(score,grade,gradeColor){
-  const cx=110,cy=105,r=88,rIn=64;
+  const cx=130,cy=118,r=76,rIn=54;
   const clampScore=Math.max(0,Math.min(100,score));
   const angleForScore=v=>180-(v/100)*180;
   const polar=(radius,angDeg)=>{const rad=angDeg*Math.PI/180;return{x:cx+radius*Math.cos(rad),y:cy-radius*Math.sin(rad)};};
@@ -540,24 +540,24 @@ function makeScoreGauge(score,grade,gradeColor){
     const a0=angleForScore(z.from),a1=angleForScore(z.to);
     const p0=polar(r,a0),p1=polar(r,a1);
     const large=Math.abs(a0-a1)>180?1:0;
-    return `<path d="M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}" fill="none" stroke="${z.color}" stroke-width="20" stroke-linecap="butt"/>`;
+    return `<path d="M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}" fill="none" stroke="${z.color}" stroke-width="18" stroke-linecap="butt"/>`;
   }).join('');
   const needleAngle=angleForScore(clampScore);
   const needleTip=polar(rIn,needleAngle);
   const needleBaseL=polar(7,needleAngle+90);
   const needleBaseR=polar(7,needleAngle-90);
-  const needle=`<polygon points="${needleTip.x.toFixed(2)},${needleTip.y.toFixed(2)} ${needleBaseL.x.toFixed(2)},${needleBaseL.y.toFixed(2)} ${needleBaseR.x.toFixed(2)},${needleBaseR.y.toFixed(2)}" fill="#1a1a18"/><circle cx="${cx}" cy="${cy}" r="9" fill="#1a1a18"/>`;
-  const labelPositions=[{v:0,a:'end'},{v:50,a:'end'},{v:65,a:'middle'},{v:80,a:'start'},{v:100,a:'start'}];
+  const needle=`<polygon points="${needleTip.x.toFixed(2)},${needleTip.y.toFixed(2)} ${needleBaseL.x.toFixed(2)},${needleBaseL.y.toFixed(2)} ${needleBaseR.x.toFixed(2)},${needleBaseR.y.toFixed(2)}" fill="#1a1a18"/><circle cx="${cx}" cy="${cy}" r="8" fill="#1a1a18"/>`;
+  const labelPositions=[{v:0,a:'middle'},{v:50,a:'middle'},{v:65,a:'middle'},{v:80,a:'middle'},{v:100,a:'middle'}];
   const tickLabels=labelPositions.map(t=>{
-    const p=polar(r+16,angleForScore(t.v));
+    const p=polar(r+18,angleForScore(t.v));
     return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" font-size="10" fill="#888780" text-anchor="${t.a}" dominant-baseline="middle">${t.v}</text>`;
   }).join('');
-  return `<svg viewBox="0 0 220 130" style="width:100%;max-width:260px;display:block;margin:0 auto">
+  return `<svg viewBox="0 0 260 190" style="width:100%;max-width:260px;display:block;margin:0 auto">
     ${arcs}
     ${tickLabels}
     ${needle}
-    <text x="${cx}" y="${cy+34}" font-size="22" font-weight="700" fill="${gradeColor}" text-anchor="middle">${Math.round(clampScore)}</text>
-    <text x="${cx}" y="${cy+50}" font-size="12" font-weight="600" fill="${gradeColor}" text-anchor="middle">${grade}</text>
+    <text x="${cx}" y="${cy+38}" font-size="22" font-weight="700" fill="${gradeColor}" text-anchor="middle">${Math.round(clampScore)}</text>
+    <text x="${cx}" y="${cy+56}" font-size="12" font-weight="600" fill="${gradeColor}" text-anchor="middle">${grade}</text>
   </svg>`;
 }
 
