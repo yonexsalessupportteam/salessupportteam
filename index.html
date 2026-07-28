@@ -135,6 +135,7 @@ tbody tr:hover{background:#f9f8f4}
 .ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
 .ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
 .ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}
+.ai-kpi .pct{font-size:11px;color:#b4b2a9;margin-top:4px}
 .ai-filter-tag{font-size:12px;padding:5px 12px;border-radius:20px;border:.5px solid #e0dfd8;cursor:pointer;color:#5f5e5a;background:#fff}
 .ai-filter-tag.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
 .ai-filter-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
@@ -212,7 +213,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.28(화) 13:23 업데이트</span>
+  <span class="sub">2026.07.28(화) 14:24 업데이트</span>
 </div>
 
 <div class="layout">
@@ -638,7 +639,7 @@ function buildAiDash(){
       allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
     });
   });
-  allStores.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  allStores.sort((a,b)=>b.totalScore-a.totalScore);
 
   const total=allStores.length;
   const manage=allStores.filter(s=>s.worstRisk==='관리').length;
@@ -696,12 +697,12 @@ function buildAiDash(){
 
   let html=insightHtml+`
   <div class="ai-kpi-grid">
-    <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div></div>
-    <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div></div>
-    <div class="ai-kpi"><div class="lbl">주의</div><div class="val a">${caution}</div></div>
-    <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div></div>
-    <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div></div>
-    <div class="ai-kpi"><div class="lbl">관리</div><div class="val r">${manage}</div></div>
+    <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
+    <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="lbl">주의</div><div class="val a">${caution}</div><div class="pct">전체의 ${total?Math.round(caution/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div><div class="pct">전체의 ${total?Math.round(border/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div><div class="pct">전체의 ${total?Math.round(crisis/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="lbl">관리</div><div class="val r">${manage}</div><div class="pct">전체의 ${total?Math.round(manage/total*1000)/10:0}%</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
     <input id="ai-search" type="text" placeholder="매장명 검색..." style="font-size:13px;padding:6px 12px;border-radius:8px;border:.5px solid #d3d1c7;outline:none;width:180px;">
