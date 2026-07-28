@@ -152,7 +152,7 @@ def process_raw(filepath):
     result['excess'] = result['receivable'] - result['collateral']
     result['ratio']  = np.where(
         result['collateral'] > 0,
-        result['receivable'] / result['collateral'], 0.0
+        (result['receivable'] - result['collateral']) / result['collateral'], 0.0
     )
     result['risk'] = result.apply(
         lambda r: classify_risk(r['collateral'], r['receivable']), axis=1
@@ -300,9 +300,8 @@ def main():
                     'cats_seen': set(),
                 })
                 entry['cats_seen'].add(cat)
-                entry['collateral'] = s['collateral']
-                entry['receivable'] = s['receivable']
-                entry['ratio']      = s['ratio']
+                entry['collateral'] += s['collateral']
+                entry['receivable'] += s['receivable']
                 entry['risk']       = s['risk']
                 entry['cat']        = cat
                 if cat == '의류':
@@ -341,6 +340,7 @@ def main():
         del entry['cats_seen']
         del entry['deduct_collateral_single']
         del entry['deduct_collection_single']
+        entry['ratio'] = (entry['receivable'] - entry['collateral']) / entry['collateral'] if entry['collateral'] > 0 else 0.0
 
     cs_scores = fetch_cs_data(store_debt_map)
 
