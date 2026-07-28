@@ -119,6 +119,17 @@ tbody tr:hover{background:#f9f8f4}
 .dept-filter-btn:hover{background:#f5f4f0}
 .dept-filter-btn.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
 .ai-dash{padding:24px;max-width:1200px;margin:0 auto}
+.insight-banner{display:flex;align-items:center;justify-content:space-between;background:#f0efe9;border-radius:10px;padding:12px 16px;margin-bottom:12px;cursor:pointer;user-select:none}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;overflow:hidden;max-height:600px;transition:max-height .2s ease,opacity .2s ease,margin .2s ease;opacity:1}
+.insight-grid.collapsed{max-height:0;opacity:0;margin-bottom:0}
+.insight-card{background:#fff;border-radius:10px;padding:12px 14px;border:.5px solid #e0dfd8}
+.insight-card-hdr{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px}
+.insight-count{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.insight-row{padding:6px 0;border-top:.5px solid #f0efe9;cursor:pointer}
+.insight-row:first-child{border-top:none}
+.insight-row:hover .insight-row-name{text-decoration:underline}
+.insight-row-name{font-size:13px;font-weight:500;color:#1a1a18}
+.insight-row-sub{font-size:12px;color:#888780;margin-top:2px}
 .ai-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
 .ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8}
 .ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
@@ -193,7 +204,7 @@ tbody tr:hover{background:#f9f8f4}
 .gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:12px 0;}
 .gauge-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
 .gauge-btn{font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:sans-serif;transition:.15s;}
-@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}.cat-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ai-kpi-grid{grid-template-columns:1fr 1fr}.cat-grid{grid-template-columns:1fr 1fr}.insight-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -201,7 +212,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.28(화) 11:04 업데이트</span>
+  <span class="sub">2026.07.28(화) 11:09 업데이트</span>
 </div>
 
 <div class="layout">
@@ -637,7 +648,53 @@ function buildAiDash(){
   const border=graded.filter(s=>s.totalScore>=50&&s.totalScore<65).length;
   const crisis=graded.filter(s=>s.totalScore<50).length;
 
-  let html=`
+  const idxStores=allStores.map((s,idx)=>Object.assign({idx},s));
+  const warnList=idxStores.filter(s=>s.worstRisk==='위기'||s.worstRisk==='경계'||s.worstRisk==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
+  const oppList=idxStores.filter(s=>s.worstRisk!=='관리'&&s.totalScore>=80).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
+  const reviewList=idxStores.filter(s=>s.aiMismatch).sort((a,b)=>(b.aiMismatchDirection==='severe'?1:0)-(a.aiMismatchDirection==='severe'?1:0)).slice(0,3);
+
+  const insightCard=function(kind,list,emptyMsg){
+    const meta={
+      warn:{label:'경고 및 추천',icon:'⚠️',bg:'#FCEBEB',bd:'#E24B4A',txt:'#A32D2D',tagBg:'#F7C1C1'},
+      opp:{label:'기회 요소',icon:'💡',bg:'#EAF3DE',bd:'#639922',txt:'#3B6D11',tagBg:'#C0DD97'},
+      review:{label:'검토 대상',icon:'🔎',bg:'#E6F1FB',bd:'#378ADD',txt:'#185FA5',tagBg:'#B5D4F4'}
+    }[kind];
+    const rows=list.length?list.map(s=>{
+      const sub=kind==='warn'?`종합점수 ${Math.round(s.totalScore)}점 · ${s.worstRisk} 등급`
+        :kind==='opp'?`종합점수 ${Math.round(s.totalScore)}점 · 적정 등급 유지`
+        :`AI 자체판단 ${s.aiAssessedRisk||'-'}${s.aiMismatchDirection==='severe'?' (더 심각)':' (완화)'}`;
+      return `<div class="insight-row" onclick="event.stopPropagation();goToDealer(${s.idx})">
+        <div class="insight-row-name">${s.name}</div>
+        <div class="insight-row-sub">${sub}</div>
+      </div>`;
+    }).join(''):`<div style="font-size:12px;color:#b4b2a9;padding:6px 0">${emptyMsg}</div>`;
+    return `<div class="insight-card" style="border-top:3px solid ${meta.bd}">
+      <div class="insight-card-hdr">
+        <span style="color:${meta.txt}">${meta.icon} ${meta.label}</span>
+        <span class="insight-count" style="background:${meta.tagBg};color:${meta.txt}">${list.length}</span>
+      </div>
+      ${rows}
+    </div>`;
+  };
+
+  const insightHtml=`
+  <div class="insight-banner" onclick="toggleTodayInsight()">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">🤖</span>
+      <div>
+        <div style="font-weight:600;font-size:14px">AI가 분석한 오늘의 대리점 인사이트</div>
+        <div style="font-size:12px;color:#888780">종합점수·CS등급·AI 위험판단 기반으로 요약했습니다</div>
+      </div>
+    </div>
+    <span id="insight-caret" style="font-size:12px;color:#888780">접기 ▲</span>
+  </div>
+  <div id="insight-body" class="insight-grid">
+    ${insightCard('warn',warnList,'경고 대상 대리점이 없습니다.')}
+    ${insightCard('opp',oppList,'해당하는 대리점이 없습니다.')}
+    ${insightCard('review',reviewList,'AI 판단 불일치 대리점이 없습니다.')}
+  </div>`;
+
+  let html=insightHtml+`
   <div class="ai-kpi-grid">
     <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div></div>
     <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div></div>
@@ -796,6 +853,21 @@ function applyAiFilters(){
     card.style.display=show?'':'none';
     if(det&&!show) det.style.display='none';
   });
+}
+
+function toggleTodayInsight(){
+  const body=document.getElementById('insight-body');
+  const caret=document.getElementById('insight-caret');
+  const collapsed=body.classList.toggle('collapsed');
+  caret.textContent=collapsed?'펼치기 ▾':'접기 ▲';
+}
+
+function goToDealer(idx){
+  const card=document.getElementById('aicard-'+idx);
+  if(!card) return;
+  const det=document.getElementById('aidet-'+idx);
+  if(det && det.style.display==='none'){ toggleAiDet(idx,card); }
+  card.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function toggleAiDet(idx,card){
