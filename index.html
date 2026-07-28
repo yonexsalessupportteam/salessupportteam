@@ -54,7 +54,7 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#E4F3FC;colo
 .tab:hover:not(.active){color:#1a1a18}
 .page{display:none;padding:28px 24px 20px;max-width:1200px;margin:0 auto}
 .page.active{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .kpi{background:#fff;border-radius:10px;padding:16px 18px;border:.5px solid #e0dfd8}
 .kpi-label{font-size:12px;color:#888780;margin-bottom:8px}
 .kpi-value{font-size:22px;font-weight:500}
@@ -201,7 +201,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.07.27(월) 11:29 업데이트</span>
+  <span class="sub">2026.07.28(화) 09:50 업데이트</span>
 </div>
 
 <div class="layout">
@@ -816,13 +816,11 @@ function buildPage(cat,dept){
   el.innerHTML='';
   excessOnly[key]=false;
   expandedRisk[key]=null;
-  const hiCnt=(s.risk_counts['위기']||0)+(s.risk_counts['경계']||0);
   const exCnt=d.stores.filter(x=>x.excess>0).length;
   const kpiHtml=`<div class="kpi-grid">
     <div class="kpi"><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div><div class="kpi-sub">ERP 기준</div></div>
     <div class="kpi"><div class="kpi-label">총 담보</div><div class="kpi-value">${fmt(s.total_collateral)}</div><div class="kpi-sub">해당 부서 합산</div></div>
     <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div><div class="kpi-sub">${exCnt}개 매장 초과</div></div>
-    <div class="kpi warn"><div class="kpi-label">경계·위기 매장</div><div class="kpi-value">${hiCnt}개</div><div class="kpi-sub">아래 단계 클릭시 목록 표시</div></div>
   </div>`;
   const pillHtml=allRisks.map(r=>`<div class="pill p${r}" id="pill-${key}-${r}" onclick="togglePillExpand('${key}','${r}')"><span class="pill-dot"></span>${r} ${s.risk_counts[r]||0}개</div>`).join('');
   const chartId='chart-'+key,tblId='tbl-'+key,spId='sp-'+key,searchId='srch-'+key,riskId='risk-'+key,spFilterId='spf-'+key,toggleId='toggle-'+key,expandId='expand-'+key,subtotalId='subtotal-'+key;
