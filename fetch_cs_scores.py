@@ -286,7 +286,17 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
         "generationConfig": {"maxOutputTokens": min(4096, 150 * len(blocks) + 200)},
     }
     try:
-        res = requests.post(url, json=body, timeout=60)
+        res = None
+        for attempt in range(3):
+            res = requests.post(url, json=body, timeout=60)
+            if res.status_code in (503, 500, 502, 504):
+                # 모델 일시 과부하 등 - 잠깐 대기 후 재시도 (최대 2회)
+                if attempt < 2:
+                    wait = 15 * (attempt + 1)
+                    print(f"  ⏳ 일일 인사이트 생성 - Gemini 서버 일시 오류(HTTP {res.status_code}), {wait}초 후 재시도")
+                    time.sleep(wait)
+                    continue
+            break
         if res.status_code == 429:
             err = res.json().get('error', {}) if res.content else {}
             if err.get('status') == 'RESOURCE_EXHAUSTED':
