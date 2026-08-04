@@ -272,12 +272,12 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
 
 {stores_text}
 
-각 대리점마다 1문장(간결하게, 가능하면 수치 근거 포함)으로 작성하세요.
+각 대리점마다 줄바꿈 없이 1문장(간결하게, 가능하면 수치 근거 포함)으로 작성하세요.
 - 경고 태그: 왜 위험한지와 어떤 조치가 필요한지
 - 기회 태그: 왜 안정적인지와 어떤 점을 유지하면 좋은지
 - 검토 태그: AI 판단과 기계적 등급이 왜 다를 수 있는지에 대한 추정
 
-반드시 아래 JSON 배열 형식으로만 출력하세요. 다른 텍스트 일절 금지:
+반드시 아래 JSON 배열 형식으로만 출력하세요. 다른 텍스트 일절 금지. comment 값 안에 줄바꿈 문자를 절대 넣지 마세요:
 [{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...]"""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
@@ -304,7 +304,9 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
             return {}
         raw = candidates[0]['content']['parts'][0]['text'].strip()
         raw = raw.strip('`').replace('json\n', '', 1).strip()
-        parsed_list = json.loads(raw)
+        # strict=False: Gemini가 comment 안에 이스케이프 안 된 줄바꿈(제어문자)을 넣는 경우가 있어
+        # 기본 json 파서(strict=True)는 이를 오류로 처리함 - strict=False로 완화해서 그대로 허용
+        parsed_list = json.loads(raw, strict=False)
         comments = {}
         for item in parsed_list:
             name = ' '.join(str(item.get('name', '')).split())
