@@ -213,7 +213,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.08.03(월) 11:22 업데이트</span>
+  <span class="sub">2026.08.04(화) 09:18 업데이트</span>
 </div>
 
 <div class="layout">
@@ -621,6 +621,7 @@ function buildAiDash(){
       const aiAssessedRisk=csData.ai_assessed_risk||'';
       const aiMismatch=!!csData.ai_mismatch;
       const aiMismatchDirection=csData.ai_mismatch_direction||'';
+      const dailyInsight=csData.insight_comment||'';
       const order=['위기','경계','주의','적정','관리','해당없음'];
       const worstRisk=[c,g].filter(Boolean).reduce((w,s)=>order.indexOf(s.risk)<order.indexOf(w)?s.risk:w,'해당없음');
       const deductCollection=csData.deduct_collection!=null?csData.deduct_collection:0;
@@ -636,7 +637,7 @@ function buildAiDash(){
       const quantScore=Math.min(70,healthScore+salesScore);
       const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);
@@ -661,9 +662,10 @@ function buildAiDash(){
       review:{label:'검토 대상',icon:'🔎',bg:'#E6F1FB',bd:'#378ADD',txt:'#185FA5',tagBg:'#B5D4F4'}
     }[kind];
     const rows=list.length?list.map(s=>{
-      const sub=kind==='warn'?`종합점수 ${Math.round(s.totalScore)}점 · ${s.worstRisk} 등급`
+      const fallback=kind==='warn'?`종합점수 ${Math.round(s.totalScore)}점 · ${s.worstRisk} 등급`
         :kind==='opp'?`종합점수 ${Math.round(s.totalScore)}점 · 적정 등급 유지`
         :`AI 자체판단 ${s.aiAssessedRisk||'-'}${s.aiMismatchDirection==='severe'?' (더 심각)':' (완화)'}`;
+      const sub=s.dailyInsight||fallback;
       return `<div class="insight-row" onclick="event.stopPropagation();goToDealer(${s.idx})">
         <div class="insight-row-name">${s.name}</div>
         <div class="insight-row-sub">${sub}</div>
