@@ -31,16 +31,21 @@ def parse_sheet_date(date_str):
             continue
     return None
 
-# CS 키워드 3단계 표 (정성 점수 CS코멘트, 기본 20점)
-# CS 대리점평가 구글시트의 '키워드' 컬럼에서 담당자가 직접 선택한 값을 이 표와 매칭해 기계적으로 채점.
-# 여러 등급이 섞여 있으면 가장 심각한 등급(고위험>중위험>저위험) 하나만 기준으로 감점.
+# CS 키워드 3단계 표 (정성 점수 CS코멘트, 기본 30점 - 월 누적 방식)
+# CS 대리점평가 구글시트의 '키워드' 컬럼에서 담당자가 직접 선택한 값을 이 표와 매칭.
+# 한 행(=한 상담 건)에 여러 등급 키워드가 섞여 있으면 그 행에서는 가장 심각한 등급 하나만 인정(중복집계 방지).
+# 이번 달에 작성된 행들을 모두 모아 등급별 건수를 세고, 건당 아래 배점을 누적 적용:
+#   고위험 -5점/건, 중위험 -2점/건, 저위험(우수) +1점/건 - 최종 점수는 0~30점 사이로 clamp.
 # 키워드 목록은 추후 바뀔 수 있음 — 여기만 수정하면 전체 채점에 반영됨.
 KEYWORD_TIERS = {
     '고위험': ['허위안내', 'AS접수거부', '임의판정', '폭언·욕설', '보증서조작', 'AS규정위반', '클레임', '컴플레인', '한국소비자원신고', '법적조치', 'SNS게시'],
     '중위험': ['AS기준오안내', '접수지연', '응대미흡', '불만', '불편', '실망', '불친절', '개선요청'],
     '저위험': ['친절', '신속처리', '적극협조', '고객칭찬', '만족도우수', '응대우수', '규정준수', '정확한안내', '클레임없음'],
 }
-KEYWORD_DEDUCT = {'고위험': 20, '중위험': 10, '저위험': 0}
+CS_BASE_SCORE = 30
+KEYWORD_POINTS = {'고위험': -5, '중위험': -2, '저위험': 1}  # 건당 가감점 (저위험은 우수 보너스)
+
+PARTNERSHIP_BASE_SCORE = 30  # 위반 1건(용품/의류 각 컬럼에 값이 있으면 1건)당 -1점, 월 누적
 
 # 매출규모 기준 (나중에 활성화)
 SALES_GRADE = {
@@ -133,16 +138,16 @@ def fetch_sales_tab(tab_name, name_col='매장명'):
 # 메모 있음 → AI(Gemini)가 메모 텍스트를 읽고 직접 판단한 위험단계(assessed_risk)를 기준으로 배점
 #             (고정 키워드 리스트와의 문자열 일치가 아니라, 자유 서술 메모의 맥락을 보고 판단)
 # ───────────────────────────────────────────
+# CS 점수 계산 (30점 만점, 월 누적) — 구글시트 '키워드' 컬럼 값을 KEYWORD_TIERS와 매칭
+# 1) 행(상담 건) 단위로 최고 등급 하나만 분류 → 2) 이번 달 전체 행에 대해 등급별 건수를 세고
+# 고위험 -5점/건, 중위험 -2점/건, 저위험(우수) +1점/건을 30점에서 가감(0~30 clamp)
 # ───────────────────────────────────────────
-# CS 점수 계산 (20점 만점) — 구글시트 '키워드' 컬럼 값을 KEYWORD_TIERS와 매칭해 기계적으로 채점
-# 키워드 없음 → 20점 / 저위험(긍정) → 20점 / 중위험 → 10점 / 고위험 → 0점
-# ───────────────────────────────────────────
-def score_cs_from_keywords(keyword_str):
-    """반환: (점수, 매칭된 등급 또는 빈 문자열). 여러 등급이 섞여 있으면 가장 심각한 등급 하나만 기준으로 감점.
+def classify_keyword_tier(keyword_str):
+    """한 행(상담 건)의 키워드 문자열에서 가장 심각한 등급 하나만 반환 ('고위험'/'중위험'/'저위험'/'').
     저위험(긍정) 문구 중 일부('클레임없음' 등)가 고/중위험 키워드('클레임')를 부분 문자열로 포함하는 경우가 있어,
-    저위험 문구를 먼저 제거한 나머지 텍스트에서 고/중위험을 검사해 오탐(예: '클레임없음'이 '클레임'으로 잘못 잡히는 것)을 막는다."""
+    저위험 문구를 먼저 제거한 나머지 텍스트에서 고/중위험을 검사해 오탐을 막는다."""
     if not keyword_str or not keyword_str.strip():
-        return 20, ''
+        return ''
     text = keyword_str
     matched_low = any(kw in text for kw in KEYWORD_TIERS['저위험'])
     stripped = text
@@ -150,17 +155,19 @@ def score_cs_from_keywords(keyword_str):
         stripped = stripped.replace(kw, '')
     for tier in ('고위험', '중위험'):
         if any(kw in stripped for kw in KEYWORD_TIERS[tier]):
-            return 20 - KEYWORD_DEDUCT[tier], tier
-    if matched_low:
-        return 20, '저위험'
-    return 20, ''  # 표에 없는 값 - 감점 없이 만점 처리
+            return tier
+    return '저위험' if matched_low else ''  # 표에 없는 값 - 미분류(카운트 안 함)
 
 
-def score_partnership(p_goods, p_clothing):
-    """파트너십 점수 (30점 만점, 용품 15 + 의류 15). 컬럼에 값이 있으면(공백 아니면) 위반으로 처리."""
-    goods_score = 0 if str(p_goods).strip() else 15
-    cloth_score = 0 if str(p_clothing).strip() else 15
-    return goods_score + cloth_score
+def score_cs_cumulative(count_high, count_mid, count_low):
+    """이번 달 누적 등급별 건수로 CS 점수 계산 (30점 기준, 0~30 clamp)."""
+    raw = CS_BASE_SCORE + count_high * KEYWORD_POINTS['고위험'] + count_mid * KEYWORD_POINTS['중위험'] + count_low * KEYWORD_POINTS['저위험']
+    return min(30, max(0, raw))
+
+
+def score_partnership_cumulative(violations):
+    """이번 달 누적 파트너십 위반 건수(용품+의류 합산)로 점수 계산 (30점 기준, 위반 1건당 -1점, 0~30 clamp)."""
+    return min(PARTNERSHIP_BASE_SCORE, max(0, PARTNERSHIP_BASE_SCORE - violations))
 
 
 # ───────────────────────────────────────────
@@ -344,8 +351,10 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
 # ───────────────────────────────────────────
 def fetch_cs_data(store_debt_map={}):
     """CS 대리점평가 구글시트(NO./대리점명/작성자/키워드/작성일/파트너십_용품/파트너십_의류)에서
-    담당자가 선택한 '키워드'를 KEYWORD_TIERS 표와 매칭해 기계적으로 CS 점수를 산정.
-    (Gemini 자유판단은 더 이상 사용하지 않음 - 시트가 자유 서술 메모 대신 고정 키워드 선택 방식으로 바뀌었기 때문)"""
+    이번 달에 작성된 행들을 모아 대리점별로 누적 집계해 CS/파트너십 점수를 산정.
+    - CS: 행(상담 건)마다 키워드의 최고 등급 하나만 인정 → 등급별 건수 누적(고위험 -5/건, 중위험 -2/건, 저위험(우수) +1/건, 30점 기준 0~30 clamp)
+    - 파트너십: 파트너십_용품/파트너십_의류 컬럼에 값이 있는 행 = 위반 1건, 용품+의류 합산 위반 건수만큼 30점에서 1점씩 차감
+    (Gemini 자유판단은 사용하지 않음 - 시트가 자유 서술 메모 대신 고정 키워드 선택 방식으로 바뀌었기 때문)"""
     try:
         records = fetch_sheet_data()
     except Exception as e:
@@ -368,9 +377,15 @@ def fetch_cs_data(store_debt_map={}):
         print(f"의류 3개월 매출 탭 조회 실패: {e}")
         sales_3m_clothing_tab = {}
 
-    # CS 시트 병합 (대리점명 기준)
-    # - 키워드: 이번 달 작성건만 반영 (매달 리셋)
-    # - 파트너십(용품/의류): 작성일과 무관하게 항상 최신 값 반영 (상태값이라 월 필터 미적용)
+    def new_entry():
+        return {
+            'keywords': [], 'count_high': 0, 'count_mid': 0, 'count_low': 0,
+            'p_goods_count': 0, 'p_clothing_count': 0,
+            'p_goods_latest': '', 'p_clothing_latest': '',
+            'sales_3m_goods': 0, 'sales_3m_clothing': 0,
+        }
+
+    # CS 시트 병합 (대리점명 기준) - 키워드/파트너십 둘 다 "이번 달 작성분만" 누적 집계 (매달 리셋)
     merged = {}
     for row in records:
         name    = ' '.join(str(row.get('대리점명', '')).split())
@@ -383,58 +398,67 @@ def fetch_cs_data(store_debt_map={}):
         sales_3m_goods    = parse_amount(row.get('매출3개월_용품', ''))
         sales_3m_clothing = parse_amount(row.get('매출3개월_의류', ''))
         if name not in merged:
-            merged[name] = {'keywords': [], 'p_goods': '', 'p_clothing': '',
-                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
-        # 파트너십/3개월매출은 월 필터 없이 항상 최신 행 값으로 덮어씀
-        if p_goods:
-            merged[name]['p_goods'] = p_goods
-        if p_cloth:
-            merged[name]['p_clothing'] = p_cloth
+            merged[name] = new_entry()
+        # 3개월매출은 월 필터 없이 항상 최신 행 값으로 덮어씀 (상태값)
         if sales_3m_goods:
             merged[name]['sales_3m_goods'] = sales_3m_goods
         if sales_3m_clothing:
             merged[name]['sales_3m_clothing'] = sales_3m_clothing
-        # 키워드는 이번 달 작성분만 반영 (과거 기록 누적 방지)
+
+        # 키워드/파트너십은 이번 달 작성분만 반영 (과거 기록 누적 방지)
         if written and (written.year != cur_year or written.month != cur_month):
             skipped_old += 1
             continue
+
         if keyword:
             merged[name]['keywords'].append(keyword)
+            tier = classify_keyword_tier(keyword)  # 이 행(상담 건)의 최고 등급 하나만 인정
+            if tier == '고위험':
+                merged[name]['count_high'] += 1
+            elif tier == '중위험':
+                merged[name]['count_mid'] += 1
+            elif tier == '저위험':
+                merged[name]['count_low'] += 1
+        if p_goods:
+            merged[name]['p_goods_count'] += 1
+            merged[name]['p_goods_latest'] = p_goods
+        if p_cloth:
+            merged[name]['p_clothing_count'] += 1
+            merged[name]['p_clothing_latest'] = p_cloth
 
     if skipped_old:
-        print(f"  이번 달({cur_year}-{cur_month:02d}) 이전 작성 키워드 {skipped_old}건 제외 (파트너십은 반영됨)")
+        print(f"  이번 달({cur_year}-{cur_month:02d}) 이전 작성 CS/파트너십 기록 {skipped_old}건 제외 (매출3개월은 반영됨)")
 
     # '용품_3개월 매출'/'의류_3개월 매출' 탭 값을 우선 반영 (있으면 덮어씀, 탭에만 있는 대리점은 새로 추가)
     for name, total in sales_3m_goods_tab.items():
         if name not in merged:
-            merged[name] = {'keywords': [], 'p_goods': '', 'p_clothing': '',
-                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
+            merged[name] = new_entry()
         merged[name]['sales_3m_goods'] = total
     for name, total in sales_3m_clothing_tab.items():
         if name not in merged:
-            merged[name] = {'keywords': [], 'p_goods': '', 'p_clothing': '',
-                             'sales_3m_goods': 0, 'sales_3m_clothing': 0}
+            merged[name] = new_entry()
         merged[name]['sales_3m_clothing'] = total
 
     result = {}
     for name, data in merged.items():
         keyword_str = ', '.join(data['keywords'])
-        p_goods = data['p_goods']
-        p_clothing = data['p_clothing']
+        count_high, count_mid, count_low = data['count_high'], data['count_mid'], data['count_low']
+        p_goods_count, p_clothing_count = data['p_goods_count'], data['p_clothing_count']
         sales_3m_goods    = data.get('sales_3m_goods', 0)
         sales_3m_clothing = data.get('sales_3m_clothing', 0)
 
-        cs_score, tier = score_cs_from_keywords(keyword_str)
+        cs_score = score_cs_cumulative(count_high, count_mid, count_low)
         if keyword_str:
-            if tier:
-                comment = f"선택 키워드 '{keyword_str}' → {tier} 등급으로 CS {cs_score}점 반영"
-            else:
-                comment = f"선택 키워드 '{keyword_str}'가 기준표에 없어 감점 없이 처리(20점)"
-            print(f"  {name}: 키워드 '{keyword_str}' → {tier or '미분류'} / CS {cs_score}점")
+            comment = (f"이번 달 고위험 {count_high}건(-{count_high*5}점) · 중위험 {count_mid}건(-{count_mid*2}점) · "
+                       f"우수 {count_low}건(+{count_low}점) → CS {cs_score}점")
+            worst_tier = '고위험' if count_high else ('중위험' if count_mid else ('저위험' if count_low else ''))
+            print(f"  {name}: 키워드 '{keyword_str}' → 고위험{count_high}/중위험{count_mid}/우수{count_low} / CS {cs_score}점")
         else:
             comment = ''
+            worst_tier = ''
 
-        partnership_score = score_partnership(p_goods, p_clothing)
+        p_violations = p_goods_count + p_clothing_count
+        partnership_score = score_partnership_cumulative(p_violations)
         sales_score_goods    = score_sales_tier_goods(sales_3m_goods)
         sales_score_clothing = score_sales_tier_clothing(sales_3m_clothing)
 
@@ -446,12 +470,14 @@ def fetch_cs_data(store_debt_map={}):
             'sales_score_clothing':   sales_score_clothing,
             'sales_3m_goods':         sales_3m_goods,
             'sales_3m_clothing':      sales_3m_clothing,
-            'p_goods':                p_goods,
-            'p_clothing':             p_clothing,
+            'p_goods':                data['p_goods_latest'],
+            'p_clothing':             data['p_clothing_latest'],
+            'p_goods_count':          p_goods_count,
+            'p_clothing_count':       p_clothing_count,
             'keywords':               keyword_str,
             'memo':                   '',
             'ai_comment':             comment,
-            'ai_assessed_risk':       tier,
+            'ai_assessed_risk':       worst_tier,
             'ai_mismatch':            False,
             'ai_mismatch_direction':  '',
         }

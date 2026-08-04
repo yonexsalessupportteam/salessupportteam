@@ -284,19 +284,20 @@ tbody tr:hover{background:#f9f8f4}
 
 <div id="cat-criteria" class="cat-page">
   <div class="crit-wrap">
-    <div class="crit-intro">대리점 종합평가는 <b>정량점수(70) + 정성점수(30) = 100점</b> 만점으로 구성됩니다. 각 항목을 클릭하면 세부 기준이 펼쳐집니다.</div>
+    <div class="crit-intro">대리점 종합평가는 <b>정량점수(70) + 정성점수(60) = 130점</b> 만점으로 구성됩니다. 각 항목을 클릭하면 세부 기준이 펼쳐집니다.</div>
 
     <details class="crit-block" open>
-      <summary>총점 구조 (최대 100점)</summary>
+      <summary>총점 구조 (최대 130점)</summary>
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>구분</th><th>세부항목</th><th>배점</th></tr>
           <tr><td rowspan="2">📈 정량점수 (70점)</td><td>채권건전성</td><td>50점</td></tr>
           <tr><td>매출규모</td><td>20점</td></tr>
-          <tr><td rowspan="2">🤝 정성점수 (30점)</td><td>CS 코멘트</td><td>20점</td></tr>
-          <tr><td>파트너십 (용품5+의류5)</td><td>10점</td></tr>
-          <tr><td colspan="2"><b>합계</b></td><td><b>100점</b></td></tr>
+          <tr><td rowspan="2">🤝 정성점수 (60점, 월 누적)</td><td>CS 코멘트</td><td>30점</td></tr>
+          <tr><td>파트너십 (용품+의류 합산)</td><td>30점</td></tr>
+          <tr><td colspan="2"><b>합계</b></td><td><b>130점</b></td></tr>
         </table>
+        <div class="crit-sub">※ CS 코멘트·파트너십은 이번 달에 작성된 행(건)을 모두 모아 누적 계산 - 매달 1일 기준 리셋</div>
       </div>
     </details>
 
@@ -350,16 +351,16 @@ tbody tr:hover{background:#f9f8f4}
     <div class="crit-group-label">🤝 정성평가</div>
 
     <details class="crit-block">
-      <summary>CS 코멘트 (20점)</summary>
+      <summary>CS 코멘트 (30점, 월 누적)</summary>
       <div class="crit-body">
+        <p>이번 달에 작성된 CS 행(상담 건)마다 키워드의 가장 심각한 등급 하나만 인정해 등급별 건수를 센 뒤, 30점 기준으로 아래 배점을 누적 가감(0~30점 clamp)</p>
         <table class="crit-table">
-          <tr><th>조건</th><th>점수</th></tr>
-          <tr><td>키워드 없음</td><td>20점 (만점)</td></tr>
-          <tr><td>저위험(긍정) 키워드</td><td>20점</td></tr>
-          <tr><td>중위험 키워드</td><td class="neg">10점</td></tr>
-          <tr><td>고위험 키워드</td><td class="neg">0점</td></tr>
+          <tr><th>등급</th><th>건당 배점</th></tr>
+          <tr><td>고위험</td><td class="neg">-5점</td></tr>
+          <tr><td>중위험</td><td class="neg">-2점</td></tr>
+          <tr><td>저위험(긍정, 우수)</td><td>+1점</td></tr>
         </table>
-        <div class="crit-sub">※ CS 대리점평가 구글시트에서 담당자가 직접 선택한 키워드를 아래 3단계 표와 매칭해 기계적으로 배점(고위험/중위험 키워드가 섞여 있으면 더 심각한 등급 하나만 기준으로 감점). 별도 AI 판단은 사용하지 않음.</div>
+        <div class="crit-sub">※ CS 대리점평가 구글시트에서 담당자가 직접 선택한 키워드를 아래 3단계 표와 매칭해 기계적으로 배점(한 행에 여러 등급이 섞여 있으면 그 행에서는 가장 심각한 등급 하나만 인정, 중복집계 방지). 별도 AI 판단은 사용하지 않음.</div>
         <table class="crit-table" style="margin-top:8px">
           <tr><th>등급</th><th>키워드</th></tr>
           <tr><td>고위험</td><td>허위안내, AS접수거부, 임의판정, 폭언·욕설, 보증서조작, AS규정위반, 클레임, 컴플레인, 한국소비자원신고, 법적조치, SNS게시</td></tr>
@@ -370,25 +371,26 @@ tbody tr:hover{background:#f9f8f4}
     </details>
 
     <details class="crit-block">
-      <summary>파트너십 (10점 = 용품5 + 의류5)</summary>
+      <summary>파트너십 (30점, 월 누적)</summary>
       <div class="crit-body">
+        <p>이번 달에 작성된 행 중 파트너십_용품 / 파트너십_의류 컬럼에 값이 있으면 위반 1건으로 집계. 용품+의류 위반 건수를 합산해 30점에서 1건당 1점씩 차감(0~30점 clamp)</p>
         <table class="crit-table">
-          <tr><th>조건</th><th>점수</th></tr>
-          <tr><td>준수</td><td>5점</td></tr>
-          <tr><td>위반</td><td class="neg">0점</td></tr>
+          <tr><th>조건</th><th>배점</th></tr>
+          <tr><td>위반 없음</td><td>30점 (만점)</td></tr>
+          <tr><td>위반 1건당</td><td class="neg">-1점</td></tr>
         </table>
       </div>
     </details>
 
     <details class="crit-block" open>
-      <summary>종합점수 등급 (0~100점)</summary>
+      <summary>종합점수 등급 (0~130점)</summary>
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>등급</th><th>종합점수 구간</th></tr>
-          <tr><td>적정</td><td>80점 이상</td></tr>
-          <tr><td>주의</td><td>65~79점</td></tr>
-          <tr><td>경계</td><td>50~64점</td></tr>
-          <tr><td>위기</td><td>50점 미만</td></tr>
+          <tr><td>적정</td><td>105점 이상</td></tr>
+          <tr><td>주의</td><td>85~104점</td></tr>
+          <tr><td>경계</td><td>65~84점</td></tr>
+          <tr><td>위기</td><td>65점 미만</td></tr>
           <tr><td>관리</td><td>무담보 + 채권 존재 (별도 분류)</td></tr>
         </table>
       </div>
@@ -407,16 +409,16 @@ function buildScoreSection(s){
   const collLabelFor = function(days){ return days<=60 ? '✓ 60일이내' : days<=80 ? '60~80일' : days<=90 ? '80~90일' : '90일초과'; };
   const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.excess/s.clothing.collateral*100) : null;
   const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.excess/s.goods.collateral*100) : null;
-  const deductCollateral = Math.min(15, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
-  const deductCollection = Math.min(15, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
+  const deductCollateral = Math.min(25, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
+  const deductCollection = Math.min(25, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
   const salesScoreGoods = Math.min(10, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
   const salesScoreClothing = Math.min(10, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
   const salesScore = salesScoreGoods + salesScoreClothing;
-  const goodsPartner = s.pGoods&&s.pGoods.trim() ? '미준수' : '준수';
-  const clothPartner = s.pClothing&&s.pClothing.trim() ? '미준수' : '준수';
+  const goodsPartner = (s.pGoodsCount||0)>0 ? '위반 '+s.pGoodsCount+'건' : '준수';
+  const clothPartner = (s.pClothingCount||0)>0 ? '위반 '+s.pClothingCount+'건' : '준수';
   const memoLabel = s.keywords ? '키워드기반 자동채점' : '키워드없음(만점)';
   const qualScore = s.csScore + s.partnershipScore;
-  const totalColor = s.totalScore>=80?'#0F6E56':s.totalScore>=65?'#185FA5':s.totalScore>=50?'#854F0B':'#A32D2D';
+  const totalColor = s.totalScore>=105?'#0F6E56':s.totalScore>=85?'#185FA5':s.totalScore>=65?'#854F0B':'#A32D2D';
   const gaugeRc = getRiskClass(s.totalScore, s.worstRisk);
   const gaugeColor = gaugeRc.label==='관리' ? '#7A2E8C' : gaugeRc.label==='적정' ? '#0F6E56' : gaugeRc.label==='주의' ? '#185FA5' : gaugeRc.label==='경계' ? '#854F0B' : '#A32D2D';
   return '<div style="margin-bottom:14px">'
@@ -424,33 +426,33 @@ function buildScoreSection(s){
     +'<div style="margin-top:8px">'+makeScoreGauge(s.totalScore,gaugeRc.label,gaugeColor)+'</div>'
     +'<div class="score-total-bar" style="margin-top:8px">'
     +'<div><div class="score-total-label">종합점수</div>'
-    +'<div class="score-total-sub">정량 '+Math.round(s.quantScore*10)/10+'/70 · 정성 '+Math.round(qualScore*10)/10+'/30</div></div>'
-    +'<div style="text-align:right"><span style="font-size:26px;font-weight:700;color:'+totalColor+'">'+Math.round(s.totalScore)+'</span><span style="font-size:12px;color:#888780">/100</span></div>'
+    +'<div class="score-total-sub">정량 '+Math.round(s.quantScore*10)/10+'/70 · 정성 '+Math.round(qualScore*10)/10+'/60</div></div>'
+    +'<div style="text-align:right"><span style="font-size:26px;font-weight:700;color:'+totalColor+'">'+Math.round(s.totalScore)+'</span><span style="font-size:12px;color:#888780">/130</span></div>'
     +'</div>'
     +'<div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:'+dvColor(s.quantScore,59,46)+'">'+Math.round(s.quantScore*10)/10+'점 / 70</span></div>'
     +'<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionClothing)+'">'
     +'<div class="dl">회수일 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점')+' <span style="font-size:11px;color:#888780">/15</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollectionClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
     +'<div class="dsub">당월 '+(s.collectionDaysClothing||0)+'일 '+collLabelFor(s.collectionDaysClothing||0)+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionGoods)+'">'
     +'<div class="dl">회수일 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점')+' <span style="font-size:11px;color:#888780">/15</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollectionGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
     +'<div class="dsub">당월 '+(s.collectionDaysGoods||0)+'일 '+collLabelFor(s.collectionDaysGoods||0)+'</div></div>'
     ):'')
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollateralClothing)+'">'
     +'<div class="dl">담보대비 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점')+' <span style="font-size:11px;color:#888780">/15</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollateralClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
     +'<div class="dsub">'+(clRatioVal!=null?clRatioVal+'%':'담보없음')+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc" style="'+dcStyle(s.deductCollateralGoods)+'">'
     +'<div class="dl">담보대비 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/15</span></div>'
+    +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
     +'<div class="dsub">'+(gdRatioVal!=null?gdRatioVal+'%':'담보없음')+'</div></div>'
     ):'')
     +(s.clothing?(
@@ -470,15 +472,15 @@ function buildScoreSection(s){
     +'<div class="dv" style="color:'+dvColor(s.quantScore,59,46)+'">'+(Math.round(s.quantScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/70</span></div>'
     +'</div>'
     +'</div>'
-    +'<div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:'+dvColor(qualScore,25,20)+'">'+(Math.round(qualScore*10)/10)+'점 / 30</span></div>'
+    +'<div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:'+dvColor(qualScore,50,40)+'">'+(Math.round(qualScore*10)/10)+'점 / 60</span></div>'
     +'<div class="cat-grid">'
     +'<div class="dc">'
     +'<div class="dl">CS 코멘트</div>'
-    +'<div class="dv" style="color:'+dvColor(s.csScore,16,10)+'">'+s.csScore+'점 <span style="font-size:11px;color:#888780">/20</span></div>'
+    +'<div class="dv" style="color:'+dvColor(s.csScore,24,15)+'">'+s.csScore+'점 <span style="font-size:11px;color:#888780">/30</span></div>'
     +'<div class="dsub">'+memoLabel+'</div></div>'
     +'<div class="dc">'
     +'<div class="dl">파트너십</div>'
-    +'<div class="dv" style="color:'+(s.partnershipScore>=10?'#0F6E56':s.partnershipScore>=5?'#854F0B':'#A32D2D')+'">'+(Math.round(s.partnershipScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
+    +'<div class="dv" style="color:'+(s.partnershipScore>=30?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+(Math.round(s.partnershipScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/30</span></div>'
     +'<div class="dsub">용품 '+goodsPartner+' / 의류 '+clothPartner+'</div></div>'
     +'</div></div>';
 }
@@ -549,22 +551,22 @@ function updatePartnership(storeName, field, isViolation, idx){
 
 function getRiskClass(score,worstRisk){
   if(worstRisk==='관리') return {label:'관리',cls:'rp-manage',bar:'#7A2E8C'};
-  if(score>=80) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
-  if(score>=65) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
-  if(score>=50) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
+  if(score>=105) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
+  if(score>=85) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
+  if(score>=65) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
   return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
 }
 
 function makeScoreGauge(score,grade,gradeColor){
   const cx=130,cy=118,r=76,rIn=54;
-  const clampScore=Math.max(0,Math.min(100,score));
-  const angleForScore=v=>180-(v/100)*180;
+  const clampScore=Math.max(0,Math.min(130,score));
+  const angleForScore=v=>180-(v/130)*180;
   const polar=(radius,angDeg)=>{const rad=angDeg*Math.PI/180;return{x:cx+radius*Math.cos(rad),y:cy-radius*Math.sin(rad)};};
   const zones=[
-    {from:0,to:50,color:'#E24B4A'},
-    {from:50,to:65,color:'#EF9F27'},
-    {from:65,to:80,color:'#378ADD'},
-    {from:80,to:100,color:'#1D9E75'}
+    {from:0,to:65,color:'#E24B4A'},
+    {from:65,to:85,color:'#EF9F27'},
+    {from:85,to:105,color:'#378ADD'},
+    {from:105,to:130,color:'#1D9E75'}
   ];
   const arcs=zones.map(z=>{
     const a0=angleForScore(z.from),a1=angleForScore(z.to);
@@ -577,7 +579,7 @@ function makeScoreGauge(score,grade,gradeColor){
   const needleBaseL=polar(7,needleAngle+90);
   const needleBaseR=polar(7,needleAngle-90);
   const needle=`<polygon points="${needleTip.x.toFixed(2)},${needleTip.y.toFixed(2)} ${needleBaseL.x.toFixed(2)},${needleBaseL.y.toFixed(2)} ${needleBaseR.x.toFixed(2)},${needleBaseR.y.toFixed(2)}" fill="#1a1a18"/><circle cx="${cx}" cy="${cy}" r="8" fill="#1a1a18"/>`;
-  const labelPositions=[{v:0,a:'middle'},{v:50,a:'middle'},{v:65,a:'middle'},{v:80,a:'middle'},{v:100,a:'middle'}];
+  const labelPositions=[{v:0,a:'middle'},{v:65,a:'middle'},{v:85,a:'middle'},{v:105,a:'middle'},{v:130,a:'middle'}];
   const tickLabels=labelPositions.map(t=>{
     const p=polar(r+18,angleForScore(t.v));
     return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" font-size="10" fill="#888780" text-anchor="${t.a}" dominant-baseline="middle">${t.v}</text>`;
@@ -621,6 +623,8 @@ function buildAiDash(){
       const sales3mClothing=csData.sales_3m_clothing||0;
       const pGoods=csData.p_goods||'';
       const pClothing=csData.p_clothing||'';
+      const pGoodsCount=csData.p_goods_count||0;
+      const pClothingCount=csData.p_clothing_count||0;
       const keywords=csData.keywords||'';
       const memo=csData.memo||'';
       const aiComment=csData.ai_comment||'';
@@ -643,7 +647,7 @@ function buildAiDash(){
       const quantScore=Math.min(70,healthScore+salesScore);
       const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);
@@ -651,14 +655,14 @@ function buildAiDash(){
   const total=allStores.length;
   const manage=allStores.filter(s=>s.worstRisk==='관리').length;
   const graded=allStores.filter(s=>s.worstRisk!=='관리');
-  const safe=graded.filter(s=>s.totalScore>=80).length;
-  const caution=graded.filter(s=>s.totalScore>=65&&s.totalScore<80).length;
-  const border=graded.filter(s=>s.totalScore>=50&&s.totalScore<65).length;
-  const crisis=graded.filter(s=>s.totalScore<50).length;
+  const safe=graded.filter(s=>s.totalScore>=105).length;
+  const caution=graded.filter(s=>s.totalScore>=85&&s.totalScore<105).length;
+  const border=graded.filter(s=>s.totalScore>=65&&s.totalScore<85).length;
+  const crisis=graded.filter(s=>s.totalScore<65).length;
 
   const idxStores=allStores.map((s,idx)=>Object.assign({idx},s));
   const warnList=idxStores.filter(s=>s.worstRisk==='위기'||s.worstRisk==='경계'||s.worstRisk==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
-  const oppList=idxStores.filter(s=>s.worstRisk!=='관리'&&s.totalScore>=80).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
+  const oppList=idxStores.filter(s=>s.worstRisk!=='관리'&&s.totalScore>=105).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
   const reviewList=idxStores.filter(s=>s.aiMismatch).sort((a,b)=>(b.aiMismatchDirection==='severe'?1:0)-(a.aiMismatchDirection==='severe'?1:0)).slice(0,3);
 
   const insightCard=function(kind,list,emptyMsg){
@@ -759,13 +763,13 @@ function buildAiDash(){
     const kwLow=['친절','신속처리','적극협조','고객칭찬','만족도우수','응대우수','규정준수','정확한안내','클레임없음'];
     const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${kwLow.some(d=>k.includes(d))?'safe':kwHigh.some(d=>k.includes(d))?'danger':kwMid.some(d=>k.includes(d))?'warn':''}">${k}</span>`).join(''):'';
 
-    const aiBoxBg=s.totalScore>=80?'#EAF3DE':'#E6F1FB';
-    const aiBoxBd=s.totalScore>=80?'#1D9E75':'#185FA5';
-    const aiLblColor=s.totalScore>=80?'#085041':'#0C447C';
-    const aiTxtColor=s.totalScore>=80?'#0F6E56':'#185FA5';
+    const aiBoxBg=s.totalScore>=105?'#EAF3DE':'#E6F1FB';
+    const aiBoxBd=s.totalScore>=105?'#1D9E75':'#185FA5';
+    const aiLblColor=s.totalScore>=105?'#085041':'#0C447C';
+    const aiTxtColor=s.totalScore>=105?'#0F6E56':'#185FA5';
 
-    const pGoodsViolation=!!(s.pGoods&&s.pGoods.trim());
-    const pClothingViolation=!!(s.pClothing&&s.pClothing.trim());
+    const pGoodsViolation=(s.pGoodsCount||0)>0;
+    const pClothingViolation=(s.pClothingCount||0)>0;
 
     const partnerSec=`
       <div style="margin-bottom:14px">
@@ -773,20 +777,20 @@ function buildAiDash(){
         <div class="partner-box">
           <div class="partner-item${pGoodsViolation?' violation':''}">
             <span class="partner-label">🏸 용품</span>
-            <span class="partner-status ${pGoodsViolation?'ng':'ok'}">${pGoodsViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pGoodsViolation?'0':'5'}점)</span>
+            <span class="partner-status ${pGoodsViolation?'ng':'ok'}">${pGoodsViolation?`위반 ${s.pGoodsCount}건`:'준수'}</span>
+            <span class="partner-pts">${pGoodsViolation?'(-'+s.pGoodsCount+'점)':'(0점)'}</span>
           </div>
           <div class="partner-item${pClothingViolation?' violation':''}">
             <span class="partner-label">👔 의류</span>
-            <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?'미준수':'준수'}</span>
-            <span class="partner-pts">(${pClothingViolation?'0':'5'}점)</span>
+            <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?`위반 ${s.pClothingCount}건`:'준수'}</span>
+            <span class="partner-pts">${pClothingViolation?'(-'+s.pClothingCount+'점)':'(0점)'}</span>
           </div>
           <div class="partner-total">
-            <span style="font-size:12px;color:#5f5e5a">파트너십 점수</span>
-            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore<10?'#A32D2D':'#0F6E56'}">${Math.round(s.partnershipScore*10)/10}<span style="font-size:11px;font-weight:400;color:#888780">/10</span></span>
+            <span style="font-size:12px;color:#5f5e5a">파트너십 점수 (이번 달 누적, 위반 1건당 -1점)</span>
+            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore>=15?'#0F6E56':'#A32D2D'}">${Math.round(s.partnershipScore*10)/10}<span style="font-size:11px;font-weight:400;color:#888780">/30</span></span>
           </div>
         </div>
-        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등)</div>
+        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등) - 이번 달 행 개수만큼 누적 집계</div>
       </div>`;
 
     const aiCommentHtml = s.aiComment
