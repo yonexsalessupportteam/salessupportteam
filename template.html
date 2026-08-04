@@ -362,9 +362,9 @@ tbody tr:hover{background:#f9f8f4}
         <div class="crit-sub">※ CS 대리점평가 구글시트에서 담당자가 직접 선택한 키워드를 아래 3단계 표와 매칭해 기계적으로 배점(고위험/중위험 키워드가 섞여 있으면 더 심각한 등급 하나만 기준으로 감점). 별도 AI 판단은 사용하지 않음.</div>
         <table class="crit-table" style="margin-top:8px">
           <tr><th>등급</th><th>키워드</th></tr>
-          <tr><td>고위험</td><td>연락두절, 약속불이행, 클레임방치, 폐업징후, 허위접수, 타사이탈, 연락안됨, A/S 처리불량</td></tr>
-          <tr><td>중위험</td><td>연락지연, 가끔약속어김, 클레임/매출감소, 응대느림, 불만, A/S규정숙지</td></tr>
-          <tr><td>저위험(긍정)</td><td>협조적, 응대원활, 약속이행, 클레임없음, 신뢰, 칭찬</td></tr>
+          <tr><td>고위험</td><td>허위안내, AS접수거부, 임의판정, 폭언·욕설, 보증서조작, AS규정위반, 클레임, 컴플레인, 한국소비자원신고, 법적조치, SNS게시</td></tr>
+          <tr><td>중위험</td><td>AS기준오안내, 접수지연, 응대미흡, 불만, 불편, 실망, 불친절, 개선요청</td></tr>
+          <tr><td>저위험(긍정)</td><td>친절, 신속처리, 적극협조, 고객칭찬, 만족도우수, 응대우수, 규정준수, 정확한안내, 클레임없음</td></tr>
         </table>
       </div>
     </details>
@@ -754,10 +754,10 @@ function buildAiDash(){
       </div>
     </div>`:'';
 
-    const kwHigh=['연락두절','약속불이행','클레임방치','폐업징후','허위접수','타사이탈','연락안됨','A/S 처리불량'];
-    const kwMid=['연락지연','가끔약속어김','클레임/매출감소','응대느림','불만','A/S규정숙지'];
-    const kwLow=['협조적','응대원활','약속이행','클레임없음','신뢰','칭찬'];
-    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${kwHigh.some(d=>k.includes(d))?'danger':kwMid.some(d=>k.includes(d))?'warn':kwLow.some(d=>k.includes(d))?'safe':''}">${k}</span>`).join(''):'';
+    const kwHigh=['허위안내','AS접수거부','임의판정','폭언·욕설','보증서조작','AS규정위반','클레임','컴플레인','한국소비자원신고','법적조치','SNS게시'];
+    const kwMid=['AS기준오안내','접수지연','응대미흡','불만','불편','실망','불친절','개선요청'];
+    const kwLow=['친절','신속처리','적극협조','고객칭찬','만족도우수','응대우수','규정준수','정확한안내','클레임없음'];
+    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${kwLow.some(d=>k.includes(d))?'safe':kwHigh.some(d=>k.includes(d))?'danger':kwMid.some(d=>k.includes(d))?'warn':''}">${k}</span>`).join(''):'';
 
     const aiBoxBg=s.totalScore>=80?'#EAF3DE':'#E6F1FB';
     const aiBoxBd=s.totalScore>=80?'#1D9E75':'#185FA5';
