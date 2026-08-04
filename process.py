@@ -14,8 +14,9 @@ import pandas as pd
 import numpy as np
 import json
 import sys
+import os
 from datetime import datetime, timezone, timedelta
-from fetch_cs_scores import fetch_cs_data
+from fetch_cs_scores import fetch_cs_data, generate_daily_insights
 
 RAW_FILES = {
     '의류': 'clothing_raw.xls',
@@ -252,7 +253,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
     cs_scores = {' '.join(k.split()): v for k, v in cs_scores.items()}
 
     for name, data in cs_scores.items():
-        for field in ['memo', 'ai_comment', 'keywords']:
+        for field in ['memo', 'ai_comment', 'keywords', 'insight_comment']:
             if field in data and data[field]:
                 data[field] = sanitize_text(data[field])
 
@@ -292,6 +293,7 @@ def main():
                 name = ' '.join(s['name'].split())
                 entry = store_debt_map.setdefault(name, {
                     'collateral': 0, 'receivable': 0, 'ratio': 0, 'risk': '해당없음',
+                    'clothing_risk': '해당없음', 'goods_risk': '해당없음',
                     'deduct_collateral_clothing': 0, 'deduct_collateral_goods': 0,
                     'deduct_collateral_single': 0,
                     'deduct_collection_clothing': 0, 'deduct_collection_goods': 0,
@@ -304,6 +306,10 @@ def main():
                 entry['receivable'] += s['receivable']
                 entry['risk']       = s['risk']
                 entry['cat']        = cat
+                if cat == '의류':
+                    entry['clothing_risk'] = s['risk']
+                else:
+                    entry['goods_risk'] = s['risk']
                 if cat == '의류':
                     entry['deduct_collateral_clothing'] = s['deduct_collateral_half']
                     entry['deduct_collection_clothing']  = s['deduct_collection_half']
@@ -373,6 +379,59 @@ def main():
                 'collection_days_clothing':   debt.get('collection_days_clothing', 0),
                 'collection_days_goods':      debt.get('collection_days_goods', 0),
             }
+
+    # ── 대리점별 종합점수·등급 계산 (template.html buildAiDash의 계산과 동일한 공식) ──
+    # "AI가 분석한 오늘의 대리점 인사이트" 팝업(경고/기회/검토)에 노출할 대리점을 선정하기 위함
+    risk_order = ['위기', '경계', '주의', '적정', '관리', '해당없음']
+
+    def combine_worst_risk(risks):
+        w = '해당없음'
+        for r in risks:
+            if r and risk_order.index(r) < risk_order.index(w):
+                w = r
+        return w
+
+    all_store_totals = []
+    for name, debt in store_debt_map.items():
+        cs = cs_scores.get(name, {})
+        cs_score = min(20, max(0, cs.get('score', 20)))
+        partnership_score = min(30, max(0, cs.get('partnership_score', 30))) / 3
+        sales_score_goods = min(10, max(0, cs.get('sales_score_goods', 0)))
+        sales_score_clothing = min(10, max(0, cs.get('sales_score_clothing', 0)))
+        sales_score = sales_score_goods + sales_score_clothing
+        deduct_collection = cs.get('deduct_collection', 0)
+        deduct_collateral = cs.get('deduct_collateral', 0)
+        health_score = max(0, 30 - deduct_collection - deduct_collateral) * (5 / 3)
+        quant_score = min(70, health_score + sales_score)
+        total_score = min(100, quant_score + cs_score + partnership_score)
+        worst_risk = combine_worst_risk([debt.get('clothing_risk'), debt.get('goods_risk')])
+        all_store_totals.append({
+            'name': name,
+            'total_score': total_score,
+            'worst_risk': worst_risk,
+            'ai_assessed_risk': cs.get('ai_assessed_risk', ''),
+            'ai_mismatch': cs.get('ai_mismatch', False),
+            'ai_mismatch_direction': cs.get('ai_mismatch_direction', ''),
+        })
+
+    warn_list = sorted(
+        [s for s in all_store_totals if s['worst_risk'] in ('위기', '경계', '관리')],
+        key=lambda s: s['total_score']
+    )[:3]
+    opp_list = sorted(
+        [s for s in all_store_totals if s['worst_risk'] != '관리' and s['total_score'] >= 80],
+        key=lambda s: -s['total_score']
+    )[:3]
+    review_list = sorted(
+        [s for s in all_store_totals if s['ai_mismatch']],
+        key=lambda s: (0 if s['ai_mismatch_direction'] == 'severe' else 1)
+    )[:3]
+
+    api_key = os.environ.get('GEMINI_API_KEY', '')
+    daily_insights = generate_daily_insights(warn_list, opp_list, review_list, api_key)
+    for name, comment in daily_insights.items():
+        if name in cs_scores:
+            cs_scores[name]['insight_comment'] = comment
 
     generate_html(clothing_dash, goods_dash, cs_scores)
 

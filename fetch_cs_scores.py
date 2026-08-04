@@ -6,7 +6,7 @@ import hashlib
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
@@ -435,6 +435,119 @@ def gemini_analyze_batch(stores, api_key):
         return out
     except Exception as e:
         print(f"  ⚠️ Gemini 배치 오류 ({store_names}): {type(e).__name__}: {e}")
+        return {}
+
+
+# ───────────────────────────────────────────
+# 일일 AI 인사이트 코멘트 ("AI가 분석한 오늘의 대리점 인사이트" 팝업용)
+# 하루 한 번만 Gemini를 호출해 경고/기회/검토 대상 대리점에 대한 코멘트를 생성.
+# 같은 날 빌드가 여러 번 돌아도(파일 재업로드 등) insight_cache.json의 날짜를 확인해 재호출하지 않음.
+# ───────────────────────────────────────────
+INSIGHT_CACHE_FILE = 'insight_cache.json'
+
+
+def get_kst_today_str():
+    kst = timezone(timedelta(hours=9))
+    return datetime.now(kst).strftime('%Y-%m-%d')
+
+
+def load_insight_cache():
+    try:
+        with open(INSIGHT_CACHE_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_insight_cache(cache):
+    try:
+        with open(INSIGHT_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"  ⚠️ 일일 인사이트 캐시 저장 실패: {e}")
+
+
+def generate_daily_insights(warn_list, opp_list, review_list, api_key):
+    """warn_list/opp_list/review_list: [{'name':..., 'total_score':..., 'worst_risk':..., 'ai_assessed_risk':...}, ...]
+    반환: {대리점명: 코멘트} - 오늘 이미 생성된 적 있으면 캐시를 그대로 재사용."""
+    today = get_kst_today_str()
+    cache = load_insight_cache()
+    if cache.get('date') == today and cache.get('comments'):
+        print(f"  📦 오늘({today}) 일일 인사이트 이미 생성됨 - 캐시 재사용 ({len(cache['comments'])}건)")
+        return cache['comments']
+
+    if not api_key:
+        print("  ⚠️ GEMINI_API_KEY 없음 - 일일 인사이트 코멘트 생성 건너뜀")
+        return {}
+
+    global _quota_exhausted
+    if _quota_exhausted:
+        print("  ⚠️ Gemini 할당량 소진 상태 - 일일 인사이트 코멘트 생성 건너뜀")
+        return {}
+
+    def block(store, tag):
+        return (f"[{tag}] name: \"{store['name']}\"\n"
+                f"- 종합점수: {round(store['total_score'])}점\n"
+                f"- 등급: {store['worst_risk']}\n"
+                f"- AI 자체판단: {store.get('ai_assessed_risk') or '-'}")
+
+    blocks = ([block(s, '경고') for s in warn_list]
+              + [block(s, '기회') for s in opp_list]
+              + [block(s, '검토') for s in review_list])
+    if not blocks:
+        return {}
+
+    stores_text = '\n\n'.join(blocks)
+    prompt = f"""당신은 스포츠용품 유통사의 대리점 채권 리스크 담당 분석가입니다.
+아래는 오늘 대시보드 상단 'AI가 분석한 오늘의 대리점 인사이트'에 노출될 대리점 목록입니다.
+각 대리점 태그(경고/기회/검토)에 맞게, 영업 담당자가 한눈에 왜 이 대리점이 이 카테고리에 포함됐는지 이해할 수 있도록 코멘트를 작성하세요.
+
+{stores_text}
+
+각 대리점마다 1문장(간결하게, 가능하면 수치 근거 포함)으로 작성하세요.
+- 경고 태그: 왜 위험한지와 어떤 조치가 필요한지
+- 기회 태그: 왜 안정적인지와 어떤 점을 유지하면 좋은지
+- 검토 태그: AI 판단과 기계적 등급이 왜 다를 수 있는지에 대한 추정
+
+반드시 아래 JSON 배열 형식으로만 출력하세요. 다른 텍스트 일절 금지:
+[{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...]"""
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"maxOutputTokens": min(4096, 150 * len(blocks) + 200)},
+    }
+    try:
+        res = requests.post(url, json=body, timeout=60)
+        if res.status_code == 429:
+            err = res.json().get('error', {}) if res.content else {}
+            if err.get('status') == 'RESOURCE_EXHAUSTED':
+                _quota_exhausted = True
+            print("  ⚠️ 일일 인사이트 생성 실패 - Gemini 한도 초과")
+            return {}
+        data = res.json()
+        if res.status_code != 200:
+            err = data.get('error', {})
+            print(f"  ⚠️ 일일 인사이트 Gemini 오류: HTTP {res.status_code} / {err.get('message','')[:200]}")
+            return {}
+        candidates = data.get('candidates', [])
+        if not candidates:
+            print("  ⚠️ 일일 인사이트 응답에 candidates 없음")
+            return {}
+        raw = candidates[0]['content']['parts'][0]['text'].strip()
+        raw = raw.strip('`').replace('json\n', '', 1).strip()
+        parsed_list = json.loads(raw)
+        comments = {}
+        for item in parsed_list:
+            name = ' '.join(str(item.get('name', '')).split())
+            comment = str(item.get('comment', '')).strip()
+            if name and comment:
+                comments[name] = comment
+        save_insight_cache({'date': today, 'comments': comments})
+        print(f"  ✅ 일일 인사이트 코멘트 생성 완료 ({len(comments)}건, {today})")
+        return comments
+    except Exception as e:
+        print(f"  ⚠️ 일일 인사이트 생성 오류: {type(e).__name__}: {e}")
         return {}
 
 
