@@ -185,6 +185,7 @@ tbody tr:hover{background:#f9f8f4}
 .kw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .kw-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#f1efe8;color:#5f5e5a;border:.5px solid #e0dfd8}
 .kw-tag.danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.kw-tag.warn{background:#FAEEDA;color:#854F0B;border-color:#FAC775}
 .kw-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
 .partner-box{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
 .partner-item{display:flex;align-items:center;gap:10px;background:#f5f4f0;border-radius:8px;padding:10px 14px;min-width:160px;transition:.2s}
@@ -353,13 +354,18 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>조건</th><th>점수</th></tr>
-          <tr><td>메모 없음</td><td>20점 (만점)</td></tr>
-          <tr><td>AI 판단: 적정</td><td>20점</td></tr>
-          <tr><td>AI 판단: 주의</td><td class="neg">15점</td></tr>
-          <tr><td>AI 판단: 경계</td><td class="neg">10점</td></tr>
-          <tr><td>AI 판단: 위기</td><td class="neg">5점</td></tr>
+          <tr><td>키워드 없음</td><td>20점 (만점)</td></tr>
+          <tr><td>저위험(긍정) 키워드</td><td>20점</td></tr>
+          <tr><td>중위험 키워드</td><td class="neg">10점</td></tr>
+          <tr><td>고위험 키워드</td><td class="neg">0점</td></tr>
         </table>
-        <div class="crit-sub">※ 담당자가 남긴 특이사항메모를 Gemini AI가 읽고 위험단계를 직접 판단해 배점. AI가 판단하지 못한 경우(쿼터 소진 등)에만 고정 키워드 매칭으로 대체 추정(위기/경계/적정 3단계).</div>
+        <div class="crit-sub">※ CS 대리점평가 구글시트에서 담당자가 직접 선택한 키워드를 아래 3단계 표와 매칭해 기계적으로 배점(고위험/중위험 키워드가 섞여 있으면 더 심각한 등급 하나만 기준으로 감점). 별도 AI 판단은 사용하지 않음.</div>
+        <table class="crit-table" style="margin-top:8px">
+          <tr><th>등급</th><th>키워드</th></tr>
+          <tr><td>고위험</td><td>연락두절, 약속불이행, 클레임방치, 폐업징후, 허위접수, 타사이탈, 연락안됨, A/S 처리불량</td></tr>
+          <tr><td>중위험</td><td>연락지연, 가끔약속어김, 클레임/매출감소, 응대느림, 불만, A/S규정숙지</td></tr>
+          <tr><td>저위험(긍정)</td><td>협조적, 응대원활, 약속이행, 클레임없음, 신뢰, 칭찬</td></tr>
+        </table>
       </div>
     </details>
 
@@ -408,7 +414,7 @@ function buildScoreSection(s){
   const salesScore = salesScoreGoods + salesScoreClothing;
   const goodsPartner = s.pGoods&&s.pGoods.trim() ? '미준수' : '준수';
   const clothPartner = s.pClothing&&s.pClothing.trim() ? '미준수' : '준수';
-  const memoLabel = s.memo ? '메모기반AI분석' : '메모없음(만점)';
+  const memoLabel = s.keywords ? '키워드기반 자동채점' : '키워드없음(만점)';
   const qualScore = s.csScore + s.partnershipScore;
   const totalColor = s.totalScore>=80?'#0F6E56':s.totalScore>=65?'#185FA5':s.totalScore>=50?'#854F0B':'#A32D2D';
   const gaugeRc = getRiskClass(s.totalScore, s.worstRisk);
@@ -748,7 +754,10 @@ function buildAiDash(){
       </div>
     </div>`:'';
 
-    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${['연락두절','약속불이행','클레임다발','폐업징후','허위접수','재고과다','타사이탈'].some(d=>k.includes(d))?'danger':['협조적','응대원활','약속이행','클레임없음'].some(d=>k.includes(d))?'safe':''}">${k}</span>`).join(''):'';
+    const kwHigh=['연락두절','약속불이행','클레임방치','폐업징후','허위접수','타사이탈','연락안됨','A/S 처리불량'];
+    const kwMid=['연락지연','가끔약속어김','클레임/매출감소','응대느림','불만','A/S규정숙지'];
+    const kwLow=['협조적','응대원활','약속이행','클레임없음','신뢰','칭찬'];
+    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${kwHigh.some(d=>k.includes(d))?'danger':kwMid.some(d=>k.includes(d))?'warn':kwLow.some(d=>k.includes(d))?'safe':''}">${k}</span>`).join(''):'';
 
     const aiBoxBg=s.totalScore>=80?'#EAF3DE':'#E6F1FB';
     const aiBoxBd=s.totalScore>=80?'#1D9E75':'#185FA5';
@@ -782,7 +791,7 @@ function buildAiDash(){
 
     const aiCommentHtml = s.aiComment
       ? s.aiComment.replace(/\n/g,'<br>')
-      : '구글 시트에 키워드와 메모를 입력하면 AI 분석이 자동 생성됩니다.';
+      : '구글 시트에 키워드를 입력하면 CS 등급이 자동 산정됩니다.';
 
     const mismatchBadge = s.aiMismatch
       ? (s.aiMismatchDirection==='severe'
@@ -814,12 +823,10 @@ function buildAiDash(){
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       <div style="margin-bottom:1rem">
         <div class="sec-label">🤝 CS 평가 (공통)</div>
-        ${kwHtml?('<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">'+kwHtml+'</div></div>'):''}
-        ${s.memo?('<div style="margin-top:10px"><div style="font-size:12px;color:#888780;margin-bottom:4px">담당자 메모</div><div style="font-size:13px;color:#5f5e5a;line-height:1.6;background:#f5f4f0;padding:10px 12px;border-radius:8px">'+s.memo+'</div></div>'):''}
-        ${(!kwHtml&&!s.memo)?'<div style="font-size:13px;color:#b4b2a9;margin-top:8px">메모를 입력하면 표시됩니다.</div>':''}
+        ${kwHtml?('<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">'+kwHtml+'</div></div>'):'<div style="font-size:13px;color:#b4b2a9;margin-top:8px">키워드를 입력하면 표시됩니다.</div>'}
       </div>
       <div style="background:${aiBoxBg};border-radius:8px;padding:14px 16px;border-left:3px solid ${aiBoxBd}">
-        <div style="font-size:11px;font-weight:500;color:${aiLblColor};margin-bottom:5px">🤖 AI 위험탐지 분석${s.aiAssessedRisk?` · AI 자체판단: <span style="font-weight:700">${s.aiAssessedRisk}</span>`:''}${mismatchBadge}</div>
+        <div style="font-size:11px;font-weight:500;color:${aiLblColor};margin-bottom:5px">🔍 CS 키워드 분석${s.aiAssessedRisk?` · CS 등급: <span style="font-weight:700">${s.aiAssessedRisk}</span>`:''}${mismatchBadge}</div>
         <div style="font-size:13px;color:${aiTxtColor};line-height:1.7">${aiCommentHtml}</div>
       </div>
     </div>`;
