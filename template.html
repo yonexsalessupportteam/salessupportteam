@@ -613,9 +613,8 @@ function buildAiDash(){
       if(!base) return;
       if(Math.abs((c||{}).receivable||0)<100000&&Math.abs((g||{}).receivable||0)<100000) return;
       const csData=CS_SHEET[base.name]||{};
-      const csScore=Math.min(20,Math.max(0,csData.score!=null?csData.score:20));
-      const partnershipScoreRaw=Math.min(30,Math.max(0,csData.partnership_score!=null?csData.partnership_score:30));
-      const partnershipScore=partnershipScoreRaw/3;
+      const csScore=Math.min(30,Math.max(0,csData.score!=null?csData.score:30));
+      const partnershipScore=Math.min(30,Math.max(0,csData.partnership_score!=null?csData.partnership_score:30));
       const salesScoreGoods=Math.min(10,Math.max(0,csData.sales_score_goods!=null?csData.sales_score_goods:0));
       const salesScoreClothing=Math.min(10,Math.max(0,csData.sales_score_clothing!=null?csData.sales_score_clothing:0));
       const salesScore=salesScoreGoods+salesScoreClothing;
@@ -643,9 +642,9 @@ function buildAiDash(){
       const collectionDays=csData.collection_days!=null?csData.collection_days:0;
       const collectionDaysClothing=csData.collection_days_clothing!=null?csData.collection_days_clothing:0;
       const collectionDaysGoods=csData.collection_days_goods!=null?csData.collection_days_goods:0;
-      const healthScore=Math.max(0,30-deductCollection-deductCollateral)*(5/3);
+      const healthScore=Math.max(0,50-deductCollection-deductCollateral);
       const quantScore=Math.min(70,healthScore+salesScore);
-      const totalScore=Math.min(100,quantScore+csScore+partnershipScore);
+      const totalScore=Math.min(130,quantScore+csScore+partnershipScore);
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
       allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
     });
@@ -736,7 +735,7 @@ function buildAiDash(){
 
   allStores.forEach((s,i)=>{
     const rc=getRiskClass(s.totalScore,s.worstRisk);
-    const barW=Math.min(100,s.totalScore);
+    const barW=Math.min(100,s.totalScore/130*100);
 
     const clSec=s.clothing?`
     <div class="cat-section">
@@ -809,7 +808,7 @@ function buildAiDash(){
         <div class="rank-badge">${i+1}</div>
         <div class="sinfo"><div class="sname">${s.name}</div><div class="smeta">${s.dept} · ${s.salesperson} · ${s.catLabel}</div></div>
         <div class="bwrap"><div class="blbl">종합점수</div><div class="btrack"><div class="bfill" style="width:${barW}%;background:${rc.bar}"></div></div></div>
-        <div style="text-align:right"><div class="snum">${Math.round(s.totalScore)}</div><div class="sunit">/ 100</div></div>
+        <div style="text-align:right"><div class="snum">${Math.round(s.totalScore)}</div><div class="sunit">/ 130</div></div>
         <span class="rpill ${rc.cls}">${rc.label}</span>
         ${s.aiMismatch&&s.aiMismatchDirection==='severe'?'<span style="margin-left:4px" title="AI가 기계적 등급보다 더 심각하게 판단함">⚠️</span>':''}
       </div>
