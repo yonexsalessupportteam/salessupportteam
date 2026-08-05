@@ -441,13 +441,6 @@ function buildScoreSection(s){
   const gaugeRc = getRiskClass(s.totalScore, s.worstRisk);
   const gaugeColor = gaugeRc.label==='관리' ? '#7A2E8C' : gaugeRc.label==='적정' ? '#0F6E56' : gaugeRc.label==='주의' ? '#185FA5' : gaugeRc.label==='경계' ? '#854F0B' : '#A32D2D';
   return '<div style="margin-bottom:14px">'
-    +'<div class="sec-label">📊 평가 점수 현황</div>'
-    +'<div style="margin-top:8px">'+makeScoreGauge(s.totalScore,gaugeRc.label,gaugeColor)+'</div>'
-    +'<div class="score-total-bar" style="margin-top:8px">'
-    +'<div><div class="score-total-label">종합점수</div>'
-    +'<div class="score-total-sub">정량 '+Math.round(s.quantScore*10)/10+'/70 · 정성 '+Math.round(qualScore*10)/10+'/60</div></div>'
-    +'<div style="text-align:right"><span style="font-size:26px;font-weight:700;color:'+totalColor+'">'+Math.round(s.totalScore)+'</span><span style="font-size:12px;color:#888780">/130</span></div>'
-    +'</div>'
     +'<div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:'+dvColor(s.quantScore,59,46)+'">'+Math.round(s.quantScore*10)/10+'점 / 70</span></div>'
     +'<div class="cat-grid">'
     +(s.clothing?(
@@ -865,13 +858,13 @@ function buildAiDash(){
           ${buildScoreSection(s)}
           <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
           ${partnerSec}
+          <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+          <div style="margin-bottom:1rem">
+            <div class="sec-label">🤝 CS 평가 (공통)</div>
+            ${kwHtml?('<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">'+kwHtml+'</div></div>'):'<div style="font-size:13px;color:#b4b2a9;margin-top:8px">키워드를 입력하면 표시됩니다.</div>'}
+          </div>
         </div>
       </details>
-      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
-      <div style="margin-bottom:1rem">
-        <div class="sec-label">🤝 CS 평가 (공통)</div>
-        ${kwHtml?('<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">'+kwHtml+'</div></div>'):'<div style="font-size:13px;color:#b4b2a9;margin-top:8px">키워드를 입력하면 표시됩니다.</div>'}
-      </div>
     </div>`;
   });
 
