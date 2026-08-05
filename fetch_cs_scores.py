@@ -321,7 +321,13 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": min(4096, 150 * (len(blocks) + len(candidate_blocks)) + 300)},
+        # maxOutputTokens: Gemini 2.5 Flash는 내부 "생각(thinking)" 토큰도 이 한도 안에서 소모하므로
+        # 넉넉하게 잡지 않으면 실제 텍스트(JSON)가 다 나오기 전에 잘릴 수 있음 (Unterminated string 오류의 원인).
+        # thinkingBudget: 0으로 생각 토큰 자체를 꺼서 전체 예산을 응답 텍스트에만 쓰도록 함.
+        "generationConfig": {
+            "maxOutputTokens": min(8192, 200 * (len(blocks) + len(candidate_blocks)) + 500),
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
     }
     try:
         res = None
