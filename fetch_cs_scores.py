@@ -250,23 +250,27 @@ def save_insight_cache(cache):
         print(f"  ⚠️ 일일 인사이트 캐시 저장 실패: {e}")
 
 
-def generate_daily_insights(warn_list, opp_list, review_list, api_key):
+def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, api_key):
     """warn_list/opp_list/review_list: [{'name':..., 'total_score':..., 'worst_risk':..., 'ai_assessed_risk':...}, ...]
-    반환: {대리점명: 코멘트} - 오늘 이미 생성된 적 있으면 캐시를 그대로 재사용."""
+    candidate_list: [{'name':..., 'total_score':..., 'worst_risk':..., 'keywords':..., 'count_high':, 'count_mid':, 'count_low':}, ...]
+    - 아직 위기/경계/관리 등급은 아니지만 이번 달 CS 키워드가 입력된 대리점들. AI가 키워드 내용을 읽고
+      기계적 등급에는 안 잡혔지만 위험 신호가 보이는 곳을 추가로 골라낸다('AI 추가 발견').
+    반환: {'comments': {대리점명: 코멘트}, 'flagged': {대리점명: 사유}} - 오늘 이미 생성된 적 있으면 캐시를 그대로 재사용."""
     today = get_kst_today_str()
     cache = load_insight_cache()
-    if cache.get('date') == today and cache.get('comments'):
-        print(f"  📦 오늘({today}) 일일 인사이트 이미 생성됨 - 캐시 재사용 ({len(cache['comments'])}건)")
-        return cache['comments']
+    if cache.get('date') == today and (cache.get('comments') or cache.get('flagged')):
+        n_c, n_f = len(cache.get('comments', {})), len(cache.get('flagged', {}))
+        print(f"  📦 오늘({today}) 일일 인사이트 이미 생성됨 - 캐시 재사용 (코멘트 {n_c}건, AI 추가 발견 {n_f}건)")
+        return {'comments': cache.get('comments', {}), 'flagged': cache.get('flagged', {})}
 
     if not api_key:
         print("  ⚠️ GEMINI_API_KEY 없음 - 일일 인사이트 코멘트 생성 건너뜀")
-        return {}
+        return {'comments': {}, 'flagged': {}}
 
     global _quota_exhausted
     if _quota_exhausted:
         print("  ⚠️ Gemini 할당량 소진 상태 - 일일 인사이트 코멘트 생성 건너뜀")
-        return {}
+        return {'comments': {}, 'flagged': {}}
 
     def block(store, tag):
         return (f"[{tag}] name: \"{store['name']}\"\n"
@@ -274,13 +278,22 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
                 f"- 등급: {store['worst_risk']}\n"
                 f"- CS 키워드 등급: {store.get('ai_assessed_risk') or '-'}")
 
+    def candidate_block(store):
+        return (f"[후보] name: \"{store['name']}\"\n"
+                f"- 종합점수: {round(store['total_score'])}점\n"
+                f"- 등급: {store['worst_risk']}\n"
+                f"- 이번 달 CS 키워드: {store.get('keywords') or '-'}\n"
+                f"- 고위험 {store.get('count_high',0)}건 · 중위험 {store.get('count_mid',0)}건 · 우수 {store.get('count_low',0)}건")
+
     blocks = ([block(s, '경고') for s in warn_list]
               + [block(s, '기회') for s in opp_list]
               + [block(s, '검토') for s in review_list])
-    if not blocks:
-        return {}
+    candidate_blocks = [candidate_block(s) for s in candidate_list]
+    if not blocks and not candidate_blocks:
+        return {'comments': {}, 'flagged': {}}
 
-    stores_text = '\n\n'.join(blocks)
+    stores_text = '\n\n'.join(blocks) if blocks else '(해당 없음)'
+    candidates_text = '\n\n'.join(candidate_blocks) if candidate_blocks else '(해당 없음)'
     prompt = f"""당신은 스포츠용품 유통사의 대리점 채권 리스크 담당 분석가입니다.
 아래는 오늘 대시보드 상단 'AI가 분석한 오늘의 대리점 인사이트'에 노출될 대리점 목록입니다.
 각 대리점 태그(경고/기회/검토)에 맞게, 영업 담당자가 한눈에 왜 이 대리점이 이 카테고리에 포함됐는지 이해할 수 있도록 코멘트를 작성하세요.
@@ -292,13 +305,23 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
 - 기회 태그: 왜 안정적인지와 어떤 점을 유지하면 좋은지
 - 검토 태그: AI 판단과 기계적 등급이 왜 다를 수 있는지에 대한 추정
 
-반드시 아래 JSON 배열 형식으로만 출력하세요. 다른 텍스트 일절 금지. comment 값 안에 줄바꿈 문자를 절대 넣지 마세요:
-[{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...]"""
+---
+
+아래는 아직 종합 등급상 위험 등급(위기/경계/관리)에는 속하지 않지만, 이번 달 CS 키워드가 입력된 '후보' 대리점 목록입니다.
+키워드 내용을 실제로 읽고, 건수가 적더라도 표현 수위가 심각하거나(예: 법적조치, 한국소비자원신고, 반복되는 불만 등)
+앞으로 등급이 나빠질 조짐이 있다고 판단되는 대리점만 최대 3곳까지 골라주세요. 단순히 건수가 있다는 이유만으로 고르지 말고,
+정말 주의가 필요하다고 판단될 때만 고르세요. 우려되는 곳이 없으면 빈 배열로 두세요.
+
+{candidates_text}
+
+반드시 아래 JSON 형식으로만 출력하세요. 다른 텍스트 일절 금지. 값 안에 줄바꿈 문자를 절대 넣지 마세요:
+{{"comments": [{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...],
+ "flagged": [{{"name": "후보 목록 중 대리점명(정확히 동일하게)", "reason": "왜 주의가 필요한지 한 문장"}}, ...]}}"""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": min(4096, 150 * len(blocks) + 200)},
+        "generationConfig": {"maxOutputTokens": min(4096, 150 * (len(blocks) + len(candidate_blocks)) + 300)},
     }
     try:
         res = None
@@ -317,33 +340,41 @@ def generate_daily_insights(warn_list, opp_list, review_list, api_key):
             if err.get('status') == 'RESOURCE_EXHAUSTED':
                 _quota_exhausted = True
             print("  ⚠️ 일일 인사이트 생성 실패 - Gemini 한도 초과")
-            return {}
+            return {'comments': {}, 'flagged': {}}
         data = res.json()
         if res.status_code != 200:
             err = data.get('error', {})
             print(f"  ⚠️ 일일 인사이트 Gemini 오류: HTTP {res.status_code} / {err.get('message','')[:200]}")
-            return {}
-        candidates = data.get('candidates', [])
-        if not candidates:
+            return {'comments': {}, 'flagged': {}}
+        candidates_resp = data.get('candidates', [])
+        if not candidates_resp:
             print("  ⚠️ 일일 인사이트 응답에 candidates 없음")
-            return {}
-        raw = candidates[0]['content']['parts'][0]['text'].strip()
+            return {'comments': {}, 'flagged': {}}
+        raw = candidates_resp[0]['content']['parts'][0]['text'].strip()
         raw = raw.strip('`').replace('json\n', '', 1).strip()
-        # strict=False: Gemini가 comment 안에 이스케이프 안 된 줄바꿈(제어문자)을 넣는 경우가 있어
+        # strict=False: Gemini가 값 안에 이스케이프 안 된 줄바꿈(제어문자)을 넣는 경우가 있어
         # 기본 json 파서(strict=True)는 이를 오류로 처리함 - strict=False로 완화해서 그대로 허용
-        parsed_list = json.loads(raw, strict=False)
+        parsed = json.loads(raw, strict=False)
         comments = {}
-        for item in parsed_list:
+        for item in parsed.get('comments', []):
             name = ' '.join(str(item.get('name', '')).split())
             comment = str(item.get('comment', '')).strip()
             if name and comment:
                 comments[name] = comment
-        save_insight_cache({'date': today, 'comments': comments})
-        print(f"  ✅ 일일 인사이트 코멘트 생성 완료 ({len(comments)}건, {today})")
-        return comments
+        candidate_names = {' '.join(s['name'].split()) for s in candidate_list}
+        flagged = {}
+        for item in parsed.get('flagged', []):
+            name = ' '.join(str(item.get('name', '')).split())
+            reason = str(item.get('reason', '')).strip()
+            # 후보 목록에 없는 이름을 Gemini가 지어내는 경우를 대비해 검증
+            if name and reason and name in candidate_names:
+                flagged[name] = reason
+        save_insight_cache({'date': today, 'comments': comments, 'flagged': flagged})
+        print(f"  ✅ 일일 인사이트 코멘트 생성 완료 (코멘트 {len(comments)}건, AI 추가 발견 {len(flagged)}건, {today})")
+        return {'comments': comments, 'flagged': flagged}
     except Exception as e:
         print(f"  ⚠️ 일일 인사이트 생성 오류: {type(e).__name__}: {e}")
-        return {}
+        return {'comments': {}, 'flagged': {}}
 
 
 # ───────────────────────────────────────────
@@ -480,6 +511,9 @@ def fetch_cs_data(store_debt_map={}):
             'ai_assessed_risk':       worst_tier,
             'ai_mismatch':            False,
             'ai_mismatch_direction':  '',
+            'count_high':             count_high,
+            'count_mid':              count_mid,
+            'count_low':              count_low,
         }
 
     return result

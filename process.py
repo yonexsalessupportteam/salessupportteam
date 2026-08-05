@@ -212,7 +212,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
     cs_scores = {' '.join(k.split()): v for k, v in cs_scores.items()}
 
     for name, data in cs_scores.items():
-        for field in ['memo', 'ai_comment', 'keywords', 'insight_comment']:
+        for field in ['memo', 'ai_comment', 'keywords', 'insight_comment', 'ai_flag_comment']:
             if field in data and data[field]:
                 data[field] = sanitize_text(data[field])
 
@@ -342,6 +342,10 @@ def main():
             'ai_assessed_risk': cs.get('ai_assessed_risk', ''),
             'ai_mismatch': cs.get('ai_mismatch', False),
             'ai_mismatch_direction': cs.get('ai_mismatch_direction', ''),
+            'keywords': cs.get('keywords', ''),
+            'count_high': cs.get('count_high', 0),
+            'count_mid': cs.get('count_mid', 0),
+            'count_low': cs.get('count_low', 0),
         })
 
     warn_list = sorted(
@@ -356,12 +360,24 @@ def main():
         [s for s in all_store_totals if s['ai_mismatch']],
         key=lambda s: (0 if s['ai_mismatch_direction'] == 'severe' else 1)
     )[:3]
+    # 'AI 추가 발견' 후보: 아직 위기/경계/관리 등급은 아니지만, 이번 달 CS 키워드가 입력됐고
+    # 고위험/중위험 건이 하나라도 있는 대리점 (완전히 깨끗한 곳은 검토할 필요 없어 제외)
+    candidate_list = sorted(
+        [s for s in all_store_totals
+         if s['worst_risk'] not in ('위기', '경계', '관리') and s['keywords']
+         and (s['count_high'] > 0 or s['count_mid'] > 0)],
+        key=lambda s: (-s['count_high'], -s['count_mid'])
+    )[:15]
 
     api_key = os.environ.get('GEMINI_API_KEY', '')
-    daily_insights = generate_daily_insights(warn_list, opp_list, review_list, api_key)
-    for name, comment in daily_insights.items():
+    daily_insights = generate_daily_insights(warn_list, opp_list, review_list, candidate_list, api_key)
+    for name, comment in daily_insights.get('comments', {}).items():
         if name in cs_scores:
             cs_scores[name]['insight_comment'] = comment
+    for name, reason in daily_insights.get('flagged', {}).items():
+        if name in cs_scores:
+            cs_scores[name]['ai_flagged'] = True
+            cs_scores[name]['ai_flag_comment'] = reason
 
     generate_html(clothing_dash, goods_dash, cs_scores)
 
