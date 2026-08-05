@@ -181,6 +181,20 @@ tbody tr:hover{background:#f9f8f4}
 .dc .dl{font-size:11px;color:#888780;margin-bottom:3px}
 .dc .dv{font-size:14px;font-weight:500;color:#1a1a18}
 .dc .dsub{font-size:11px;color:#888780;margin-top:2px}
+.quick-summary{display:flex;align-items:center;gap:18px;background:#f5f4f0;border-radius:10px;padding:12px 16px;margin-bottom:10px;flex-wrap:wrap}
+.qs-total{display:flex;flex-direction:column;align-items:center;gap:5px;padding-right:16px;border-right:1px solid #e0dfd8}
+.qs-total-num{font-size:24px;font-weight:700;line-height:1}
+.qs-total-unit{font-size:11px;font-weight:400;color:#888780}
+.qs-grid{display:flex;gap:20px;flex-wrap:wrap;flex:1}
+.qs-item{display:flex;flex-direction:column;gap:2px}
+.qs-lbl{font-size:11px;color:#888780}
+.qs-val{font-size:15px;font-weight:600}
+.qs-val i{font-size:11px;font-weight:400;color:#888780;font-style:normal;margin-left:2px}
+.detail-toggle{margin-top:2px}
+.detail-toggle summary{list-style:none;cursor:pointer;font-size:12px;font-weight:600;color:#185FA5;padding:6px 0;display:flex;align-items:center;gap:4px;user-select:none}
+.detail-toggle summary::-webkit-details-marker{display:none}
+.detail-toggle summary::after{content:'▾';font-size:11px;color:#888780;transition:.2s;margin-left:4px}
+.detail-toggle[open] summary::after{transform:rotate(180deg)}
 .over-bar{height:5px;background:#e0dfd8;border-radius:3px;overflow:hidden;margin-top:5px}
 .over-fill{height:100%;border-radius:3px}
 .kw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
@@ -196,7 +210,11 @@ tbody tr:hover{background:#f9f8f4}
 .partner-status.ok{color:#0F6E56}
 .partner-status.ng{color:#A32D2D}
 .partner-pts{font-size:11px;color:#888780;margin-left:2px}
-.partner-total{display:flex;align-items:center;gap:6px;background:#f5f4f0;border-radius:8px;padding:10px 14px}
+.partner-total{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f5f4f0;border-radius:8px;padding:10px 14px;width:100%;flex-basis:100%;box-sizing:border-box}
+.pt-title{font-size:12px;font-weight:600;color:#1a1a18}
+.pt-sub{font-size:11px;color:#888780;margin-top:1px}
+.pt-val{font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.pt-unit{font-size:11px;font-weight:400;color:#888780;margin-left:2px}
 .toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0}
 .toggle-switch input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d3d1c7;border-radius:22px;transition:.2s}
@@ -483,6 +501,25 @@ function buildScoreSection(s){
     +'<div class="dl">파트너십</div>'
     +'<div class="dv" style="color:'+(s.partnershipScore>=30?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+(Math.round(s.partnershipScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/30</span></div>'
     +'<div class="dsub">용품 '+goodsPartner+' / 의류 '+clothPartner+'</div></div>'
+    +'</div></div>';
+}
+
+function buildQuickSummary(s){
+  const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
+  const deductCollection=Math.min(25,(s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
+  const deductCollateral=Math.min(25,(s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
+  const healthScore=Math.max(0,50-deductCollection-deductCollateral);
+  const salesScore=(s.salesScoreClothing||0)+(s.salesScoreGoods||0);
+  const rc=getRiskClass(s.totalScore,s.worstRisk);
+  const gradeColor=rc.label==='관리'?'#7A2E8C':rc.label==='적정'?'#0F6E56':rc.label==='주의'?'#185FA5':rc.label==='경계'?'#854F0B':'#A32D2D';
+  return '<div class="quick-summary">'
+    +'<div class="qs-total"><div class="qs-total-num" style="color:'+gradeColor+'">'+Math.round(s.totalScore)+'<span class="qs-total-unit">/130</span></div>'
+    +'<span class="rpill '+rc.cls+'" style="font-size:11px;padding:3px 10px">'+rc.label+'</span></div>'
+    +'<div class="qs-grid">'
+    +'<div class="qs-item"><span class="qs-lbl">채권건전성</span><span class="qs-val" style="color:'+dvColor(healthScore,42,33)+'">'+healthScore+'<i>/50</i></span></div>'
+    +'<div class="qs-item"><span class="qs-lbl">매출</span><span class="qs-val" style="color:'+dvColor(salesScore,16,10)+'">'+salesScore+'<i>/20</i></span></div>'
+    +'<div class="qs-item"><span class="qs-lbl">CS</span><span class="qs-val" style="color:'+dvColor(s.csScore,24,15)+'">'+s.csScore+'<i>/30</i></span></div>'
+    +'<div class="qs-item"><span class="qs-lbl">파트너십</span><span class="qs-val" style="color:'+(s.partnershipScore>=25?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+(Math.round(s.partnershipScore*10)/10)+'<i>/30</i></span></div>'
     +'</div></div>';
 }
 
@@ -786,8 +823,8 @@ function buildAiDash(){
             <span class="partner-pts">${pClothingViolation?'(-'+s.pClothingCount+'점)':'(0점)'}</span>
           </div>
           <div class="partner-total">
-            <span style="font-size:12px;color:#5f5e5a">파트너십 점수 (이번 달 누적, 위반 1건당 -1점)</span>
-            <span style="font-size:15px;font-weight:600;color:${s.partnershipScore>=15?'#0F6E56':'#A32D2D'}">${Math.round(s.partnershipScore*10)/10}<span style="font-size:11px;font-weight:400;color:#888780">/30</span></span>
+            <div><div class="pt-title">파트너십 점수</div><div class="pt-sub">이번 달 누적, 위반 1건당 -1점</div></div>
+            <div class="pt-val" style="color:${s.partnershipScore>=15?'#0F6E56':'#A32D2D'}">${Math.round(s.partnershipScore*10)/10}<span class="pt-unit">/30</span></div>
           </div>
         </div>
         <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등) - 이번 달 행 개수만큼 누적 집계</div>
@@ -819,11 +856,17 @@ function buildAiDash(){
         <div><div class="det-title">${s.name} 상세 분석</div><div class="det-sub">${s.dept} · 담당: ${s.salesperson} · ${s.catLabel}</div></div>
         <span class="rpill ${rc.cls}" style="font-size:12px;padding:4px 12px">${rc.label}</span>
       </div>
-      ${clSec}${gdSec}
-      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
-      ${buildScoreSection(s)}
-      <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
-      ${partnerSec}
+      ${buildQuickSummary(s)}
+      <details class="detail-toggle" onclick="event.stopPropagation()">
+        <summary>항목별 상세 보기</summary>
+        <div style="margin-top:8px">
+          ${clSec}${gdSec}
+          <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+          ${buildScoreSection(s)}
+          <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+          ${partnerSec}
+        </div>
+      </details>
       <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
       <div style="margin-bottom:1rem">
         <div class="sec-label">🤝 CS 평가 (공통)</div>
