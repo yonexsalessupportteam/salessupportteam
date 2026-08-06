@@ -69,6 +69,9 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#F4F5FA;colo
 .kpi-callout.danger{background:#FCEBEB;color:#A32D2D}
 .kpi-callout.danger:before{border-bottom-color:#FCEBEB}
 .kpi-callout-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.kpi-mini-bar{width:100%;height:6px;background:#f1efe8;border-radius:999px;margin-top:12px;overflow:hidden}
+.kpi-mini-fill{height:100%;background:#A32D2D;border-radius:999px}
+.kpi-mini-label{font-size:11px;color:#A32D2D;font-weight:600;margin-top:6px}
 .risk-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pill{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid;cursor:pointer;transition:.15s;user-select:none}
 .pill:hover{filter:brightness(0.96)}
@@ -980,10 +983,14 @@ function buildPage(cat,dept){
   excessOnly[key]=false;
   expandedRisk[key]=null;
   const exCnt=d.stores.filter(x=>x.excess>0).length;
+  const excessPct=d.stores.length>0?Math.round(exCnt/d.stores.length*100):0;
   const kpiHtml=`<div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div><div class="kpi-callout"><span class="kpi-callout-dot"></span>ERP 기준 실시간 반영</div></div>
+    <div class="kpi"><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div></div>
     <div class="kpi"><div class="kpi-label">총 담보</div><div class="kpi-value">${fmt(s.total_collateral)}</div><div class="kpi-callout"><span class="kpi-callout-dot"></span>해당 부서 합산</div></div>
-    <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div><div class="kpi-callout danger"><span class="kpi-callout-dot"></span>${exCnt}개 매장 초과</div></div>
+    <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div>
+      <div class="kpi-mini-bar"><div class="kpi-mini-fill" style="width:${excessPct}%"></div></div>
+      <div class="kpi-mini-label">${exCnt}개 / ${d.stores.length}개 매장 초과 (${excessPct}%)</div>
+    </div>
   </div>`;
   const pillHtml=allRisks.map(r=>`<div class="pill p${r}" id="pill-${key}-${r}" onclick="togglePillExpand('${key}','${r}')"><span class="pill-dot"></span>${r} ${s.risk_counts[r]||0}개</div>`).join('');
   const chartId='chart-'+key,tblId='tbl-'+key,spId='sp-'+key,searchId='srch-'+key,riskId='risk-'+key,spFilterId='spf-'+key,toggleId='toggle-'+key,expandId='expand-'+key,subtotalId='subtotal-'+key;
