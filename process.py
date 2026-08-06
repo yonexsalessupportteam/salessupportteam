@@ -23,6 +23,11 @@ RAW_FILES = {
     '용품': 'goods_raw.xls',
 }
 
+CREDIT_GRACE_FILES = {
+    '의류': '의류_수주여신.xls',
+    '용품': '용품_수주여신.xls',
+}
+
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
 RISK_THRESHOLDS = {
@@ -94,7 +99,30 @@ def classify_risk(collateral, receivable):
         return '위기'
 
 
-def process_raw(filepath):
+def load_credit_grace(filepath):
+    """수주여신(여신유예금액) 로더. ERP '여신현황' 계열 리포트 전용 컬럼 배치(코드=col1,이름=col2,여신유예금액=col34)를
+    사용하므로 clothing_raw.xls/goods_raw.xls(채권현황 리포트, 코드=col4)와 컬럼 배치가 다르다.
+    파일이 없으면(수주 기간이 아니면) 빈 dict를 반환해 나머지 로직에 영향 없게 한다."""
+    if not os.path.exists(filepath):
+        return {}
+    xl = pd.read_excel(filepath, engine='xlrd', sheet_name=None, header=None)
+    df = xl['export']
+    data = df.iloc[1:].copy()
+    data.columns = range(len(data.columns))
+
+    mask = data[1].astype(str).str.match(r'^D\d+$', na=False)
+    store_data = data[mask].copy()
+
+    names = store_data[2].astype(str).apply(lambda x: ' '.join(x.split()))
+    grace = pd.to_numeric(store_data[34], errors='coerce').fillna(0)
+
+    result = {}
+    for name, g in zip(names, grace):
+        result[name] = result.get(name, 0) + float(g)
+    return result
+
+
+def process_raw(filepath, credit_grace_map=None):
     xl = pd.read_excel(filepath, engine='xlrd', sheet_name=None, header=None)
     df = xl['export']
     data = df.iloc[1:].copy()
@@ -114,6 +142,15 @@ def process_raw(filepath):
     result['sales']           = pd.to_numeric(store_data[11], errors='coerce').fillna(0)
     result['collection']      = pd.to_numeric(store_data[12], errors='coerce').fillna(0)
     result['collection_days'] = pd.to_numeric(store_data[14], errors='coerce').fillna(0)
+
+    # 수주여신(여신유예금액): 수주 기간 중 담보 위에 추가로 열어주는 여신 한도.
+    # 담보대비초과율/감점 계산에는 "담보+수주여신"을 유효 담보로 반영해, 정상 승인된 여신 확대를
+    # 위험(채권 급증)으로 오인하지 않도록 한다. 원 담보값은 'collateral_base'로 따로 보존해 화면에 분리 표시한다.
+    credit_grace_map = credit_grace_map or {}
+    name_norm = store_data[5].astype(str).apply(lambda x: ' '.join(x.split()))
+    result['credit_grace']  = name_norm.map(credit_grace_map).fillna(0)
+    result['collateral_base'] = result['collateral']
+    result['collateral']    = result['collateral_base'] + result['credit_grace']
 
     result['excess'] = result['receivable'] - result['collateral']
     result['ratio']  = np.where(
@@ -146,6 +183,8 @@ def build_group_data(full_sub):
             'name':             r['name'],
             'salesperson':      r['salesperson'],
             'collateral':       int(r['collateral']),
+            'collateral_base':  int(r['collateral_base']),
+            'credit_grace':     int(r['credit_grace']),
             'receivable':       int(r['receivable']),
             'excess':           int(r['excess']),
             'ratio':            round(float(r['ratio']), 2),
@@ -158,6 +197,7 @@ def build_group_data(full_sub):
 
     summary = {
         'total_collateral': int(full_sub['collateral'].sum()),
+        'total_credit_grace': int(full_sub['credit_grace'].sum()),
         'total_receivable': int(full_sub['receivable'].sum()),
         'total_excess':     int(full_sub[full_sub['excess'] > 0]['excess'].sum()),
         'risk_counts':      {k: int(v) for k, v in full_sub['risk'].value_counts().to_dict().items()}
@@ -174,8 +214,8 @@ def build_group_data(full_sub):
     return {'stores': stores, 'summary': summary, 'by_salesperson': sp_summary}
 
 
-def build_category_dashboard(filepath):
-    result = process_raw(filepath)
+def build_category_dashboard(filepath, credit_grace_map=None):
+    result = process_raw(filepath, credit_grace_map=credit_grace_map)
     dashboard = {}
     for dept in DEPT_TABS:
         sub = result[result['dept_name'] == dept]
@@ -229,8 +269,17 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
 
 def main():
     print("raw 파일 처리 시작...")
-    clothing_dash = build_category_dashboard(RAW_FILES['의류'])
-    goods_dash    = build_category_dashboard(RAW_FILES['용품'])
+    print("수주여신 파일 확인 중...")
+    credit_grace = {}
+    for cat, fp in CREDIT_GRACE_FILES.items():
+        credit_grace[cat] = load_credit_grace(fp)
+        if credit_grace[cat]:
+            print(f"  {cat} 수주여신: {len(credit_grace[cat])}개 매장, 합계 {sum(credit_grace[cat].values()):,.0f}원")
+        else:
+            print(f"  {cat} 수주여신: 파일 없음 또는 데이터 없음 (수주 기간이 아니면 정상)")
+
+    clothing_dash = build_category_dashboard(RAW_FILES['의류'], credit_grace_map=credit_grace['의류'])
+    goods_dash    = build_category_dashboard(RAW_FILES['용품'], credit_grace_map=credit_grace['용품'])
 
     print("\n=== 의류 ===")
     for dept, d in clothing_dash.items():
@@ -256,6 +305,7 @@ def main():
                     'deduct_collateral_clothing': 0, 'deduct_collateral_goods': 0,
                     'deduct_collection_clothing': 0, 'deduct_collection_goods': 0,
                     'collection_days_clothing': 0, 'collection_days_goods': 0,
+                    'credit_grace_clothing': 0, 'credit_grace_goods': 0,
                 })
                 entry['collateral'] += s['collateral']
                 entry['receivable'] += s['receivable']
@@ -266,11 +316,13 @@ def main():
                     entry['deduct_collateral_clothing'] = s['deduct_collateral']
                     entry['deduct_collection_clothing']  = s['deduct_collection']
                     entry['collection_days_clothing']    = s['collection_days']
+                    entry['credit_grace_clothing']        = s['credit_grace']
                 else:
                     entry['goods_risk'] = s['risk']
                     entry['deduct_collateral_goods'] = s['deduct_collateral']
                     entry['deduct_collection_goods']  = s['deduct_collection']
                     entry['collection_days_goods']    = s['collection_days']
+                    entry['credit_grace_goods']        = s['credit_grace']
 
     for name, entry in store_debt_map.items():
         entry['deduct_collateral'] = min(25, entry['deduct_collateral_clothing'] + entry['deduct_collateral_goods'])
@@ -292,6 +344,8 @@ def main():
             cs_scores[name]['collection_days']             = debt.get('collection_days', 0)
             cs_scores[name]['collection_days_clothing']    = debt.get('collection_days_clothing', 0)
             cs_scores[name]['collection_days_goods']       = debt.get('collection_days_goods', 0)
+            cs_scores[name]['credit_grace_clothing']       = debt.get('credit_grace_clothing', 0)
+            cs_scores[name]['credit_grace_goods']          = debt.get('credit_grace_goods', 0)
         else:
             cs_scores[name] = {
                 'score': 30, 'partnership_score': 30,
@@ -308,6 +362,8 @@ def main():
                 'collection_days':            debt.get('collection_days', 0),
                 'collection_days_clothing':   debt.get('collection_days_clothing', 0),
                 'collection_days_goods':      debt.get('collection_days_goods', 0),
+                'credit_grace_clothing':      debt.get('credit_grace_clothing', 0),
+                'credit_grace_goods':         debt.get('credit_grace_goods', 0),
             }
 
     # ── 대리점별 종합점수·등급 계산 (template.html buildAiDash의 계산과 동일한 공식) ──

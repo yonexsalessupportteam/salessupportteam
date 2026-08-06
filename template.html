@@ -828,7 +828,7 @@ function buildAiDash(){
       <div class="sec-label">👔 의류 채권 리스크 진단</div>
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
-        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral_base!=null?s.clothing.collateral_base:s.clothing.collateral)}${s.clothing.credit_grace?' + 수주여신 '+fmt(s.clothing.credit_grace)+' = 유효담보 '+fmt(s.clothing.collateral):''} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
       </div>
     </div>`:'';
 
@@ -837,7 +837,7 @@ function buildAiDash(){
       <div class="sec-label">🏸 용품 채권 리스크 진단</div>
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
-        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral_base!=null?s.goods.collateral_base:s.goods.collateral)}${s.goods.credit_grace?' + 수주여신 '+fmt(s.goods.credit_grace)+' = 유효담보 '+fmt(s.goods.collateral):''} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
       </div>
     </div>`:'';
 

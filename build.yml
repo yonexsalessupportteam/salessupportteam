@@ -4,6 +4,8 @@ on:
     paths:
       - 'clothing_raw.xls'
       - 'goods_raw.xls'
+      - '의류_수주여신.xls'
+      - '용품_수주여신.xls'
       - 'template.html'
       - 'fetch_cs_scores.py'
       - 'process.py'
@@ -38,7 +40,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action (자동 생성)"
-          git add index.html ai_cache.json
+          git add index.html
+          if [ -f insight_cache.json ]; then git add insight_cache.json; fi
           git diff --staged --quiet || git commit -m "대시보드 자동 업데이트"
           git pull --rebase origin main
           git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:main
