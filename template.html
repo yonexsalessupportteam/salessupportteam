@@ -170,7 +170,7 @@ tbody tr:hover{background:#f9f8f4}
 .det-sub{font-size:12px;color:#888780;margin-top:3px}
 .sec-label{font-size:11px;font-weight:500;color:#5f5e5a;letter-spacing:0.03em;margin-bottom:8px;padding:3px 8px;background:#f5f4f0;border-radius:6px;display:inline-block}
 .cat-section{margin-bottom:14px}
-.cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .score-total-bar{background:#1a6abf0d;border:.5px solid #1a6abf33;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
 .score-total-label{font-size:12px;color:#185FA5;font-weight:600;margin-bottom:3px}
 .score-total-sub{font-size:11px;color:#888780}
@@ -422,26 +422,15 @@ tbody tr:hover{background:#f9f8f4}
 
 <script>
 
-function buildScoreSection(s){
+function buildQuantGrid(s){
   const dcStyle = function(deduct){ return deduct>0 ? 'background:#FCEBEB;border:.5px solid #F09595' : ''; };
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
   const collLabelFor = function(days){ return days<=60 ? '✓ 60일이내' : days<=80 ? '60~80일' : days<=90 ? '80~90일' : '90일초과'; };
   const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.excess/s.clothing.collateral*100) : null;
   const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.excess/s.goods.collateral*100) : null;
-  const deductCollateral = Math.min(25, (s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
-  const deductCollection = Math.min(25, (s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
   const salesScoreGoods = Math.min(10, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
   const salesScoreClothing = Math.min(10, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
-  const salesScore = salesScoreGoods + salesScoreClothing;
-  const goodsPartner = (s.pGoodsCount||0)>0 ? '위반 '+s.pGoodsCount+'건' : '준수';
-  const clothPartner = (s.pClothingCount||0)>0 ? '위반 '+s.pClothingCount+'건' : '준수';
-  const memoLabel = s.keywords ? '키워드기반 자동채점' : '키워드없음(만점)';
-  const qualScore = s.csScore + s.partnershipScore;
-  const totalColor = s.totalScore>=105?'#0F6E56':s.totalScore>=85?'#185FA5':s.totalScore>=65?'#854F0B':'#A32D2D';
-  const gaugeRc = getRiskClass(s.totalScore, s.worstRisk);
-  const gaugeColor = gaugeRc.label==='관리' ? '#7A2E8C' : gaugeRc.label==='적정' ? '#0F6E56' : gaugeRc.label==='주의' ? '#185FA5' : gaugeRc.label==='경계' ? '#854F0B' : '#A32D2D';
   return '<div style="margin-bottom:14px">'
-    +'<div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:'+dvColor(s.quantScore,59,46)+'">'+Math.round(s.quantScore*10)/10+'점 / 70</span></div>'
     +'<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc" style="'+dcStyle(s.deductCollectionClothing)+'">'
@@ -483,8 +472,15 @@ function buildScoreSection(s){
     +'<div class="dl">정량점수</div>'
     +'<div class="dv" style="color:'+dvColor(s.quantScore,59,46)+'">'+(Math.round(s.quantScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/70</span></div>'
     +'</div>'
-    +'</div>'
-    +'<div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:'+dvColor(qualScore,50,40)+'">'+(Math.round(qualScore*10)/10)+'점 / 60</span></div>'
+    +'</div></div>';
+}
+
+function buildQualGrid(s){
+  const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
+  const goodsPartner = (s.pGoodsCount||0)>0 ? '위반 '+s.pGoodsCount+'건' : '준수';
+  const clothPartner = (s.pClothingCount||0)>0 ? '위반 '+s.pClothingCount+'건' : '준수';
+  const memoLabel = s.keywords ? '키워드기반 자동채점' : '키워드없음(만점)';
+  return '<div style="margin-bottom:14px">'
     +'<div class="cat-grid">'
     +'<div class="dc">'
     +'<div class="dl">CS 코멘트</div>'
@@ -772,21 +768,19 @@ function buildAiDash(){
 
     const clSec=s.clothing?`
     <div class="cat-section">
-      <div class="sec-label">👔 의류 채권/매출</div>
+      <div class="sec-label">👔 의류 채권 리스크 진단</div>
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
-        <div class="dc"><div class="dl">매출규모 (3개월)</div><div class="dv" style="color:${dvColor(s.salesScoreClothing,8,5)}">${s.salesScoreClothing}점 <span style="font-size:11px;color:#888780">/10</span></div><div class="dsub">${s.sales3mClothing?fmt(s.sales3mClothing):'미입력'}</div></div>
       </div>
     </div>`:'';
 
     const gdSec=s.goods?`
     <div class="cat-section">
-      <div class="sec-label">🏸 용품 채권/매출</div>
+      <div class="sec-label">🏸 용품 채권 리스크 진단</div>
       <div class="cat-grid">
         <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
         <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
-        <div class="dc"><div class="dl">매출규모 (3개월)</div><div class="dv" style="color:${dvColor(s.salesScoreGoods,8,5)}">${s.salesScoreGoods}점 <span style="font-size:11px;color:#888780">/10</span></div><div class="dsub">${s.sales3mGoods?fmt(s.sales3mGoods):'미입력'}</div></div>
       </div>
     </div>`:'';
 
@@ -855,12 +849,13 @@ function buildAiDash(){
       <details class="detail-toggle" onclick="event.stopPropagation()">
         <summary>항목별 상세 보기</summary>
         <div style="margin-top:8px">
+          <div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:${dvColor(s.quantScore,59,46)}">${Math.round(s.quantScore*10)/10}점 / 70</span></div>
           ${clSec}${gdSec}
+          ${buildQuantGrid(s)}
           <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
-          ${buildScoreSection(s)}
-          <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
+          <div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:${dvColor(s.csScore+s.partnershipScore,50,40)}">${Math.round((s.csScore+s.partnershipScore)*10)/10}점 / 60</span></div>
+          ${buildQualGrid(s)}
           ${partnerSec}
-          <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
           <div style="margin-bottom:1rem">
             <div class="sec-label">🤝 CS 평가 (공통)</div>
             ${kwHtml?('<div style="margin-top:8px"><div style="font-size:12px;color:#888780;margin-bottom:4px">입력 키워드</div><div class="kw-tags">'+kwHtml+'</div></div>'):'<div style="font-size:13px;color:#b4b2a9;margin-top:8px">키워드를 입력하면 표시됩니다.</div>'}
