@@ -148,7 +148,7 @@ def classify_keyword_tier(keyword_str):
     저위험 문구를 먼저 제거한 나머지 텍스트에서 고/중위험을 검사해 오탐을 막는다."""
     if not keyword_str or not keyword_str.strip():
         return ''
-    text = keyword_str
+    text = re.sub(r'\s+', '', keyword_str)  # 띄어쓰기 차이로 매칭이 빠지는 것을 방지 (예: "정확한 안내" vs "정확한안내")
     matched_low = any(kw in text for kw in KEYWORD_TIERS['저위험'])
     stripped = text
     for kw in KEYWORD_TIERS['저위험']:
