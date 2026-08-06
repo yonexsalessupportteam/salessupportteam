@@ -137,6 +137,21 @@ tbody tr:hover{background:#f9f8f4}
 .ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
 .ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}
 .ai-kpi .pct{font-size:11px;color:#b4b2a9;margin-top:4px}
+.ew-intro{background:#fff;border-radius:12px;border:.5px solid #e0dfd8;padding:28px 24px;margin-bottom:16px;text-align:center}
+.ew-intro-title{font-size:21px;font-weight:700;margin-bottom:6px;color:#1a1a18}
+.ew-intro-sub{font-size:13px;color:#5f5e5a;margin-bottom:22px;line-height:1.6}
+.ew-flow{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:26px;flex-wrap:wrap}
+.ew-flow-card{display:flex;align-items:center;gap:12px;background:#f9f8f5;border:.5px solid #e0dfd8;border-radius:10px;padding:16px 20px;flex:1;min-width:220px;max-width:320px;text-align:left}
+.ew-flow-icon{font-size:26px;line-height:1}
+.ew-flow-text{font-size:13px;font-weight:600;line-height:1.4;color:#1a1a18}
+.ew-flow-arrow{font-size:18px;color:#b4b2a9}
+.ew-features{max-width:560px;margin:0 auto;text-align:left}
+.ew-feature{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.ew-feature:last-child{margin-bottom:0}
+.ew-feature-check{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#185FA5;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.ew-feature-title{font-size:13px;font-weight:600;margin-bottom:2px;color:#1a1a18}
+.ew-feature-sub{font-size:12px;color:#888780;line-height:1.5}
+@media(max-width:700px){.ew-flow{flex-direction:column}.ew-flow-arrow{transform:rotate(90deg)}}
 .ai-filter-tag{font-size:12px;padding:5px 12px;border-radius:20px;border:.5px solid #e0dfd8;cursor:pointer;color:#5f5e5a;background:#fff}
 .ai-filter-tag.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
 .ai-filter-tag.safe{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
@@ -248,10 +263,10 @@ tbody tr:hover{background:#f9f8f4}
     <div class="sidebar-divider"></div>
   </div>
   <div class="sidebar-block">
-    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">AI 리스크<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">AI 조기경보<span class="sidebar-caret">▾</span></div>
     <div class="sidebar-group">
       <div class="sidebar-item active" id="menu-ai-risk" onclick="switchCat('ai-risk',this)">
-        <span class="icon">🤖</span> AI 위험탐지
+        <span class="icon">🤖</span> 조기경보 대시보드
       </div>
     </div>
     <div class="sidebar-divider"></div>
@@ -724,7 +739,7 @@ function buildAiDash(){
       <span style="font-size:18px">🤖</span>
       <div>
         <div style="font-weight:600;font-size:14px">AI가 분석한 오늘의 대리점 인사이트</div>
-        <div style="font-size:12px;color:#888780">종합점수·CS등급·AI 위험판단 기반으로 요약했습니다</div>
+        <div style="font-size:12px;color:#888780">종합점수·CS등급·조기경보 신호 기반으로 요약했습니다</div>
       </div>
     </div>
     <span id="insight-caret" style="font-size:12px;color:#888780">접기 ▲</span>
@@ -735,7 +750,35 @@ function buildAiDash(){
     ${insightCard('flag',flagList,'AI 검토가 필요한 대리점이 없습니다.')}
   </div>`;
 
-  let html=insightHtml+`
+  let html=`
+  <div class="ew-intro">
+    <div class="ew-intro-title">AI 조기경보</div>
+    <div class="ew-intro-sub">대리점의 신용 상태 변화를 실시간으로 파악하고, 부실 가능성을 조기에 감지하여<br>조기경보 시그널을 제공하는 서비스입니다.</div>
+    <div class="ew-flow">
+      <div class="ew-flow-card">
+        <div class="ew-flow-icon">🚨</div>
+        <div class="ew-flow-text">대리점의 부실위험을 사전에<br>예측하여 조기경보 시그널 제공</div>
+      </div>
+      <div class="ew-flow-arrow">➜</div>
+      <div class="ew-flow-card">
+        <div class="ew-flow-icon">🖥️</div>
+        <div class="ew-flow-text">대리점 관리를 위한 최적의<br>신용관리 시스템</div>
+      </div>
+    </div>
+    <div class="ew-features">
+      <div class="ew-feature">
+        <span class="ew-feature-check">✓</span>
+        <div><div class="ew-feature-title">다양한 리스크 정보 실시간 수집 및 분석</div>
+        <div class="ew-feature-sub">채권건전성·매출규모·CS코멘트·파트너십 등 다양한 Risk Factor를 종합 분석</div></div>
+      </div>
+      <div class="ew-feature">
+        <span class="ew-feature-check">✓</span>
+        <div><div class="ew-feature-title">종합점수 등급 산출 관리</div>
+        <div class="ew-feature-sub">수집된 정보로 대리점의 종합등급을 자동 산출 → 위험 수준별 모니터링 가능</div></div>
+      </div>
+    </div>
+  </div>
+  `+insightHtml+`
   <div class="ai-kpi-grid">
     <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
     <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
