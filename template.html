@@ -167,6 +167,10 @@ tbody tr:hover{background:#f9f8f4}
 .ai-filter-tag.border2{background:#FAECE7;color:#712B13;border-color:#F5C4B3}
 .ai-filter-tag.crisis{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
 .ai-filter-tag.manage{background:#F1E5F5;color:#4A1758;border-color:#DCB8E8}
+.ai-filter-tag.watchlist.active{background:#FFF4D6;color:#8A6D00;border-color:#F5D67A}
+.star-btn{font-size:17px;line-height:1;cursor:pointer;color:#d3d1c7;flex-shrink:0;width:20px;text-align:center;user-select:none;transition:.15s}
+.star-btn:hover{color:#E8A93A}
+.star-btn.active{color:#E8A93A}
 .dealer-card{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .dealer-card:hover{border-color:#b4b2a9}
 .dealer-card.sel{border:1.5px solid #185FA5}
@@ -644,6 +648,7 @@ function makeScoreGauge(score,grade,gradeColor){
 }
 
 let currentAiGrade='전체';
+let watchlistOnly=false;
 
 function buildAiDash(){
   const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
@@ -803,6 +808,7 @@ function buildAiDash(){
     <select id="ai-cat-filter" style="font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;">
       <option value="">전체 카테고리</option><option>의류</option><option>용품</option>
     </select>
+    <span class="ai-filter-tag watchlist" id="ai-watchlist-toggle" onclick="toggleWatchlistFilter()">⭐ 관심 대리점만</span>
     <span style="font-size:12px;color:#888780;">등급</span>
     <span class="ai-filter-tag active" id="aitag-전체" onclick="filterAiTag('전체')">전체</span>
     <span class="ai-filter-tag safe" id="aitag-적정" onclick="filterAiTag('적정')">적정</span>
@@ -884,6 +890,7 @@ function buildAiDash(){
     <div class="dealer-card" id="aicard-${i}" data-grade="${rc.label}" data-dept="${s.dept}" data-cat="${s.catLabel}" data-name="${s.name}" onclick="toggleAiDet(${i},this)">
       <div class="crow">
         <div class="rank-badge">${i+1}</div>
+        <span class="star-btn${isWatched(s.name)?' active':''}" data-star-name="${s.name}" onclick="toggleWatchlist(event,'${s.name}')" title="관심 대리점 등록/해제">${isWatched(s.name)?'★':'☆'}</span>
         <div class="sinfo"><div class="sname">${s.name}</div><div class="smeta">${s.dept} · ${s.salesperson} · ${s.catLabel}</div></div>
         <div class="bwrap"><div class="blbl">종합점수</div><div class="btrack"><div class="bfill" style="width:${barW}%;background:${rc.bar}"></div></div></div>
         <div style="text-align:right"><div class="snum">${Math.round(s.totalScore)}</div><div class="sunit">/ 130</div></div>
@@ -924,6 +931,30 @@ function buildAiDash(){
   document.getElementById('ai-cat-filter').addEventListener('change',applyAiFilters);
 }
 
+function getWatchlist(){
+  try{ return JSON.parse(localStorage.getItem('watchlistDealers')||'[]'); }catch(e){ return []; }
+}
+function isWatched(name){ return getWatchlist().indexOf(name)>=0; }
+function toggleWatchlist(ev,name){
+  ev.stopPropagation();
+  let list=getWatchlist();
+  const idx=list.indexOf(name);
+  if(idx>=0) list.splice(idx,1); else list.push(name);
+  try{ localStorage.setItem('watchlistDealers', JSON.stringify(list)); }catch(e){}
+  document.querySelectorAll('.star-btn[data-star-name="'+name.replace(/"/g,'\\"')+'"]').forEach(btn=>{
+    const nowActive=idx<0;
+    btn.classList.toggle('active',nowActive);
+    btn.textContent=nowActive?'★':'☆';
+  });
+  if(watchlistOnly) applyAiFilters();
+}
+function toggleWatchlistFilter(){
+  watchlistOnly=!watchlistOnly;
+  const el=document.getElementById('ai-watchlist-toggle');
+  if(el) el.classList.toggle('active',watchlistOnly);
+  applyAiFilters();
+}
+
 function filterAiTag(grade){
   currentAiGrade=grade;
   ['전체','적정','주의','경계','위기','관리'].forEach(g=>{
@@ -937,13 +968,15 @@ function applyAiFilters(){
   const q=(document.getElementById('ai-search')||{}).value?.toLowerCase()||'';
   const team=(document.getElementById('ai-team-filter')||{}).value||'';
   const cat=(document.getElementById('ai-cat-filter')||{}).value||'';
+  const wl=getWatchlist();
   document.querySelectorAll('.dealer-card').forEach(card=>{
     const det=document.getElementById('aidet-'+card.id.replace('aicard-',''));
     const gradeOk=currentAiGrade==='전체'||card.dataset.grade===currentAiGrade;
     const teamOk=!team||card.dataset.dept===team;
     const catOk=!cat||card.dataset.cat.includes(cat);
     const nameOk=!q||card.dataset.name.toLowerCase().includes(q);
-    const show=gradeOk&&teamOk&&catOk&&nameOk;
+    const watchOk=!watchlistOnly||wl.indexOf(card.dataset.name)>=0;
+    const show=gradeOk&&teamOk&&catOk&&nameOk&&watchOk;
     card.style.display=show?'':'none';
     if(det&&!show) det.style.display='none';
   });
