@@ -11,9 +11,11 @@ from datetime import datetime, timedelta, timezone
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # 법인 접두어("주식회사"/"(주)"/"㈜") 유무 차이로 이름 매칭이 실패하는 것을 막기 위한 정규화.
+# ERP 원본 데이터 자체가 "주식회사 나이스패밀리"(띄어쓰기 있음)와 "주식회사동우스포츠"(띄어쓰기 없음)처럼
+# 표기가 일관되지 않아, 접두어 뒤 공백 유무와 무관하게 제거해야 한다.
 # "_특판", "_단독" 같은 지점 구분 접미어는 서로 다른 거래선을 가리키므로 절대 제거하지 않는다.
-_CORP_PREFIXES = ['주식회사 ', '(주)', '㈜']
-_CORP_SUFFIXES = [' 주식회사']
+_CORP_PREFIXES = ['주식회사', '(주)', '㈜']
+_CORP_SUFFIXES = ['주식회사']
 
 
 def normalize_dealer_name_for_matching(name):
