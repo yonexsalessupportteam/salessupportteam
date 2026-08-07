@@ -273,15 +273,17 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
         return {'comments': {}, 'flagged': {}}
 
     def block(store, tag):
+        # 등급은 반드시 종합점수(130점) 기준 score_grade를 써야 함 - worst_risk는 담보초과율 기반
+        # 개별 채권 리스크라 종합점수와 불일치할 수 있음(예: 76점인데 worst_risk만 '위기'인 경우)
         return (f"[{tag}] name: \"{store['name']}\"\n"
                 f"- 종합점수: {round(store['total_score'])}점\n"
-                f"- 등급: {store['worst_risk']}\n"
+                f"- 등급: {store['score_grade']}\n"
                 f"- CS 키워드 등급: {store.get('ai_assessed_risk') or '-'}")
 
     def candidate_block(store):
         return (f"[후보] name: \"{store['name']}\"\n"
                 f"- 종합점수: {round(store['total_score'])}점\n"
-                f"- 등급: {store['worst_risk']}\n"
+                f"- 등급: {store['score_grade']}\n"
                 f"- 이번 달 CS 키워드: {store.get('keywords') or '-'}\n"
                 f"- 고위험 {store.get('count_high',0)}건 · 중위험 {store.get('count_mid',0)}건 · 우수 {store.get('count_low',0)}건")
 

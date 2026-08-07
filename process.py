@@ -377,6 +377,19 @@ def main():
                 w = r
         return w
 
+    # 종합점수(130점) 기준 등급 - 대시보드에 실제로 표시되는 등급과 반드시 일치해야 함
+    # (담보초과율 기반 worst_risk와는 별개 체계이므로 절대 혼용하지 않음 - template.html getRiskClass와 동일 공식)
+    def score_grade(total_score, worst_risk):
+        if worst_risk == '관리':
+            return '관리'
+        if total_score >= 105:
+            return '적정'
+        if total_score >= 85:
+            return '주의'
+        if total_score >= 65:
+            return '경계'
+        return '위기'
+
     all_store_totals = []
     for name, debt in store_debt_map.items():
         cs = cs_scores.get(name, {})
@@ -390,11 +403,13 @@ def main():
         health_score = max(0, 50 - deduct_collection - deduct_collateral)
         quant_score = min(70, health_score + sales_score)
         total_score = min(130, quant_score + cs_score + partnership_score)
+        # worst_risk: 담보초과율 기반 개별(의류/용품) 채권 리스크 - "채권 리스크" 진단 표시용, 종합등급과는 다른 지표
         worst_risk = combine_worst_risk([debt.get('clothing_risk'), debt.get('goods_risk')])
         all_store_totals.append({
             'name': name,
             'total_score': total_score,
             'worst_risk': worst_risk,
+            'score_grade': score_grade(total_score, worst_risk),
             'ai_assessed_risk': cs.get('ai_assessed_risk', ''),
             'ai_mismatch': cs.get('ai_mismatch', False),
             'ai_mismatch_direction': cs.get('ai_mismatch_direction', ''),
@@ -405,11 +420,11 @@ def main():
         })
 
     warn_list = sorted(
-        [s for s in all_store_totals if s['worst_risk'] in ('위기', '경계', '관리')],
+        [s for s in all_store_totals if s['score_grade'] in ('위기', '경계', '관리')],
         key=lambda s: s['total_score']
     )[:3]
     opp_list = sorted(
-        [s for s in all_store_totals if s['worst_risk'] != '관리' and s['total_score'] >= 80],
+        [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 105],
         key=lambda s: -s['total_score']
     )[:3]
     review_list = sorted(
@@ -420,7 +435,7 @@ def main():
     # 고위험/중위험 건이 하나라도 있는 대리점 (완전히 깨끗한 곳은 검토할 필요 없어 제외)
     candidate_list = sorted(
         [s for s in all_store_totals
-         if s['worst_risk'] not in ('위기', '경계', '관리') and s['keywords']
+         if s['score_grade'] not in ('위기', '경계', '관리') and s['keywords']
          and (s['count_high'] > 0 or s['count_mid'] > 0)],
         key=lambda s: (-s['count_high'], -s['count_mid'])
     )[:15]
