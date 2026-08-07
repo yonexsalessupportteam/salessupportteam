@@ -3,7 +3,7 @@
 
 총점 구조 (최대 130점):
   정량점수  최대 70점
-    = 채권건전성 50점 (기본 50 - 회수일 감점(최대25) - 담보대비채권 감점(최대25))
+    = 채권건전성 50점 (회수일 감점(카테고리당 최대15, 의류+용품 합산 최대30) + 담보대비채권 감점(카테고리당 최대10, 의류+용품 합산 최대20)을 50에서 차감)
     + 매출규모  20점 (3개월 매출 합계 구간, fetch_cs_scores.score_sales_tier)
   + CS 코멘트  최대 30점 (월 누적: 고위험 -5점/건, 중위험 -2점/건, 우수 +1점/건)
   + 파트너십   최대 30점 (월 누적: 위반 1건당 -1점, 용품+의류 합산)
@@ -41,8 +41,8 @@ MIN_DISPLAY_THRESHOLD = 100_000
 # ───────────────────────────────────────────
 
 def deduct_collection_days(days):
-    """회수일 감점 (60일 기준 초과시 감점, 카테고리당 최대 25점).
-    의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 합산한 뒤 25점으로 캡한다."""
+    """회수일 감점 (60일 기준 초과시 감점, 카테고리당 최대 15점 - 의류/용품 각각 독립 채점).
+    의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 그대로 합산(최대 30점)한다."""
     try:
         days = float(days)
     except (TypeError, ValueError):
@@ -50,31 +50,31 @@ def deduct_collection_days(days):
     if days <= 60:
         return 0
     elif days <= 80:
-        return 10
+        return 6
     elif days <= 90:
-        return 15
+        return 9
     else:
-        return 25
+        return 15
 
 
 def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 초과율 감점 (카테고리당 최대 25점). classify_risk() 등급 기준(0/30/120%)과 동일하게 정렬.
-    초과율 = (채권잔액-담보)/담보. 의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 합산한 뒤 25점으로 캡한다."""
+    """담보대비 초과율 감점 (카테고리당 최대 10점 - 의류/용품 각각 독립 채점). classify_risk() 등급 기준(0/30/120%)과 동일하게 정렬.
+    초과율 = (채권잔액-담보)/담보. 의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 그대로 합산(최대 20점)한다."""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
     # 무담보 & 채권 있음 (=관리 등급) → 최대 감점
     if collateral == 0 and receivable > 0:
-        return 25
+        return 10
     excess_rate = (receivable - collateral) / collateral * 100
     if excess_rate <= RISK_THRESHOLDS['safe_max'] * 100:      # 적정 (초과율 ≤0%)
         return 0
     elif excess_rate <= RISK_THRESHOLDS['caution_max'] * 100:  # 주의 (0~30%)
-        return 10
+        return 4
     elif excess_rate <= RISK_THRESHOLDS['warning_max'] * 100:  # 경계 (30~120%)
-        return 15
+        return 6
     else:                                                       # 위기 (120% 초과)
-        return 25
+        return 10
 
 
 
@@ -124,7 +124,7 @@ def process_raw(filepath):
         lambda r: classify_risk(r['collateral'], r['receivable']), axis=1
     )
 
-    # 감점 계산 (카테고리당 최대 25점 - 의류+용품 둘 다 있으면 합산 후 25점 캡은 store_debt_map 병합 단계에서 처리)
+    # 감점 계산 (회수일 카테고리당 최대15/합산최대30, 담보 카테고리당 최대10/합산최대20 - 의류+용품 합산은 store_debt_map 병합 단계에서 처리)
     result['deduct_collection'] = result['collection_days'].apply(deduct_collection_days)
     result['deduct_collateral'] = result.apply(
         lambda r: deduct_collateral_ratio(r['collateral'], r['receivable']), axis=1
@@ -243,8 +243,8 @@ def main():
         s = d['summary']
         print(f"  {dept}: {len(d['stores'])}개 / 채권 {s['total_receivable']:,} / 초과 {s['total_excess']:,}")
 
-    # 대리점별 감점 정보 수집 (채권건전성 50점 = 회수일 최대25 + 담보 최대25)
-    # 카테고리별(의류/용품) 감점을 각각 구해 합산하고, 회수일/담보 각각 25점으로 캡한다.
+    # 대리점별 감점 정보 수집 (채권건전성 50점 = 회수일 최대30(의류15+용품15) + 담보 최대20(의류10+용품10))
+    # 카테고리별(의류/용품) 감점을 각각 구해 합산하고, 회수일은 30점, 담보는 20점으로 캡한다.
     # (카테고리가 1개뿐이면 다른 쪽은 0이라 자연히 그 카테고리 값 그대로 반영됨)
     store_debt_map = {}
     for cat, dash in [('의류', clothing_dash), ('용품', goods_dash)]:
@@ -274,8 +274,8 @@ def main():
                     entry['collection_days_goods']    = s['collection_days']
 
     for name, entry in store_debt_map.items():
-        entry['deduct_collateral'] = min(25, entry['deduct_collateral_clothing'] + entry['deduct_collateral_goods'])
-        entry['deduct_collection'] = min(25, entry['deduct_collection_clothing'] + entry['deduct_collection_goods'])
+        entry['deduct_collateral'] = min(20, entry['deduct_collateral_clothing'] + entry['deduct_collateral_goods'])
+        entry['deduct_collection'] = min(30, entry['deduct_collection_clothing'] + entry['deduct_collection_goods'])
         entry['collection_days'] = max(entry['collection_days_clothing'], entry['collection_days_goods'])
         entry['ratio'] = (entry['receivable'] - entry['collateral']) / entry['collateral'] if entry['collateral'] > 0 else 0.0
 

@@ -351,26 +351,26 @@ tbody tr:hover{background:#f9f8f4}
     <div class="crit-group-label">📈 정량평가</div>
 
     <details class="crit-block">
-      <summary>① 채권건전성 (50점)</summary>
+      <summary>① 채권건전성 (50점 = 회수일 30 + 담보대비 20)</summary>
       <div class="crit-body">
-        <p>채권건전성 = 50 − 회수일 감점(최대25) − 담보대비 초과율 감점(최대25)</p>
-        <p><b>회수일 감점 (60일 기준)</b></p>
+        <p>채권건전성 = 50 − 회수일 감점(카테고리당 최대15, 의류+용품 합산 최대30) − 담보대비 초과율 감점(카테고리당 최대10, 의류+용품 합산 최대20)</p>
+        <p><b>회수일 감점 (60일 기준, 의류/용품 각각 독립 채점)</b></p>
         <table class="crit-table">
-          <tr><th>회수일</th><th>감점</th></tr>
+          <tr><th>회수일</th><th>감점 (카테고리당)</th></tr>
           <tr><td>60일 이하</td><td>0점</td></tr>
-          <tr><td>61~80일</td><td class="neg">-10점</td></tr>
-          <tr><td>81~90일</td><td class="neg">-15점</td></tr>
-          <tr><td>90일 초과</td><td class="neg">-25점</td></tr>
+          <tr><td>61~80일</td><td class="neg">-6점</td></tr>
+          <tr><td>81~90일</td><td class="neg">-9점</td></tr>
+          <tr><td>90일 초과</td><td class="neg">-15점</td></tr>
         </table>
-        <p><b>담보대비 초과율 감점</b> (초과율 = (채권잔액-담보)/담보)</p>
+        <p><b>담보대비 초과율 감점</b> (초과율 = (채권잔액-담보)/담보, 의류/용품 각각 독립 채점)</p>
         <table class="crit-table">
-          <tr><th>담보대비 초과율</th><th>등급</th><th>감점</th></tr>
+          <tr><th>담보대비 초과율</th><th>등급</th><th>감점 (카테고리당)</th></tr>
           <tr><td>0% 이하</td><td>적정</td><td>0점</td></tr>
-          <tr><td>0~30%</td><td>주의</td><td class="neg">-10점</td></tr>
-          <tr><td>30~120%</td><td>경계</td><td class="neg">-15점</td></tr>
-          <tr><td>120% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-25점</td></tr>
+          <tr><td>0~30%</td><td>주의</td><td class="neg">-4점</td></tr>
+          <tr><td>30~120%</td><td>경계</td><td class="neg">-6점</td></tr>
+          <tr><td>120% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-10점</td></tr>
         </table>
-        <div class="crit-sub">※ 의류+용품 둘 다 있는 대리점은 카테고리별 감점을 합산하되, 회수일/담보 각 항목 최대 25점으로 제한</div>
+        <div class="crit-sub">※ 의류+용품 둘 다 있는 대리점은 카테고리별 감점을 그대로 합산 (회수일 최대 15+15=30점, 담보 최대 10+10=20점) - 한 카테고리만 있으면 그 카테고리 감점만 반영</div>
       </div>
     </details>
 
@@ -495,8 +495,8 @@ function buildQualGrid(s){
 
 function buildQuickSummary(s){
   const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
-  const deductCollection=Math.min(25,(s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
-  const deductCollateral=Math.min(25,(s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
+  const deductCollection=Math.min(30,(s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
+  const deductCollateral=Math.min(20,(s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
   const healthScore=Math.max(0,50-deductCollection-deductCollateral);
   const salesScore=(s.salesScoreClothing||0)+(s.salesScoreGoods||0);
   const rc=getRiskClass(s.totalScore,s.worstRisk);
@@ -811,12 +811,12 @@ function buildAiDash(){
         <div class="cat-grid">
           <div class="dc"${s.deductCollectionClothing>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
             <div class="dl">회수일 감점</div>
-            <div class="dv" style="color:${s.deductCollectionClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dv" style="color:${s.deductCollectionClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점'} <span style="font-size:11px;color:#888780">/15</span></div>
             <div class="dsub">당월 ${s.collectionDaysClothing||0}일 (${collLabelFor(s.collectionDaysClothing||0)})</div>
           </div>
           <div class="dc"${s.deductCollateralClothing>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
             <div class="dl">담보대비 감점</div>
-            <div class="dv" style="color:${s.deductCollateralClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dv" style="color:${s.deductCollateralClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점'} <span style="font-size:11px;color:#888780">/10</span></div>
             <div class="dsub">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'% · 담보 '+fmt(s.clothing.collateral)+' / 채권 '+fmt(s.clothing.receivable):'담보없음 · 채권 '+fmt(s.clothing.receivable)}</div>
             <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
           </div>
@@ -834,12 +834,12 @@ function buildAiDash(){
         <div class="cat-grid">
           <div class="dc"${s.deductCollectionGoods>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
             <div class="dl">회수일 감점</div>
-            <div class="dv" style="color:${s.deductCollectionGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dv" style="color:${s.deductCollectionGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점'} <span style="font-size:11px;color:#888780">/15</span></div>
             <div class="dsub">당월 ${s.collectionDaysGoods||0}일 (${collLabelFor(s.collectionDaysGoods||0)})</div>
           </div>
           <div class="dc"${s.deductCollateralGoods>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
             <div class="dl">담보대비 감점</div>
-            <div class="dv" style="color:${s.deductCollateralGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dv" style="color:${s.deductCollateralGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점'} <span style="font-size:11px;color:#888780">/10</span></div>
             <div class="dsub">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'% · 담보 '+fmt(s.goods.collateral)+' / 채권 '+fmt(s.goods.receivable):'담보없음 · 채권 '+fmt(s.goods.receivable)}</div>
             <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
           </div>
