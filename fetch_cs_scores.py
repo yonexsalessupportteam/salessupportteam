@@ -10,6 +10,25 @@ from datetime import datetime, timedelta, timezone
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
+# 법인 접두어("주식회사"/"(주)"/"㈜") 유무 차이로 이름 매칭이 실패하는 것을 막기 위한 정규화.
+# "_특판", "_단독" 같은 지점 구분 접미어는 서로 다른 거래선을 가리키므로 절대 제거하지 않는다.
+_CORP_PREFIXES = ['주식회사 ', '(주)', '㈜']
+_CORP_SUFFIXES = [' 주식회사']
+
+
+def normalize_dealer_name_for_matching(name):
+    """대리점명에서 법인 접두/접미어만 제거한 매칭용 키를 반환 (표시용 이름은 원본 그대로 유지)."""
+    name = ' '.join(str(name).split())
+    for prefix in _CORP_PREFIXES:
+        if name.startswith(prefix):
+            name = name[len(prefix):].strip()
+            break
+    for suffix in _CORP_SUFFIXES:
+        if name.endswith(suffix):
+            name = name[:-len(suffix)].strip()
+            break
+    return name
+
 def parse_sheet_date(date_str):
     """구글 시트 '작성일' 컬럼 값을 date 객체로 파싱. 실패하면 None."""
     if not date_str:
