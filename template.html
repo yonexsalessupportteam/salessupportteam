@@ -197,6 +197,7 @@ tbody tr:hover{background:#f9f8f4}
 .det-sub{font-size:12px;color:#888780;margin-top:3px}
 .sec-label{font-size:11px;font-weight:500;color:#5f5e5a;letter-spacing:0.03em;margin-bottom:8px;padding:3px 8px;background:#f5f4f0;border-radius:6px;display:inline-block}
 .cat-section{margin-bottom:14px}
+.risk-card-top{margin-bottom:8px}
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .score-total-bar{background:#4F46E50d;border:.5px solid #4F46E533;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
 .score-total-label{font-size:12px;color:#185FA5;font-weight:600;margin-bottom:3px}
@@ -450,39 +451,11 @@ tbody tr:hover{background:#f9f8f4}
 <script>
 
 function buildQuantGrid(s){
-  const dcStyle = function(deduct){ return deduct>0 ? 'background:#FCEBEB;border:.5px solid #F09595' : ''; };
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
-  const collLabelFor = function(days){ return days<=60 ? '✓ 60일이내' : days<=80 ? '60~80일' : days<=90 ? '80~90일' : '90일초과'; };
-  const clRatioVal = s.clothing&&s.clothing.collateral>0 ? Math.round(s.clothing.excess/s.clothing.collateral*100) : null;
-  const gdRatioVal = s.goods&&s.goods.collateral>0 ? Math.round(s.goods.excess/s.goods.collateral*100) : null;
   const salesScoreGoods = Math.min(10, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
   const salesScoreClothing = Math.min(10, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
   return '<div style="margin-bottom:14px">'
     +'<div class="cat-grid">'
-    +(s.clothing?(
-    '<div class="dc" style="'+dcStyle(s.deductCollectionClothing)+'">'
-    +'<div class="dl">회수일 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
-    +'<div class="dsub">당월 '+(s.collectionDaysClothing||0)+'일 '+collLabelFor(s.collectionDaysClothing||0)+'</div></div>'
-    ):'')
-    +(s.goods?(
-    '<div class="dc" style="'+dcStyle(s.deductCollectionGoods)+'">'
-    +'<div class="dl">회수일 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollectionGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
-    +'<div class="dsub">당월 '+(s.collectionDaysGoods||0)+'일 '+collLabelFor(s.collectionDaysGoods||0)+'</div></div>'
-    ):'')
-    +(s.clothing?(
-    '<div class="dc" style="'+dcStyle(s.deductCollateralClothing)+'">'
-    +'<div class="dl">담보대비 감점 (의류)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralClothing===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
-    +'<div class="dsub">'+(clRatioVal!=null?clRatioVal+'%':'담보없음')+'</div></div>'
-    ):'')
-    +(s.goods?(
-    '<div class="dc" style="'+dcStyle(s.deductCollateralGoods)+'">'
-    +'<div class="dl">담보대비 감점 (용품)</div>'
-    +'<div class="dv" style="color:'+(s.deductCollateralGoods===0?'#0F6E56':'#A32D2D')+'">'+(s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점')+' <span style="font-size:11px;color:#888780">/25</span></div>'
-    +'<div class="dsub">'+(gdRatioVal!=null?gdRatioVal+'%':'담보없음')+'</div></div>'
-    ):'')
     +(s.clothing?(
     '<div class="dc">'
     +'<div class="dl">매출규모 (의류, 3개월)</div>'
@@ -826,21 +799,51 @@ function buildAiDash(){
     const rc=getRiskClass(s.totalScore,s.worstRisk);
     const barW=Math.min(100,s.totalScore/130*100);
 
+    const collLabelFor = function(days){ return days<=60 ? '60일 이내' : days<=80 ? '61~80일' : days<=90 ? '81~90일' : '90일 초과'; };
+
     const clSec=s.clothing?`
     <div class="cat-section">
-      <div class="sec-label">👔 의류 채권 리스크 진단</div>
-      <div class="cat-grid">
-        <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.clothing.risk==='위기'?'#A32D2D':s.clothing.risk==='경계'?'#854F0B':s.clothing.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.clothing.risk}단계</div></div>
-        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.clothing.excess>0?'#A32D2D':'#0F6E56'}">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.clothing.collateral)} / 채권 ${fmt(s.clothing.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+      <div class="sec-label">👔 의류 채권 리스크</div>
+      <div class="risk-card">
+        <div class="risk-card-top">
+          <span class="rpill ${s.clothing.risk==='위기'?'rp-crisis':s.clothing.risk==='경계'?'rp-border':s.clothing.risk==='주의'?'rp-caution':s.clothing.risk==='적정'?'rp-safe':'rp-manage'}">${s.clothing.risk}단계</span>
+        </div>
+        <div class="cat-grid">
+          <div class="dc"${s.deductCollectionClothing>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
+            <div class="dl">회수일 감점</div>
+            <div class="dv" style="color:${s.deductCollectionClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionClothing===0?'없음':'-'+s.deductCollectionClothing+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dsub">당월 ${s.collectionDaysClothing||0}일 (${collLabelFor(s.collectionDaysClothing||0)})</div>
+          </div>
+          <div class="dc"${s.deductCollateralClothing>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
+            <div class="dl">담보대비 감점</div>
+            <div class="dv" style="color:${s.deductCollateralClothing===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralClothing===0?'없음':'-'+s.deductCollateralClothing+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dsub">${s.clothing.collateral>0?(s.clothing.excess>0?'+':'')+Math.round(s.clothing.excess/s.clothing.collateral*100)+'% · 담보 '+fmt(s.clothing.collateral)+' / 채권 '+fmt(s.clothing.receivable):'담보없음 · 채권 '+fmt(s.clothing.receivable)}</div>
+            <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.clothing.collateral>0?Math.abs(Math.round(s.clothing.excess/s.clothing.collateral*100)):0)}%;background:${s.clothing.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
+          </div>
+        </div>
       </div>
     </div>`:'';
 
     const gdSec=s.goods?`
     <div class="cat-section">
-      <div class="sec-label">🏸 용품 채권 리스크 진단</div>
-      <div class="cat-grid">
-        <div class="dc"><div class="dl">채권 리스크</div><div class="dv" style="color:${s.goods.risk==='위기'?'#A32D2D':s.goods.risk==='경계'?'#854F0B':s.goods.risk==='적정'?'#0F6E56':'#1a1a18'}">${s.goods.risk}단계</div></div>
-        <div class="dc"><div class="dl">담보대비 초과율</div><div class="dv" style="color:${s.goods.excess>0?'#A32D2D':'#0F6E56'}">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'%':'담보없음'}</div><div class="dsub">담보 ${fmt(s.goods.collateral)} / 채권 ${fmt(s.goods.receivable)}</div><div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div></div>
+      <div class="sec-label">🏸 용품 채권 리스크</div>
+      <div class="risk-card">
+        <div class="risk-card-top">
+          <span class="rpill ${s.goods.risk==='위기'?'rp-crisis':s.goods.risk==='경계'?'rp-border':s.goods.risk==='주의'?'rp-caution':s.goods.risk==='적정'?'rp-safe':'rp-manage'}">${s.goods.risk}단계</span>
+        </div>
+        <div class="cat-grid">
+          <div class="dc"${s.deductCollectionGoods>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
+            <div class="dl">회수일 감점</div>
+            <div class="dv" style="color:${s.deductCollectionGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollectionGoods===0?'없음':'-'+s.deductCollectionGoods+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dsub">당월 ${s.collectionDaysGoods||0}일 (${collLabelFor(s.collectionDaysGoods||0)})</div>
+          </div>
+          <div class="dc"${s.deductCollateralGoods>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
+            <div class="dl">담보대비 감점</div>
+            <div class="dv" style="color:${s.deductCollateralGoods===0?'#0F6E56':'#A32D2D'}">${s.deductCollateralGoods===0?'없음':'-'+s.deductCollateralGoods+'점'} <span style="font-size:11px;color:#888780">/25</span></div>
+            <div class="dsub">${s.goods.collateral>0?(s.goods.excess>0?'+':'')+Math.round(s.goods.excess/s.goods.collateral*100)+'% · 담보 '+fmt(s.goods.collateral)+' / 채권 '+fmt(s.goods.receivable):'담보없음 · 채권 '+fmt(s.goods.receivable)}</div>
+            <div class="over-bar"><div class="over-fill" style="width:${Math.min(100,s.goods.collateral>0?Math.abs(Math.round(s.goods.excess/s.goods.collateral*100)):0)}%;background:${s.goods.excess>0?'#E24B4A':'#1D9E75'}"></div></div>
+          </div>
+        </div>
       </div>
     </div>`:'';
 
