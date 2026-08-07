@@ -79,19 +79,23 @@ def deduct_collateral_ratio(collateral, receivable):
 
 
 def classify_risk(collateral, receivable):
-    if abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
-        return '해당없음'
+    """소액 채권(50만원 미만)은 위험 등급(관리/위기/경계/주의) 노이즈를 막기 위해 '해당없음' 처리하되,
+    담보가 충분해 원래도 '적정'인 경우까지 가릴 필요는 없으므로 '적정'은 소액이어도 그대로 노출한다."""
     if collateral == 0:
-        return '관리' if receivable > 0 else '적정'
-    excess_rate = (receivable - collateral) / collateral
-    if excess_rate <= RISK_THRESHOLDS['safe_max']:
-        return '적정'
-    elif excess_rate <= RISK_THRESHOLDS['caution_max']:
-        return '주의'
-    elif excess_rate <= RISK_THRESHOLDS['warning_max']:
-        return '경계'
+        grade = '관리' if receivable > 0 else '적정'
     else:
-        return '위기'
+        excess_rate = (receivable - collateral) / collateral
+        if excess_rate <= RISK_THRESHOLDS['safe_max']:
+            grade = '적정'
+        elif excess_rate <= RISK_THRESHOLDS['caution_max']:
+            grade = '주의'
+        elif excess_rate <= RISK_THRESHOLDS['warning_max']:
+            grade = '경계'
+        else:
+            grade = '위기'
+    if grade != '적정' and abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
+        return '해당없음'
+    return grade
 
 
 def process_raw(filepath):
