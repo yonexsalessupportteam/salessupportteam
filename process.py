@@ -16,7 +16,7 @@ import json
 import sys
 import os
 from datetime import datetime, timezone, timedelta
-from fetch_cs_scores import fetch_cs_data, generate_daily_insights, normalize_dealer_name_for_matching
+from fetch_cs_scores import fetch_cs_data, generate_daily_insights
 
 RAW_FILES = {
     '의류': 'clothing_raw.xls',
@@ -313,21 +313,6 @@ def main():
         entry['ratio'] = (entry['receivable'] - entry['collateral']) / entry['collateral'] if entry['collateral'] > 0 else 0.0
 
     cs_scores = fetch_cs_data(store_debt_map)
-
-    # "주식회사 동우스포츠"(ERP 등록명) vs "동우스포츠"(CS 시트 입력명)처럼 법인 접두어 유무 차이로
-    # 이름이 정확히 일치하지 않는 경우를 보정 - 정규화된 이름이 유일하게 매칭되는 경우에만 ERP 이름으로 재매핑
-    erp_names = set(store_debt_map.keys())
-    norm_to_erp = {}
-    for erp_name in erp_names:
-        norm_to_erp.setdefault(normalize_dealer_name_for_matching(erp_name), []).append(erp_name)
-    for cs_name in list(cs_scores.keys()):
-        if cs_name in erp_names:
-            continue  # 이미 정확히 일치 - 그대로 둠
-        candidates = norm_to_erp.get(normalize_dealer_name_for_matching(cs_name), [])
-        # 후보가 정확히 하나이고 그 ERP 이름이 아직 CS 데이터를 갖고 있지 않을 때만 재매핑 (오매칭 방지)
-        if len(candidates) == 1 and candidates[0] not in cs_scores:
-            print(f"  ℹ️ 이름 보정: CS 시트 '{cs_name}' → ERP 등록명 '{candidates[0]}'로 매칭")
-            cs_scores[candidates[0]] = cs_scores.pop(cs_name)
 
     # 감점 정보 병합
     for name, debt in store_debt_map.items():

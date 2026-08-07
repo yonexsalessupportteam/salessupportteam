@@ -420,6 +420,9 @@ def fetch_cs_data(store_debt_map={}):
     이번 달에 작성된 행들을 모아 대리점별로 누적 집계해 CS/파트너십 점수를 산정.
     - CS: 행(상담 건)마다 키워드의 최고 등급 하나만 인정 → 등급별 건수 누적(고위험 -5/건, 중위험 -2/건, 저위험(우수) +1/건, 30점 기준 0~30 clamp)
     - 파트너십: 파트너십_용품/파트너십_의류 컬럼에 값이 있는 행 = 위반 1건, 용품+의류 합산 위반 건수만큼 30점에서 1점씩 차감
+    - 시트에 입력된 대리점명이 ERP 등록명과 법인 접두어(주식회사/(주)/㈜) 유무만 다른 경우, 매 행을 읽는
+      시점에 바로 ERP 등록명으로 정규화해서 병합한다 (한 대리점이 여러 달에 걸쳐 다른 표기로 입력돼도
+      항상 하나의 키로 누적되도록 - 병합을 나중에 하면 이미 존재하는 빈 기본값 항목에 자리를 뺏길 수 있음)
     (Gemini 자유판단은 사용하지 않음 - 시트가 자유 서술 메모 대신 고정 키워드 선택 방식으로 바뀌었기 때문)"""
     try:
         records = fetch_sheet_data()
@@ -430,6 +433,19 @@ def fetch_cs_data(store_debt_map={}):
     today = datetime.now().date()
     cur_year, cur_month = today.year, today.month
     skipped_old = 0
+
+    # ERP 등록명 정규화 인덱스 (법인 접두어 유무와 무관하게 매칭용) - store_debt_map이 있을 때만
+    erp_names = set(store_debt_map.keys())
+    norm_to_erp = {}
+    for erp_name in erp_names:
+        norm_to_erp.setdefault(normalize_dealer_name_for_matching(erp_name), []).append(erp_name)
+
+    def resolve_erp_name(raw_name):
+        """시트 입력명을 가능하면 ERP 등록명으로 정규화해서 반환 (유일하게 매칭될 때만; 모호하면 원본 그대로)."""
+        if not raw_name or raw_name in erp_names:
+            return raw_name
+        candidates = norm_to_erp.get(normalize_dealer_name_for_matching(raw_name), [])
+        return candidates[0] if len(candidates) == 1 else raw_name
 
     # 별도 탭('용품_3개월 매출' / '의류_3개월 매출')에서 최근 3개월 합계 조회
     try:
@@ -454,7 +470,7 @@ def fetch_cs_data(store_debt_map={}):
     # CS 시트 병합 (대리점명 기준) - 키워드/파트너십 둘 다 "이번 달 작성분만" 누적 집계 (매달 리셋)
     merged = {}
     for row in records:
-        name    = ' '.join(str(row.get('대리점명', '')).split())
+        name    = resolve_erp_name(' '.join(str(row.get('대리점명', '')).split()))
         keyword = str(row.get('키워드', '')).strip()
         p_goods = str(row.get('파트너십_용품', '')).strip()
         p_cloth = str(row.get('파트너십_의류', '')).strip()
@@ -496,11 +512,14 @@ def fetch_cs_data(store_debt_map={}):
         print(f"  이번 달({cur_year}-{cur_month:02d}) 이전 작성 CS/파트너십 기록 {skipped_old}건 제외 (매출3개월은 반영됨)")
 
     # '용품_3개월 매출'/'의류_3개월 매출' 탭 값을 우선 반영 (있으면 덮어씀, 탭에만 있는 대리점은 새로 추가)
+    # 여기도 ERP 등록명으로 정규화해서 위 키워드/파트너십 집계와 같은 키로 합쳐지게 한다
     for name, total in sales_3m_goods_tab.items():
+        name = resolve_erp_name(name)
         if name not in merged:
             merged[name] = new_entry()
         merged[name]['sales_3m_goods'] = total
     for name, total in sales_3m_clothing_tab.items():
+        name = resolve_erp_name(name)
         if name not in merged:
             merged[name] = new_entry()
         merged[name]['sales_3m_clothing'] = total
