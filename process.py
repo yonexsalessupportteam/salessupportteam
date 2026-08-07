@@ -79,8 +79,9 @@ def deduct_collateral_ratio(collateral, receivable):
 
 
 def classify_risk(collateral, receivable):
-    """소액 채권(50만원 미만)은 위험 등급(관리/위기/경계/주의) 노이즈를 막기 위해 '해당없음' 처리하되,
-    담보가 충분해 원래도 '적정'인 경우까지 가릴 필요는 없으므로 '적정'은 소액이어도 그대로 노출한다."""
+    """소액 채권(50만원 미만)은 주의/경계/위기 등급의 노이즈를 막기 위해 '해당없음' 처리하되,
+    담보가 충분해 '적정'인 경우와 무담보 상태라 '관리'인 경우는 소액이어도 그대로 노출한다
+    (둘 다 노이즈가 아니라 실제 담보 상태를 정확히 보여줘야 하는 정보이므로)."""
     if collateral == 0:
         grade = '관리' if receivable > 0 else '적정'
     else:
@@ -93,7 +94,7 @@ def classify_risk(collateral, receivable):
             grade = '경계'
         else:
             grade = '위기'
-    if grade != '적정' and abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
+    if grade not in ('적정', '관리') and abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
         return '해당없음'
     return grade
 
