@@ -145,16 +145,17 @@ def fetch_sales_tab(tab_name, name_col='매장명'):
 def classify_keyword_tier(keyword_str):
     """한 행(상담 건)의 키워드 문자열에서 가장 심각한 등급 하나만 반환 ('고위험'/'중위험'/'저위험'/'').
     저위험(긍정) 문구 중 일부('클레임없음' 등)가 고/중위험 키워드('클레임')를 부분 문자열로 포함하는 경우가 있어,
-    저위험 문구를 먼저 제거한 나머지 텍스트에서 고/중위험을 검사해 오탐을 막는다."""
+    저위험 문구를 먼저 제거한 나머지 텍스트에서 고/중위험을 검사해 오탐을 막는다.
+    대소문자 차이(예: 'as규정위반' vs 'AS규정위반')로 매칭이 빠지는 것을 막기 위해 대문자로 통일 후 비교한다."""
     if not keyword_str or not keyword_str.strip():
         return ''
-    text = re.sub(r'\s+', '', keyword_str)  # 띄어쓰기 차이로 매칭이 빠지는 것을 방지 (예: "정확한 안내" vs "정확한안내")
-    matched_low = any(kw in text for kw in KEYWORD_TIERS['저위험'])
+    text = re.sub(r'\s+', '', keyword_str).upper()  # 띄어쓰기/대소문자 차이로 매칭이 빠지는 것을 방지
+    matched_low = any(kw.upper() in text for kw in KEYWORD_TIERS['저위험'])
     stripped = text
     for kw in KEYWORD_TIERS['저위험']:
-        stripped = stripped.replace(kw, '')
+        stripped = stripped.replace(kw.upper(), '')
     for tier in ('고위험', '중위험'):
-        if any(kw in stripped for kw in KEYWORD_TIERS[tier]):
+        if any(kw.upper() in stripped for kw in KEYWORD_TIERS[tier]):
             return tier
     return '저위험' if matched_low else ''  # 표에 없는 값 - 미분류(카운트 안 함)
 

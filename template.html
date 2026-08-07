@@ -28,7 +28,7 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#F4F5FA;colo
 .sidebar-item.active{background:#35296B;color:#fff;font-weight:500;border-left-color:#7C6FF0}
 .sidebar-item .icon{font-size:16px;width:20px;text-align:center}
 .sidebar-divider{height:.5px;background:#3A3270;margin:8px 0}
-.crit-wrap{padding:24px;max-width:820px}
+.crit-wrap{padding:24px;max-width:1200px}
 .crit-intro{font-size:13px;color:#5f5e5a;margin-bottom:20px;line-height:1.6}
 .crit-block{background:#fff;border:.5px solid #e0dfd8;border-radius:10px;margin-bottom:12px;overflow:hidden}
 .crit-block summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:15px;font-weight:600;color:#1a1a18;display:flex;align-items:center;justify-content:space-between;user-select:none}
@@ -850,7 +850,7 @@ function buildAiDash(){
     const kwHigh=['허위안내','AS접수거부','임의판정','폭언·욕설','보증서조작','AS규정위반','클레임','컴플레인','한국소비자원신고','법적조치','SNS게시'];
     const kwMid=['AS기준오안내','접수지연','응대미흡','불만','불편','실망','불친절','개선요청'];
     const kwLow=['친절','신속처리','적극협조','고객칭찬','만족도우수','응대우수','규정준수','정확한안내','클레임없음'];
-    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class="kw-tag ${kwLow.some(d=>k.includes(d))?'safe':kwHigh.some(d=>k.includes(d))?'danger':kwMid.some(d=>k.includes(d))?'warn':''}">${k}</span>`).join(''):'';
+    const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>{const ku=k.toUpperCase();return `<span class="kw-tag ${kwLow.some(d=>ku.includes(d.toUpperCase()))?'safe':kwHigh.some(d=>ku.includes(d.toUpperCase()))?'danger':kwMid.some(d=>ku.includes(d.toUpperCase()))?'warn':''}">${k}</span>`;}).join(''):'';
 
     const aiBoxBg=s.totalScore>=105?'#EAF3DE':'#E6F1FB';
     const aiBoxBd=s.totalScore>=105?'#1D9E75':'#185FA5';
