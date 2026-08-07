@@ -260,7 +260,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.08.07(금) 11:25 업데이트</span>
+  <span class="sub">2026.08.07(금) 11:43 업데이트</span>
 </div>
 
 <div class="layout">
@@ -702,8 +702,11 @@ function buildAiDash(){
       const healthScore=Math.max(0,50-deductCollection-deductCollateral);
       const quantScore=Math.min(70,healthScore+salesScore);
       const totalScore=Math.min(130,quantScore+csScore+partnershipScore);
+      // scoreGrade: 종합점수(130점) 기준 실제 등급 - worstRisk(담보초과율 기반 개별 채권 리스크)와는 다른 지표라
+      // "등급" 라벨로 화면에 노출할 땐 반드시 이 값을 써야 함 (getRiskClass와 동일 공식)
+      const scoreGrade=getRiskClass(totalScore,worstRisk).label;
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,scoreGrade,catLabel});
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);
@@ -717,8 +720,8 @@ function buildAiDash(){
   const crisis=graded.filter(s=>s.totalScore<65).length;
 
   const idxStores=allStores.map((s,idx)=>Object.assign({idx},s));
-  const warnList=idxStores.filter(s=>s.worstRisk==='위기'||s.worstRisk==='경계'||s.worstRisk==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
-  const oppList=idxStores.filter(s=>s.worstRisk!=='관리'&&s.totalScore>=105).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
+  const warnList=idxStores.filter(s=>s.scoreGrade==='위기'||s.scoreGrade==='경계'||s.scoreGrade==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
+  const oppList=idxStores.filter(s=>s.scoreGrade!=='관리'&&s.totalScore>=105).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
   const flagList=idxStores.filter(s=>s.aiFlagged);
 
   const insightCard=function(kind,list,emptyMsg){
@@ -728,9 +731,9 @@ function buildAiDash(){
       flag:{label:'AI 검토대상',icon:'🔍',bg:'#E6F1FB',bd:'#378ADD',txt:'#185FA5',tagBg:'#B5D4F4'},
     }[kind];
     const rows=list.length?list.map(s=>{
-      const fallback=kind==='warn'?`종합점수 ${Math.round(s.totalScore)}점 · ${s.worstRisk} 등급`
+      const fallback=kind==='warn'?`종합점수 ${Math.round(s.totalScore)}점 · ${s.scoreGrade} 등급`
         :kind==='opp'?`종합점수 ${Math.round(s.totalScore)}점 · 적정 등급 유지`
-        :`종합점수 ${Math.round(s.totalScore)}점 · ${s.worstRisk} 등급 (기계적 등급엔 안 잡힘)`;
+        :`종합점수 ${Math.round(s.totalScore)}점 · ${s.scoreGrade} 등급 (기계적 등급엔 안 잡힘)`;
       const sub=kind==='flag'?(s.aiFlagComment||fallback):(s.dailyInsight||fallback);
       return `<div class="insight-row" onclick="event.stopPropagation();goToDealer(${s.idx})">
         <div class="insight-row-name">${s.name}</div>
