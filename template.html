@@ -363,12 +363,21 @@ tbody tr:hover{background:#f9f8f4}
           <tr><td>90일 초과</td><td class="neg">-15점</td></tr>
         </table>
         <p><b>담보대비 초과율 감점</b> (초과율 = (채권잔액-담보)/담보, 의류/용품 각각 독립 채점)</p>
+        <p style="font-size:12px;color:#5f5e5a;margin:-4px 0 8px">※ 수주기간(2~10월, 봄+가을 시즌 재고 확보로 채권이 계절적으로 늘어남)엔 완화된 컷라인을, 비수기(11~1월)엔 기본 컷라인을 자동 적용</p>
         <table class="crit-table">
           <tr><th>담보대비 초과율</th><th>등급</th><th>감점 (카테고리당)</th></tr>
           <tr><td>0% 이하</td><td>적정</td><td>0점</td></tr>
           <tr><td>0~30%</td><td>주의</td><td class="neg">-4점</td></tr>
           <tr><td>30~120%</td><td>경계</td><td class="neg">-6점</td></tr>
           <tr><td>120% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-10점</td></tr>
+        </table>
+        <p style="font-size:12px;color:#5f5e5a;margin:8px 0 4px">▸ 수주기간(2~10월) 적용 컷라인</p>
+        <table class="crit-table">
+          <tr><th>담보대비 초과율</th><th>등급</th><th>감점 (카테고리당)</th></tr>
+          <tr><td>60% 이하</td><td>적정</td><td>0점</td></tr>
+          <tr><td>60~120%</td><td>주의</td><td class="neg">-4점</td></tr>
+          <tr><td>120~200%</td><td>경계</td><td class="neg">-6점</td></tr>
+          <tr><td>200% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-10점</td></tr>
         </table>
         <div class="crit-sub">※ 의류+용품 둘 다 있는 대리점은 카테고리별 감점을 그대로 합산 (회수일 최대 15+15=30점, 담보 최대 10+10=20점) - 한 카테고리만 있으면 그 카테고리 감점만 반영</div>
       </div>
