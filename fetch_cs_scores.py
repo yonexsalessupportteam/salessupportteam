@@ -264,8 +264,13 @@ def load_insight_cache():
         return {}
 
 
-def save_insight_cache(cache):
+def save_insight_cache(updates):
+    """updates에 담긴 키만 기존 캐시에 병합해서 저장 (덮어쓰지 않음).
+    예: generate_daily_insights가 comments/flagged만 저장해도 opp_shown_names 등
+    다른 곳에서 저장한 값이 사라지지 않도록 함."""
     try:
+        cache = load_insight_cache()
+        cache.update(updates)
         with open(INSIGHT_CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(cache, f, ensure_ascii=False, indent=2)
     except Exception as e:

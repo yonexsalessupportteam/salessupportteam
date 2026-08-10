@@ -16,7 +16,7 @@ import json
 import sys
 import os
 from datetime import datetime, timezone, timedelta
-from fetch_cs_scores import fetch_cs_data, generate_daily_insights
+from fetch_cs_scores import fetch_cs_data, generate_daily_insights, load_insight_cache, save_insight_cache, get_kst_today_str
 
 RAW_FILES = {
     '의류': 'clothing_raw.xls',
@@ -401,10 +401,28 @@ def main():
         [s for s in all_store_totals if s['score_grade'] in ('위기', '경계', '관리')],
         key=lambda s: s['total_score']
     )[:3]
-    opp_list = sorted(
+    # 기회 요소 로테이션: 어제까지 노출됐던 대리점은 후순위로 밀어서, 만점 근처에 고정된
+    # 대리점이 매일 반복 노출되는 문제를 방지 (점수 자체는 그대로 반영, 순서만 조정)
+    today_str = get_kst_today_str()
+    opp_rotation_cache = load_insight_cache()
+    if opp_rotation_cache.get('opp_shown_date') == today_str:
+        prev_opp_names = set()  # 같은 날 재빌드는 로테이션 재적용 안 함 (오늘 목록 유지)
+    else:
+        prev_opp_names = set(opp_rotation_cache.get('opp_shown_names', []))
+
+    opp_pool = sorted(
         [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 105],
         key=lambda s: -s['total_score']
-    )[:3]
+    )
+    opp_fresh = [s for s in opp_pool if s['name'] not in prev_opp_names]
+    opp_repeat = [s for s in opp_pool if s['name'] in prev_opp_names]
+    opp_list = (opp_fresh + opp_repeat)[:3]
+
+    if opp_rotation_cache.get('opp_shown_date') != today_str:
+        save_insight_cache({
+            'opp_shown_date': today_str,
+            'opp_shown_names': [s['name'] for s in opp_list],
+        })
     review_list = sorted(
         [s for s in all_store_totals if s['ai_mismatch']],
         key=lambda s: (0 if s['ai_mismatch_direction'] == 'severe' else 1)
