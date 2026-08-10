@@ -338,8 +338,9 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>구분</th><th>세부항목</th><th>배점</th></tr>
-          <tr><td rowspan="2">📈 정량점수 (70점)</td><td>채권건전성</td><td>50점</td></tr>
-          <tr><td>매출규모</td><td>20점</td></tr>
+          <tr><td rowspan="3">📈 정량점수 (70점)</td><td>채권건전성</td><td>50점</td></tr>
+          <tr><td>매출규모</td><td>10점</td></tr>
+          <tr><td>매출목표 달성</td><td>10점</td></tr>
           <tr><td rowspan="2">🤝 정성점수 (60점, 월 누적)</td><td>CS 코멘트</td><td>30점</td></tr>
           <tr><td>파트너십 (용품+의류 합산)</td><td>30점</td></tr>
           <tr><td colspan="2"><b>합계</b></td><td><b>130점</b></td></tr>
@@ -384,27 +385,40 @@ tbody tr:hover{background:#f9f8f4}
     </details>
 
     <details class="crit-block">
-      <summary>② 매출규모 (20점 = 용품10 + 의류10)</summary>
+      <summary>② 매출규모 (10점 = 용품5 + 의류5)</summary>
       <div class="crit-body">
-        <p>최근 3개월 매출 합계(부가세 제외·영업매출 기준) 기준, 10점 만점에서 감점하는 방식</p>
+        <p>최근 3개월 매출 합계(부가세 제외·영업매출 기준) 기준, 5점 만점에서 감점하는 방식 (기존 10점 만점 브라켓을 그대로 두고 최종 점수만 절반으로 스케일)</p>
         <p><b>용품</b></p>
         <table class="crit-table">
           <tr><th>3개월 매출 합계(부가세 제외)</th><th>감점</th><th>최종점수</th></tr>
-          <tr><td>1억 3,000만 이상</td><td>0점</td><td>10점</td></tr>
-          <tr><td>7,000만~1억 3,000만</td><td class="neg">-2점</td><td>8점</td></tr>
-          <tr><td>3,500만~7,000만</td><td class="neg">-4점</td><td>6점</td></tr>
-          <tr><td>2,000만~3,500만</td><td class="neg">-7점</td><td>3점</td></tr>
-          <tr><td>2,000만 미만</td><td class="neg">-10점</td><td>0점</td></tr>
+          <tr><td>1억 3,000만 이상</td><td>0점</td><td>5점</td></tr>
+          <tr><td>7,000만~1억 3,000만</td><td class="neg">-1점</td><td>4점</td></tr>
+          <tr><td>3,500만~7,000만</td><td class="neg">-2점</td><td>3점</td></tr>
+          <tr><td>2,000만~3,500만</td><td class="neg">-3.5점</td><td>1.5점</td></tr>
+          <tr><td>2,000만 미만</td><td class="neg">-5점</td><td>0점</td></tr>
         </table>
         <p><b>의류</b></p>
         <table class="crit-table">
           <tr><th>3개월 매출 합계(부가세 제외)</th><th>감점</th><th>최종점수</th></tr>
-          <tr><td>8,000만 이상</td><td>0점</td><td>10점</td></tr>
-          <tr><td>3,500만~8,000만</td><td class="neg">-2점</td><td>8점</td></tr>
-          <tr><td>1,500만~3,500만</td><td class="neg">-4점</td><td>6점</td></tr>
-          <tr><td>500만~1,500만</td><td class="neg">-7점</td><td>3점</td></tr>
-          <tr><td>500만 미만</td><td class="neg">-10점</td><td>0점</td></tr>
+          <tr><td>8,000만 이상</td><td>0점</td><td>5점</td></tr>
+          <tr><td>3,500만~8,000만</td><td class="neg">-1점</td><td>4점</td></tr>
+          <tr><td>1,500만~3,500만</td><td class="neg">-2점</td><td>3점</td></tr>
+          <tr><td>500만~1,500만</td><td class="neg">-3.5점</td><td>1.5점</td></tr>
+          <tr><td>500만 미만</td><td class="neg">-5점</td><td>0점</td></tr>
         </table>
+      </div>
+    </details>
+
+    <details class="crit-block">
+      <summary>③ 매출목표 달성 (10점 = 용품5 + 의류5)</summary>
+      <div class="crit-body">
+        <p>최근 3개월 목표 합계(부가세 제외) 대비 최근 3개월 매출 합계(부가세 제외 환산)를 비교해 용품/의류 각각 독립 판정</p>
+        <table class="crit-table">
+          <tr><th>판정</th><th>배점 (카테고리당)</th></tr>
+          <tr><td>목표 달성 (매출 ≥ 목표)</td><td>5점</td></tr>
+          <tr><td>목표 미달성 (매출 &lt; 목표)</td><td class="neg">0점</td></tr>
+        </table>
+        <div class="crit-sub">※ 목표가 입력되지 않은(0) 대리점은 판정 불가로 보고 5점(달성) 처리</div>
       </div>
     </details>
 
@@ -465,21 +479,36 @@ tbody tr:hover{background:#f9f8f4}
 
 function buildQuantGrid(s){
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
-  const salesScoreGoods = Math.min(10, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
-  const salesScoreClothing = Math.min(10, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
+  const salesScoreGoods = Math.min(5, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
+  const salesScoreClothing = Math.min(5, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
+  const targetScoreGoods = Math.min(5, Math.max(0, s.targetScoreGoods!=null?s.targetScoreGoods:0));
+  const targetScoreClothing = Math.min(5, Math.max(0, s.targetScoreClothing!=null?s.targetScoreClothing:0));
+  const targetLabel = function(score, target){ return target ? (score>=5?'달성':'미달성')+' (목표 '+fmt(target)+')' : '목표 미입력'; };
   return '<div style="margin-bottom:14px">'
     +'<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc">'
     +'<div class="dl">매출규모 (의류, 3개월·부가세제외)</div>'
-    +'<div class="dv" style="color:'+dvColor(salesScoreClothing,8,5)+'">'+salesScoreClothing+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
+    +'<div class="dv" style="color:'+dvColor(salesScoreClothing,4,2.5)+'">'+salesScoreClothing+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+(s.sales3mClothing?fmt(s.sales3mClothing):'미입력')+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc">'
     +'<div class="dl">매출규모 (용품, 3개월·부가세제외)</div>'
-    +'<div class="dv" style="color:'+dvColor(salesScoreGoods,8,5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
+    +'<div class="dv" style="color:'+dvColor(salesScoreGoods,4,2.5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+(s.sales3mGoods?fmt(s.sales3mGoods):'미입력')+'</div></div>'
+    ):'')
+    +(s.clothing?(
+    '<div class="dc">'
+    +'<div class="dl">매출목표 달성 (의류)</div>'
+    +'<div class="dv" style="color:'+dvColor(targetScoreClothing,5,5)+'">'+targetScoreClothing+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
+    +'<div class="dsub">'+targetLabel(targetScoreClothing, s.target3mClothing)+'</div></div>'
+    ):'')
+    +(s.goods?(
+    '<div class="dc">'
+    +'<div class="dl">매출목표 달성 (용품)</div>'
+    +'<div class="dv" style="color:'+dvColor(targetScoreGoods,5,5)+'">'+targetScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
+    +'<div class="dsub">'+targetLabel(targetScoreGoods, s.target3mGoods)+'</div></div>'
     ):'')
     +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
@@ -512,6 +541,7 @@ function buildQuickSummary(s){
   const deductCollateral=Math.min(20,(s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
   const healthScore=Math.max(0,50-deductCollection-deductCollateral);
   const salesScore=(s.salesScoreClothing||0)+(s.salesScoreGoods||0);
+  const targetScore=(s.targetScoreClothing||0)+(s.targetScoreGoods||0);
   const rc=getRiskClass(s.totalScore,s.worstRisk);
   const gradeColor=rc.label==='관리'?'#7A2E8C':rc.label==='적정'?'#0F6E56':rc.label==='주의'?'#185FA5':rc.label==='경계'?'#854F0B':'#A32D2D';
   return '<div class="quick-summary">'
@@ -519,7 +549,8 @@ function buildQuickSummary(s){
     +'<span class="rpill '+rc.cls+'" style="font-size:11px;padding:3px 10px">'+rc.label+'</span></div>'
     +'<div class="qs-grid">'
     +'<div class="qs-item"><span class="qs-lbl">채권건전성</span><span class="qs-val" style="color:'+dvColor(healthScore,42,33)+'">'+healthScore+'<i>/50</i></span></div>'
-    +'<div class="qs-item"><span class="qs-lbl">매출</span><span class="qs-val" style="color:'+dvColor(salesScore,16,10)+'">'+salesScore+'<i>/20</i></span></div>'
+    +'<div class="qs-item"><span class="qs-lbl">매출규모</span><span class="qs-val" style="color:'+dvColor(salesScore,8,5)+'">'+salesScore+'<i>/10</i></span></div>'
+    +'<div class="qs-item"><span class="qs-lbl">목표달성</span><span class="qs-val" style="color:'+dvColor(targetScore,10,10)+'">'+targetScore+'<i>/10</i></span></div>'
     +'<div class="qs-item"><span class="qs-lbl">CS</span><span class="qs-val" style="color:'+dvColor(s.csScore,24,15)+'">'+s.csScore+'<i>/30</i></span></div>'
     +'<div class="qs-item"><span class="qs-lbl">파트너십</span><span class="qs-val" style="color:'+(s.partnershipScore>=25?'#0F6E56':s.partnershipScore>=15?'#854F0B':'#A32D2D')+'">'+(Math.round(s.partnershipScore*10)/10)+'<i>/30</i></span></div>'
     +'</div></div>';
@@ -658,11 +689,16 @@ function buildAiDash(){
       const csData=CS_SHEET[base.name]||{};
       const csScore=Math.min(30,Math.max(0,csData.score!=null?csData.score:30));
       const partnershipScore=Math.min(30,Math.max(0,csData.partnership_score!=null?csData.partnership_score:30));
-      const salesScoreGoods=Math.min(10,Math.max(0,csData.sales_score_goods!=null?csData.sales_score_goods:0));
-      const salesScoreClothing=Math.min(10,Math.max(0,csData.sales_score_clothing!=null?csData.sales_score_clothing:0));
+      const salesScoreGoods=Math.min(5,Math.max(0,csData.sales_score_goods!=null?csData.sales_score_goods:0));
+      const salesScoreClothing=Math.min(5,Math.max(0,csData.sales_score_clothing!=null?csData.sales_score_clothing:0));
       const salesScore=salesScoreGoods+salesScoreClothing;
       const sales3mGoods=(csData.sales_3m_goods||0)/SALES_VAT_RATE;
       const sales3mClothing=(csData.sales_3m_clothing||0)/SALES_VAT_RATE;
+      const targetScoreGoods=Math.min(5,Math.max(0,csData.target_score_goods!=null?csData.target_score_goods:0));
+      const targetScoreClothing=Math.min(5,Math.max(0,csData.target_score_clothing!=null?csData.target_score_clothing:0));
+      const targetScore=targetScoreGoods+targetScoreClothing;
+      const target3mGoods=csData.target_3m_goods||0; // 목표 raw 자체가 부가세 제외 기준이라 환산 불필요
+      const target3mClothing=csData.target_3m_clothing||0;
       const pGoods=csData.p_goods||'';
       const pClothing=csData.p_clothing||'';
       const pGoodsCount=csData.p_goods_count||0;
@@ -688,13 +724,13 @@ function buildAiDash(){
       const collectionDaysClothing=csData.collection_days_clothing!=null?csData.collection_days_clothing:0;
       const collectionDaysGoods=csData.collection_days_goods!=null?csData.collection_days_goods:0;
       const healthScore=Math.max(0,50-deductCollection-deductCollateral);
-      const quantScore=Math.min(70,healthScore+salesScore);
+      const quantScore=Math.min(70,healthScore+salesScore+targetScore);
       const totalScore=Math.min(130,quantScore+csScore+partnershipScore);
       // scoreGrade: 종합점수(130점) 기준 실제 등급 - worstRisk(담보초과율 기반 개별 채권 리스크)와는 다른 지표라
       // "등급" 라벨로 화면에 노출할 땐 반드시 이 값을 써야 함 (getRiskClass와 동일 공식)
       const scoreGrade=getRiskClass(totalScore,worstRisk).label;
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,scoreGrade,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,targetScore,targetScoreGoods,targetScoreClothing,target3mGoods,target3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,scoreGrade,catLabel});
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);

@@ -193,9 +193,12 @@ def score_partnership_cumulative(violations):
 
 
 # ───────────────────────────────────────────
-# 매출규모 감점 (3개월 매출 합계, 용품 10점 + 의류 10점 = 20점 만점)
+# 매출규모 감점 (3개월 매출 합계, 용품 5점 + 의류 5점 = 10점 만점)
+# (기존 20점(10+10) 만점이었으나, 매출목표 달성 배점(10점=5+5) 신설로 130점 체계 내에서
+#  재배분 — 매출규모 20→10점으로 축소. 브라켓 감점폭·컷라인은 그대로 두고 최종 점수만
+#  1/2로 스케일)
 # 구글시트 '매출3개월_용품' / '매출3개월_의류' 컬럼(각 사업부 3개월 합계 금액)을 기준으로
-# 5구간 감점 방식 채점 (10점 만점에서 감점).
+# 5구간 감점 방식 채점 (5점 만점에서 감점).
 # 근거: 매출_규모_기준.xlsx 용품_2안/의류_2안 시트 (회사 실제 영업매출=부가세제외 계산 기준,
 # 최근 6개 분기 실측 합산 분포로 5분위(quintile) 재산정)
 #
@@ -245,11 +248,34 @@ def deduct_sales(amount, brackets):
 
 
 def score_sales_tier_goods(amount):
-    return 10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_GOODS)
+    return (10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_GOODS)) / 2
 
 
 def score_sales_tier_clothing(amount):
-    return 10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_CLOTHING)
+    return (10 - deduct_sales(amount, SALES_DEDUCT_BRACKETS_CLOTHING)) / 2
+
+
+# ───────────────────────────────────────────
+# 매출목표 달성 배점 (3개월 목표 합계 대비 3개월 매출 합계, 용품 5점 + 의류 5점 = 10점 만점)
+# '용품_목표3개월' / '의류_목표3개월' 구글시트 탭(매출3개월 탭과 동일한 구조: 매장명 + 월별
+# 컬럼)에서 fetch_sales_tab()으로 최근 3개월 목표 합계를 자동 산출해 비교한다.
+# 목표 raw 파일(용품_목표매출달성.xls/의류_목표매출달성.xls) 기준 목표값은 부가세 제외
+# (영업매출) 금액이므로, ERP 매출(부가세 포함)은 SALES_VAT_RATE로 나눠 환산 후 비교.
+# 달성(영업매출 환산 매출 ≥ 목표) 5점 / 미달성 0점. 목표가 0/미입력이면 판정 불가로 보고
+# 감점 없이 5점(달성) 처리.
+# ───────────────────────────────────────────
+def score_target_achieve(sales_3m_amount, target_3m_amount):
+    try:
+        target = float(target_3m_amount)
+    except (TypeError, ValueError):
+        target = 0
+    if target <= 0:
+        return 5
+    try:
+        net_sales = float(sales_3m_amount) / SALES_VAT_RATE
+    except (TypeError, ValueError):
+        net_sales = 0
+    return 5 if net_sales >= target else 0
 
 
 _quota_exhausted = False  # 일일 인사이트(Gemini) 호출 중 하루 할당량 초과가 확인되면 True
@@ -477,12 +503,26 @@ def fetch_cs_data(store_debt_map={}):
         print(f"의류 3개월 매출 탭 조회 실패: {e}")
         sales_3m_clothing_tab = {}
 
+    # '용품_목표3개월' / '의류_목표3개월' 탭(매출3개월 탭과 동일 구조: 매장명 + 월별 컬럼)에서
+    # 최근 3개월 목표 합계 자동 산출 - 매출목표 달성 배점(5+5=10점)에 사용
+    try:
+        target_3m_goods_tab = fetch_sales_tab('용품_목표3개월')
+    except Exception as e:
+        print(f"용품 목표3개월 탭 조회 실패: {e}")
+        target_3m_goods_tab = {}
+    try:
+        target_3m_clothing_tab = fetch_sales_tab('의류_목표3개월')
+    except Exception as e:
+        print(f"의류 목표3개월 탭 조회 실패: {e}")
+        target_3m_clothing_tab = {}
+
     def new_entry():
         return {
             'keywords': [], 'count_high': 0, 'count_mid': 0, 'count_low': 0,
             'p_goods_count': 0, 'p_clothing_count': 0,
             'p_goods_latest': '', 'p_clothing_latest': '',
             'sales_3m_goods': 0, 'sales_3m_clothing': 0,
+            'target_3m_goods': 0, 'target_3m_clothing': 0,
         }
 
     # CS 시트 병합 (대리점명 기준) - 키워드/파트너십 둘 다 "이번 달 작성분만" 누적 집계 (매달 리셋)
@@ -541,6 +581,16 @@ def fetch_cs_data(store_debt_map={}):
         if name not in merged:
             merged[name] = new_entry()
         merged[name]['sales_3m_clothing'] = total
+    for name, total in target_3m_goods_tab.items():
+        name = resolve_erp_name(name)
+        if name not in merged:
+            merged[name] = new_entry()
+        merged[name]['target_3m_goods'] = total
+    for name, total in target_3m_clothing_tab.items():
+        name = resolve_erp_name(name)
+        if name not in merged:
+            merged[name] = new_entry()
+        merged[name]['target_3m_clothing'] = total
 
     result = {}
     for name, data in merged.items():
@@ -549,6 +599,8 @@ def fetch_cs_data(store_debt_map={}):
         p_goods_count, p_clothing_count = data['p_goods_count'], data['p_clothing_count']
         sales_3m_goods    = data.get('sales_3m_goods', 0)
         sales_3m_clothing = data.get('sales_3m_clothing', 0)
+        target_3m_goods    = data.get('target_3m_goods', 0)
+        target_3m_clothing = data.get('target_3m_clothing', 0)
 
         cs_score = score_cs_cumulative(count_high, count_mid, count_low)
         if keyword_str:
@@ -564,6 +616,8 @@ def fetch_cs_data(store_debt_map={}):
         partnership_score = score_partnership_cumulative(p_violations)
         sales_score_goods    = score_sales_tier_goods(sales_3m_goods)
         sales_score_clothing = score_sales_tier_clothing(sales_3m_clothing)
+        target_score_goods    = score_target_achieve(sales_3m_goods, target_3m_goods)
+        target_score_clothing = score_target_achieve(sales_3m_clothing, target_3m_clothing)
 
         result[name] = {
             'score':                  cs_score,
@@ -573,6 +627,11 @@ def fetch_cs_data(store_debt_map={}):
             'sales_score_clothing':   sales_score_clothing,
             'sales_3m_goods':         sales_3m_goods,
             'sales_3m_clothing':      sales_3m_clothing,
+            'target_score':           target_score_goods + target_score_clothing,
+            'target_score_goods':     target_score_goods,
+            'target_score_clothing':  target_score_clothing,
+            'target_3m_goods':        target_3m_goods,
+            'target_3m_clothing':     target_3m_clothing,
             'p_goods':                data['p_goods_latest'],
             'p_clothing':             data['p_clothing_latest'],
             'p_goods_count':          p_goods_count,

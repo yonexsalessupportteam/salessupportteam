@@ -4,7 +4,8 @@
 총점 구조 (최대 130점):
   정량점수  최대 70점
     = 채권건전성 50점 (회수일 감점(카테고리당 최대15, 의류+용품 합산 최대30) + 담보대비채권 감점(카테고리당 최대10, 의류+용품 합산 최대20)을 50에서 차감)
-    + 매출규모  20점 (3개월 매출 합계 구간, fetch_cs_scores.score_sales_tier)
+    + 매출규모  10점 (3개월 매출 합계 구간, fetch_cs_scores.score_sales_tier, 용품5+의류5)
+    + 매출목표 달성 10점 (3개월 목표합계 대비 3개월 매출합계 달성여부, fetch_cs_scores.score_target_achieve, 용품5+의류5 — 달성 5점/미달성 0점)
   + CS 코멘트  최대 30점 (월 누적: 고위험 -5점/건, 중위험 -2점/건, 우수 +1점/건)
   + 파트너십   최대 30점 (월 누적: 위반 1건당 -1점, 용품+의류 합산)
   = 최대 130점
@@ -332,6 +333,8 @@ def main():
                 'score': 30, 'partnership_score': 30,
                 'sales_score': 0, 'sales_score_goods': 0, 'sales_score_clothing': 0,
                 'sales_3m_goods': 0, 'sales_3m_clothing': 0,
+                'target_score': 0, 'target_score_goods': 0, 'target_score_clothing': 0,
+                'target_3m_goods': 0, 'target_3m_clothing': 0,
                 'p_goods': '', 'p_clothing': '', 'p_goods_count': 0, 'p_clothing_count': 0,
                 'keywords': '', 'memo': '', 'ai_comment': '',
                 'deduct_collection':          debt.get('deduct_collection', 0),
@@ -374,13 +377,16 @@ def main():
         cs = cs_scores.get(name, {})
         cs_score = min(30, max(0, cs.get('score', 30)))
         partnership_score = min(30, max(0, cs.get('partnership_score', 30)))
-        sales_score_goods = min(10, max(0, cs.get('sales_score_goods', 0)))
-        sales_score_clothing = min(10, max(0, cs.get('sales_score_clothing', 0)))
+        sales_score_goods = min(5, max(0, cs.get('sales_score_goods', 0)))
+        sales_score_clothing = min(5, max(0, cs.get('sales_score_clothing', 0)))
         sales_score = sales_score_goods + sales_score_clothing
+        target_score_goods = min(5, max(0, cs.get('target_score_goods', 0)))
+        target_score_clothing = min(5, max(0, cs.get('target_score_clothing', 0)))
+        target_score = target_score_goods + target_score_clothing
         deduct_collection = cs.get('deduct_collection', 0)
         deduct_collateral = cs.get('deduct_collateral', 0)
         health_score = max(0, 50 - deduct_collection - deduct_collateral)
-        quant_score = min(70, health_score + sales_score)
+        quant_score = min(70, health_score + sales_score + target_score)
         total_score = min(130, quant_score + cs_score + partnership_score)
         # worst_risk: 담보초과율 기반 개별(의류/용품) 채권 리스크 - "채권 리스크" 진단 표시용, 종합등급과는 다른 지표
         worst_risk = combine_worst_risk([debt.get('clothing_risk'), debt.get('goods_risk')])
