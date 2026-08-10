@@ -229,7 +229,7 @@ def sanitize_text(text):
             .replace("'", "'"))
 
 
-def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'):
+def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, output_path='index.html'):
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
     goods_raw    = json.dumps(goods_dash, ensure_ascii=False)
     update_date  = get_update_timestamp()
@@ -248,6 +248,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, output_path='index.html'
             .replace('__CLOTHING_DATA__', clothing_raw)
             .replace('__GOODS_DATA__',    goods_raw)
             .replace('__CS_DATA__',       json.dumps(cs_scores, ensure_ascii=False))
+            .replace('__OPP_SHOWN__',     json.dumps(opp_shown_names, ensure_ascii=False))
             .replace('__UPDATE_DATE__',   update_date))
 
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -360,11 +361,11 @@ def main():
     def score_grade(total_score, worst_risk):
         if worst_risk == '관리':
             return '관리'
-        if total_score >= 105:
+        if total_score >= 116:
             return '적정'
-        if total_score >= 85:
+        if total_score >= 101:
             return '주의'
-        if total_score >= 65:
+        if total_score >= 90:
             return '경계'
         return '위기'
 
@@ -411,7 +412,7 @@ def main():
         prev_opp_names = set(opp_rotation_cache.get('opp_shown_names', []))
 
     opp_pool = sorted(
-        [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 105],
+        [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 116],
         key=lambda s: -s['total_score']
     )
     opp_fresh = [s for s in opp_pool if s['name'] not in prev_opp_names]
@@ -446,7 +447,7 @@ def main():
             cs_scores[name]['ai_flagged'] = True
             cs_scores[name]['ai_flag_comment'] = reason
 
-    generate_html(clothing_dash, goods_dash, cs_scores)
+    generate_html(clothing_dash, goods_dash, cs_scores, [s['name'] for s in opp_list])
 
 
 if __name__ == '__main__':

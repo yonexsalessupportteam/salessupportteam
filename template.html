@@ -443,10 +443,10 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>등급</th><th>종합점수 구간</th></tr>
-          <tr><td>적정</td><td>105점 이상</td></tr>
-          <tr><td>주의</td><td>85~104점</td></tr>
-          <tr><td>경계</td><td>65~84점</td></tr>
-          <tr><td>위기</td><td>65점 미만</td></tr>
+          <tr><td>적정</td><td>116점 이상</td></tr>
+          <tr><td>주의</td><td>101~115점</td></tr>
+          <tr><td>경계</td><td>90~100점</td></tr>
+          <tr><td>위기</td><td>90점 미만</td></tr>
           <tr><td>관리</td><td>무담보 + 채권 존재 (별도 분류)</td></tr>
         </table>
       </div>
@@ -524,6 +524,7 @@ function buildQuickSummary(s){
 const clothingData=__CLOTHING_DATA__;
 const goodsData=__GOODS_DATA__;
 const CS_SHEET=__CS_DATA__;
+const OPP_SHOWN=__OPP_SHOWN__; // process.py가 로테이션 적용 후 결정한 '기회 요소' 대리점명 목록(순서 유지)
 const DATA={'의류':clothingData,'용품':goodsData};
 
 function fmt(n){
@@ -587,9 +588,9 @@ function updatePartnership(storeName, field, isViolation, idx){
 
 function getRiskClass(score,worstRisk){
   if(worstRisk==='관리') return {label:'관리',cls:'rp-manage',bar:'#7A2E8C'};
-  if(score>=105) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
-  if(score>=85) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
-  if(score>=65) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
+  if(score>=116) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
+  if(score>=101) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
+  if(score>=90) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
   return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
 }
 
@@ -599,10 +600,10 @@ function makeScoreGauge(score,grade,gradeColor){
   const angleForScore=v=>180-(v/130)*180;
   const polar=(radius,angDeg)=>{const rad=angDeg*Math.PI/180;return{x:cx+radius*Math.cos(rad),y:cy-radius*Math.sin(rad)};};
   const zones=[
-    {from:0,to:65,color:'#E24B4A'},
-    {from:65,to:85,color:'#EF9F27'},
-    {from:85,to:105,color:'#378ADD'},
-    {from:105,to:130,color:'#1D9E75'}
+    {from:0,to:90,color:'#E24B4A'},
+    {from:90,to:101,color:'#EF9F27'},
+    {from:101,to:116,color:'#378ADD'},
+    {from:116,to:130,color:'#1D9E75'}
   ];
   const arcs=zones.map(z=>{
     const a0=angleForScore(z.from),a1=angleForScore(z.to);
@@ -615,7 +616,7 @@ function makeScoreGauge(score,grade,gradeColor){
   const needleBaseL=polar(7,needleAngle+90);
   const needleBaseR=polar(7,needleAngle-90);
   const needle=`<polygon points="${needleTip.x.toFixed(2)},${needleTip.y.toFixed(2)} ${needleBaseL.x.toFixed(2)},${needleBaseL.y.toFixed(2)} ${needleBaseR.x.toFixed(2)},${needleBaseR.y.toFixed(2)}" fill="#1a1a18"/><circle cx="${cx}" cy="${cy}" r="8" fill="#1a1a18"/>`;
-  const labelPositions=[{v:0,a:'middle'},{v:65,a:'middle'},{v:85,a:'middle'},{v:105,a:'middle'},{v:130,a:'middle'}];
+  const labelPositions=[{v:0,a:'middle'},{v:90,a:'middle'},{v:101,a:'middle'},{v:116,a:'middle'},{v:130,a:'middle'}];
   const tickLabels=labelPositions.map(t=>{
     const p=polar(r+18,angleForScore(t.v));
     return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" font-size="10" fill="#888780" text-anchor="${t.a}" dominant-baseline="middle">${t.v}</text>`;
@@ -696,14 +697,16 @@ function buildAiDash(){
   const total=allStores.length;
   const manage=allStores.filter(s=>s.worstRisk==='관리').length;
   const graded=allStores.filter(s=>s.worstRisk!=='관리');
-  const safe=graded.filter(s=>s.totalScore>=105).length;
-  const caution=graded.filter(s=>s.totalScore>=85&&s.totalScore<105).length;
-  const border=graded.filter(s=>s.totalScore>=65&&s.totalScore<85).length;
-  const crisis=graded.filter(s=>s.totalScore<65).length;
+  const safe=graded.filter(s=>s.totalScore>=116).length;
+  const caution=graded.filter(s=>s.totalScore>=101&&s.totalScore<116).length;
+  const border=graded.filter(s=>s.totalScore>=90&&s.totalScore<101).length;
+  const crisis=graded.filter(s=>s.totalScore<90).length;
 
   const idxStores=allStores.map((s,idx)=>Object.assign({idx},s));
   const warnList=idxStores.filter(s=>s.scoreGrade==='위기'||s.scoreGrade==='경계'||s.scoreGrade==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
-  const oppList=idxStores.filter(s=>s.scoreGrade!=='관리'&&s.totalScore>=105).sort((a,b)=>b.totalScore-a.totalScore).slice(0,3);
+  // 기회 요소는 매번 새로 상위 3개를 뽑지 않고, process.py가 로테이션(어제 노출분 후순위)까지
+  // 적용해서 결정한 OPP_SHOWN 순서를 그대로 따름 - 그래야 매일 같은 대리점만 반복 노출되는 문제가 해결됨
+  const oppList=OPP_SHOWN.map(name=>idxStores.find(s=>s.name===name)).filter(Boolean);
   const flagList=idxStores.filter(s=>s.aiFlagged);
 
   const insightCard=function(kind,list,emptyMsg){
@@ -861,10 +864,10 @@ function buildAiDash(){
     const kwLow=['친절','신속처리','적극협조','고객칭찬','만족도우수','응대우수','규정준수','정확한안내','클레임없음'];
     const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>{const ku=k.toUpperCase();return `<span class="kw-tag ${kwLow.some(d=>ku.includes(d.toUpperCase()))?'safe':kwHigh.some(d=>ku.includes(d.toUpperCase()))?'danger':kwMid.some(d=>ku.includes(d.toUpperCase()))?'warn':''}">${k}</span>`;}).join(''):'';
 
-    const aiBoxBg=s.totalScore>=105?'#EAF3DE':'#E6F1FB';
-    const aiBoxBd=s.totalScore>=105?'#1D9E75':'#185FA5';
-    const aiLblColor=s.totalScore>=105?'#085041':'#0C447C';
-    const aiTxtColor=s.totalScore>=105?'#0F6E56':'#185FA5';
+    const aiBoxBg=s.totalScore>=116?'#EAF3DE':'#E6F1FB';
+    const aiBoxBd=s.totalScore>=116?'#1D9E75':'#185FA5';
+    const aiLblColor=s.totalScore>=116?'#085041':'#0C447C';
+    const aiTxtColor=s.totalScore>=116?'#0F6E56':'#185FA5';
 
     const pGoodsViolation=(s.pGoodsCount||0)>0;
     const pClothingViolation=(s.pClothingCount||0)>0;
