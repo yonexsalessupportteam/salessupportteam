@@ -386,19 +386,20 @@ tbody tr:hover{background:#f9f8f4}
     <details class="crit-block">
       <summary>② 매출규모 (20점 = 용품10 + 의류10)</summary>
       <div class="crit-body">
-        <p>최근 3개월 매출 합계 기준, 10점 만점에서 감점하는 방식</p>
+        <p>최근 3개월 매출 합계(부가세 제외·영업매출 기준) 기준, 10점 만점에서 감점하는 방식<br>
+        <span style="color:#8a8878;font-size:12.5px">※ ERP 원본 매출은 부가세 포함 금액이라, 판정 시 1.1로 나눠 영업매출로 환산 후 비교함</span></p>
         <p><b>용품</b></p>
         <table class="crit-table">
-          <tr><th>3개월 매출 합계</th><th>감점</th><th>최종점수</th></tr>
-          <tr><td>1억 5,000만 이상</td><td>0점</td><td>10점</td></tr>
-          <tr><td>8,000만~1억 5,000만</td><td class="neg">-2점</td><td>8점</td></tr>
-          <tr><td>4,000만~8,000만</td><td class="neg">-4점</td><td>6점</td></tr>
-          <tr><td>2,000만~4,000만</td><td class="neg">-7점</td><td>3점</td></tr>
+          <tr><th>3개월 매출 합계(부가세 제외)</th><th>감점</th><th>최종점수</th></tr>
+          <tr><td>1억 3,000만 이상</td><td>0점</td><td>10점</td></tr>
+          <tr><td>7,000만~1억 3,000만</td><td class="neg">-2점</td><td>8점</td></tr>
+          <tr><td>3,500만~7,000만</td><td class="neg">-4점</td><td>6점</td></tr>
+          <tr><td>2,000만~3,500만</td><td class="neg">-7점</td><td>3점</td></tr>
           <tr><td>2,000만 미만</td><td class="neg">-10점</td><td>0점</td></tr>
         </table>
         <p><b>의류</b></p>
         <table class="crit-table">
-          <tr><th>3개월 매출 합계</th><th>감점</th><th>최종점수</th></tr>
+          <tr><th>3개월 매출 합계(부가세 제외)</th><th>감점</th><th>최종점수</th></tr>
           <tr><td>8,000만 이상</td><td>0점</td><td>10점</td></tr>
           <tr><td>3,500만~8,000만</td><td class="neg">-2점</td><td>8점</td></tr>
           <tr><td>1,500만~3,500만</td><td class="neg">-4점</td><td>6점</td></tr>
@@ -471,13 +472,13 @@ function buildQuantGrid(s){
     +'<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc">'
-    +'<div class="dl">매출규모 (의류, 3개월)</div>'
+    +'<div class="dl">매출규모 (의류, 3개월·부가세제외)</div>'
     +'<div class="dv" style="color:'+dvColor(salesScoreClothing,8,5)+'">'+salesScoreClothing+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
     +'<div class="dsub">'+(s.sales3mClothing?fmt(s.sales3mClothing):'미입력')+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc">'
-    +'<div class="dl">매출규모 (용품, 3개월)</div>'
+    +'<div class="dl">매출규모 (용품, 3개월·부가세제외)</div>'
     +'<div class="dv" style="color:'+dvColor(salesScoreGoods,8,5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/10</span></div>'
     +'<div class="dsub">'+(s.sales3mGoods?fmt(s.sales3mGoods):'미입력')+'</div></div>'
     ):'')
@@ -530,6 +531,7 @@ const goodsData=__GOODS_DATA__;
 const CS_SHEET=__CS_DATA__;
 const OPP_SHOWN=__OPP_SHOWN__; // process.py가 로테이션 적용 후 결정한 '기회 요소' 대리점명 목록(순서 유지)
 const DATA={'의류':clothingData,'용품':goodsData};
+const SALES_VAT_RATE=1.1; // ERP 매출은 부가세 포함이라 화면 표시·판정 시 이 값으로 나눠 영업매출(부가세 제외) 환산
 
 function fmt(n){
   const a=Math.abs(n),sign=n<0?'-':'';
@@ -660,8 +662,8 @@ function buildAiDash(){
       const salesScoreGoods=Math.min(10,Math.max(0,csData.sales_score_goods!=null?csData.sales_score_goods:0));
       const salesScoreClothing=Math.min(10,Math.max(0,csData.sales_score_clothing!=null?csData.sales_score_clothing:0));
       const salesScore=salesScoreGoods+salesScoreClothing;
-      const sales3mGoods=csData.sales_3m_goods||0;
-      const sales3mClothing=csData.sales_3m_clothing||0;
+      const sales3mGoods=(csData.sales_3m_goods||0)/SALES_VAT_RATE;
+      const sales3mClothing=(csData.sales_3m_clothing||0)/SALES_VAT_RATE;
       const pGoods=csData.p_goods||'';
       const pClothing=csData.p_clothing||'';
       const pGoodsCount=csData.p_goods_count||0;
