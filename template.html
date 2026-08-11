@@ -527,13 +527,13 @@ function buildQuantGrid(s){
     ):'')
     +(s.clothing?(
     '<div class="dc">'
-    +'<div class="dl">매출목표 달성 (의류)</div>'
+    +'<div class="dl">매출목표 달성 (의류, 3개월·부가세제외)</div>'
     +'<div class="dv" style="color:'+dvColor(targetScoreClothing,5,5)+'">'+targetScoreClothing+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+targetLabel(targetScoreClothing, s.target3mClothing, s.sales3mClothing)+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc">'
-    +'<div class="dl">매출목표 달성 (용품)</div>'
+    +'<div class="dl">매출목표 달성 (용품, 3개월·부가세제외)</div>'
     +'<div class="dv" style="color:'+dvColor(targetScoreGoods,5,5)+'">'+targetScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+targetLabel(targetScoreGoods, s.target3mGoods, s.sales3mGoods)+'</div></div>'
     ):'')
