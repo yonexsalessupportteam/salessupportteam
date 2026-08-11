@@ -288,6 +288,15 @@ tbody tr:hover{background:#f9f8f4}
     <div class="sidebar-divider"></div>
   </div>
   <div class="sidebar-block">
+    <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">매출목표 달성<span class="sidebar-caret">▾</span></div>
+    <div class="sidebar-group">
+      <div class="sidebar-item" id="menu-target" onclick="switchCat('target',this)">
+        <span class="icon">🎯</span> 목표대비 달성현황
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+  </div>
+  <div class="sidebar-block">
     <div class="sidebar-section" onclick="toggleSidebarGroup(this)" ondblclick="hideSidebarBlock(this)">팀별 채권잔액<span class="sidebar-caret">▾</span></div>
     <div class="sidebar-group">
       <div class="sidebar-item" id="menu-의류" onclick="switchCat('의류',this)">
@@ -330,6 +339,16 @@ tbody tr:hover{background:#f9f8f4}
   <div id="page-용품-영업1팀" class="page active"></div>
   <div id="page-용품-영업2팀" class="page"></div>
   <div id="page-용품-E-BIZ팀" class="page"></div>
+</div>
+
+<div id="cat-target" class="cat-page">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTargetTab('전체',this)">전체</div>
+    <div class="tab" onclick="switchTargetTab('영업1팀',this)">영업1팀</div>
+    <div class="tab" onclick="switchTargetTab('영업2팀',this)">영업2팀</div>
+    <div class="tab" onclick="switchTargetTab('E-BIZ팀',this)">E-BIZ팀</div>
+  </div>
+  <div id="target-page-content"></div>
 </div>
 
 <div id="cat-criteria" class="cat-page">
@@ -673,9 +692,9 @@ function makeScoreGauge(score,grade,gradeColor){
 let currentAiGrade='전체';
 let watchlistOnly=false;
 
-function buildAiDash(){
-  const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
-  const cont=document.getElementById('ai-dash-content');
+function buildAllStoresList(){
+  // buildAiDash·buildTargetPage가 공통으로 쓰는 대리점별 종합 데이터 목록.
+  // DATA(채권)+CS_SHEET(CS/파트너십/매출/목표)를 합쳐 매장 1건당 하나의 레코드로 만든다.
   const allStores=[];
   const seen={};
   ['영업1팀','영업2팀','E-BIZ팀'].forEach(dept=>{
@@ -738,6 +757,13 @@ function buildAiDash(){
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);
+  return allStores;
+}
+
+function buildAiDash(){
+  const dvColor=function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
+  const cont=document.getElementById('ai-dash-content');
+  const allStores=buildAllStoresList();
 
   const total=allStores.length;
   const manage=allStores.filter(s=>s.worstRisk==='관리').length;
@@ -1068,6 +1094,102 @@ function toggleAiDet(idx,card){
   if(!isOpen){card.classList.add('sel');det.style.display='block';}
 }
 
+let targetPageBuilt=false;
+let targetDeptFilter='전체';
+
+function switchTargetTab(dept,el){
+  document.querySelectorAll('#cat-target .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  targetDeptFilter=dept;
+  buildTargetPage();
+}
+
+function buildTargetPage(){
+  const dept=targetDeptFilter;
+  const all=buildAllStoresList();
+  const rows=(dept==='전체'?all:all.filter(s=>s.dept===dept));
+
+  const goodsRows=rows.filter(s=>s.target3mGoods>0);
+  const clothingRows=rows.filter(s=>s.target3mClothing>0);
+  const goodsAchieved=goodsRows.filter(s=>s.sales3mGoods>=s.target3mGoods).length;
+  const clothingAchieved=clothingRows.filter(s=>s.sales3mClothing>=s.target3mClothing).length;
+  const goodsPct=goodsRows.length>0?Math.round(goodsAchieved/goodsRows.length*100):0;
+  const clothingPct=clothingRows.length>0?Math.round(clothingAchieved/clothingRows.length*100):0;
+
+  const kpiHtml=`<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">대상 매장수</div><div class="kpi-value">${rows.length}개</div><div class="kpi-callout"><span class="kpi-callout-dot"></span>${dept}</div></div>
+    <div class="kpi"><div class="kpi-label">용품 목표 달성률</div><div class="kpi-value">${goodsPct}%</div>
+      <div class="kpi-mini-bar"><div class="kpi-mini-fill" style="width:${goodsPct}%;background:#0F6E56"></div></div>
+      <div class="kpi-mini-label" style="color:#0F6E56">${goodsAchieved}개 / ${goodsRows.length}개 달성 (목표 미입력 ${rows.length-goodsRows.length}개 제외)</div>
+    </div>
+    <div class="kpi"><div class="kpi-label">의류 목표 달성률</div><div class="kpi-value">${clothingPct}%</div>
+      <div class="kpi-mini-bar"><div class="kpi-mini-fill" style="width:${clothingPct}%;background:#0F6E56"></div></div>
+      <div class="kpi-mini-label" style="color:#0F6E56">${clothingAchieved}개 / ${clothingRows.length}개 달성 (목표 미입력 ${rows.length-clothingRows.length}개 제외)</div>
+    </div>
+  </div>`;
+
+  const el=document.getElementById('target-page-content');
+  el.innerHTML=kpiHtml+`
+  <div class="card">
+    <div class="card-title">매장별 목표 대비 달성 현황 (${rows.length}개)</div>
+    <div class="filter-bar">
+      <input id="target-search" type="text" placeholder="매장명 검색..."/>
+      <select id="target-status-filter">
+        <option value="">전체</option>
+        <option value="goods-miss">용품 미달성만</option>
+        <option value="clothing-miss">의류 미달성만</option>
+        <option value="either-miss">둘 중 하나라도 미달성</option>
+      </select>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th style="width:150px">매장명</th><th style="width:70px">팀</th><th style="width:60px">담당</th>
+        <th style="width:100px" class="nr">용품 목표</th><th style="width:100px" class="nr">용품 매출</th><th style="width:70px;text-align:center">용품</th>
+        <th style="width:100px" class="nr">의류 목표</th><th style="width:100px" class="nr">의류 매출</th><th style="width:70px;text-align:center">의류</th>
+      </tr></thead>
+      <tbody id="target-tbl"></tbody>
+    </table></div>
+  </div>`;
+  document.getElementById('target-search').addEventListener('input',renderTargetTable);
+  document.getElementById('target-status-filter').addEventListener('change',renderTargetTable);
+  window._targetRows=rows;
+  renderTargetTable();
+}
+
+function renderTargetTable(){
+  const rows=window._targetRows||[];
+  const q=(document.getElementById('target-search')||{}).value?.toLowerCase()||'';
+  const statusF=(document.getElementById('target-status-filter')||{}).value||'';
+  const badge=(achieved,hasTarget)=>{
+    if(!hasTarget) return '<span class="badge" style="background:#f1efe8;color:#888780">목표없음</span>';
+    return achieved
+      ? '<span class="badge" style="background:#E3F3EC;color:#0F6E56">달성</span>'
+      : '<span class="badge" style="background:#FCEBEB;color:#A32D2D">미달성</span>';
+  };
+  let filtered=rows.filter(s=>!q||s.name.toLowerCase().includes(q));
+  filtered=filtered.filter(s=>{
+    const goodsMiss=s.target3mGoods>0&&s.sales3mGoods<s.target3mGoods;
+    const clothingMiss=s.target3mClothing>0&&s.sales3mClothing<s.target3mClothing;
+    if(statusF==='goods-miss') return goodsMiss;
+    if(statusF==='clothing-miss') return clothingMiss;
+    if(statusF==='either-miss') return goodsMiss||clothingMiss;
+    return true;
+  });
+  const tbody=document.getElementById('target-tbl');
+  tbody.innerHTML='';
+  filtered.forEach(s=>{
+    const goodsHas=s.target3mGoods>0;
+    const clothingHas=s.target3mClothing>0;
+    const goodsOk=goodsHas&&s.sales3mGoods>=s.target3mGoods;
+    const clothingOk=clothingHas&&s.sales3mClothing>=s.target3mClothing;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td title="${s.name}">${s.name}</td><td>${s.dept}</td><td>${s.salesperson}</td>
+      <td class="nr">${goodsHas?fmt(s.target3mGoods):'—'}</td><td class="nr">${fmt(Math.round(s.sales3mGoods))}</td><td style="text-align:center">${badge(goodsOk,goodsHas)}</td>
+      <td class="nr">${clothingHas?fmt(s.target3mClothing):'—'}</td><td class="nr">${fmt(Math.round(s.sales3mClothing))}</td><td style="text-align:center">${badge(clothingOk,clothingHas)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
 function pageKey(cat,dept){return cat+'-'+dept;}
 
 function buildPage(cat,dept){
@@ -1264,6 +1386,7 @@ function switchCat(cat,el){
   el.classList.add('active');
   document.querySelectorAll('.cat-page').forEach(p=>p.classList.remove('active'));
   document.getElementById('cat-'+cat).classList.add('active');
+  if(cat==='target'&&!targetPageBuilt){targetPageBuilt=true;buildTargetPage();}
 }
 
 function toggleCriteria(el){
