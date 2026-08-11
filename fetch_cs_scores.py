@@ -424,32 +424,52 @@ def save_insight_cache(updates):
         print(f"  ⚠️ 일일 인사이트 캐시 저장 실패: {e}")
 
 
-def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, api_key):
-    """warn_list/opp_list/review_list: [{'name':..., 'total_score':..., 'worst_risk':..., 'ai_assessed_risk':...}, ...]
+def _fallback_daily_selection(warn_pool, opp_pool, review_pool):
+    """Gemini 호출 없이(키 없음/할당량 소진/파싱 실패) 안전하게 쓸 결정론적 대체 선택.
+    각 풀은 이미 심각도/점수 기준으로 정렬되어 들어오므로 그냥 앞에서 3개."""
+    return {
+        'warn': [s['name'] for s in warn_pool[:3]],
+        'opp': [s['name'] for s in opp_pool[:3]],
+        'review': [s['name'] for s in review_pool[:3]],
+    }
+
+
+def generate_daily_insights(warn_pool, opp_pool, review_pool, candidate_list, api_key, prev_selection=None):
+    """warn_pool/opp_pool/review_pool: 점수 기준으로 넉넉히(최대 10개) 추린 후보 목록
+    [{'name':..., 'total_score':..., 'worst_risk':..., 'ai_assessed_risk':...}, ...].
+    이 함수가 각 풀 안에서 '오늘 대시보드에 보여줄 최대 3곳'을 AI가 직접 선택한다
+    (기존에는 점수 정렬 + 하드코딩 로테이션으로 기계적으로 뽑았으나, 이제는 AI 판단에 맡김).
     candidate_list: [{'name':..., 'total_score':..., 'worst_risk':..., 'keywords':..., 'count_high':, 'count_mid':, 'count_low':}, ...]
     - 아직 위기/경계/관리 등급은 아니지만 이번 달 CS 키워드가 입력된 대리점들. AI가 키워드 내용을 읽고
       기계적 등급에는 안 잡혔지만 위험 신호가 보이는 곳을 추가로 골라낸다('AI 추가 발견').
-    반환: {'comments': {대리점명: 코멘트}, 'flagged': {대리점명: 사유}} - 오늘 이미 생성된 적 있으면 캐시를 그대로 재사용."""
+    prev_selection: {'warn':[...], 'opp':[...], 'review':[...]} 어제 노출된 목록(참고용 - 강제 배제 아님).
+    반환: {'selected': {'warn':[...],'opp':[...],'review':[...]}, 'comments': {대리점명: 코멘트}, 'flagged': {대리점명: 사유}}
+    - 오늘 이미 생성된 적 있으면 캐시를 그대로 재사용."""
     today = get_kst_today_str()
     cache = load_insight_cache()
-    if cache.get('date') == today and (cache.get('comments') or cache.get('flagged')):
+    if cache.get('date') == today and cache.get('selected'):
+        sel = cache.get('selected', {})
         n_c, n_f = len(cache.get('comments', {})), len(cache.get('flagged', {}))
-        print(f"  📦 오늘({today}) 일일 인사이트 이미 생성됨 - 캐시 재사용 (코멘트 {n_c}건, AI 추가 발견 {n_f}건)")
-        return {'comments': cache.get('comments', {}), 'flagged': cache.get('flagged', {})}
+        print(f"  📦 오늘({today}) 일일 인사이트 이미 생성됨 - 캐시 재사용 "
+              f"(경고 {len(sel.get('warn',[]))}·기회 {len(sel.get('opp',[]))}·검토 {len(sel.get('review',[]))}, "
+              f"코멘트 {n_c}건, AI 추가 발견 {n_f}건)")
+        return {'selected': sel, 'comments': cache.get('comments', {}), 'flagged': cache.get('flagged', {})}
+
+    fallback_selected = _fallback_daily_selection(warn_pool, opp_pool, review_pool)
 
     if not api_key:
-        print("  ⚠️ GEMINI_API_KEY 없음 - 일일 인사이트 코멘트 생성 건너뜀")
-        return {'comments': {}, 'flagged': {}}
+        print("  ⚠️ GEMINI_API_KEY 없음 - AI 선택/코멘트 생성 건너뜀 (점수순 상위 3개로 대체)")
+        return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
 
     global _quota_exhausted
     if _quota_exhausted:
-        print("  ⚠️ Gemini 할당량 소진 상태 - 일일 인사이트 코멘트 생성 건너뜀")
-        return {'comments': {}, 'flagged': {}}
+        print("  ⚠️ Gemini 할당량 소진 상태 - AI 선택/코멘트 생성 건너뜀 (점수순 상위 3개로 대체)")
+        return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
 
-    def block(store, tag):
+    def pool_block(store, tag):
         # 등급은 반드시 종합점수(130점) 기준 score_grade를 써야 함 - worst_risk는 담보초과율 기반
         # 개별 채권 리스크라 종합점수와 불일치할 수 있음(예: 76점인데 worst_risk만 '위기'인 경우)
-        return (f"[{tag}] name: \"{store['name']}\"\n"
+        return (f"[{tag}후보] name: \"{store['name']}\"\n"
                 f"- 종합점수: {round(store['total_score'])}점\n"
                 f"- 등급: {store['score_grade']}\n"
                 f"- CS 키워드 등급: {store.get('ai_assessed_risk') or '-'}")
@@ -461,32 +481,49 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
                 f"- 이번 달 CS 키워드: {store.get('keywords') or '-'}\n"
                 f"- 고위험 {store.get('count_high',0)}건 · 중위험 {store.get('count_mid',0)}건 · 우수 {store.get('count_low',0)}건")
 
-    blocks = ([block(s, '경고') for s in warn_list]
-              + [block(s, '기회') for s in opp_list]
-              + [block(s, '검토') for s in review_list])
-    candidate_blocks = [candidate_block(s) for s in candidate_list]
-    if not blocks and not candidate_blocks:
-        return {'comments': {}, 'flagged': {}}
+    if not warn_pool and not opp_pool and not review_pool and not candidate_list:
+        return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
 
-    stores_text = '\n\n'.join(blocks) if blocks else '(해당 없음)'
-    candidates_text = '\n\n'.join(candidate_blocks) if candidate_blocks else '(해당 없음)'
+    warn_text = '\n\n'.join(pool_block(s, '경고') for s in warn_pool) if warn_pool else '(해당 없음)'
+    opp_text = '\n\n'.join(pool_block(s, '기회') for s in opp_pool) if opp_pool else '(해당 없음)'
+    review_text = '\n\n'.join(pool_block(s, '검토') for s in review_pool) if review_pool else '(해당 없음)'
+    candidates_text = '\n\n'.join(candidate_block(s) for s in candidate_list) if candidate_list else '(해당 없음)'
+
+    prev = prev_selection or {}
+    prev_text = (f"어제 노출: 경고 {prev.get('warn', []) or '없음'} / "
+                 f"기회 {prev.get('opp', []) or '없음'} / 검토 {prev.get('review', []) or '없음'}")
+
     prompt = f"""당신은 스포츠용품 유통사의 대리점 채권 리스크 담당 분석가입니다.
-아래는 오늘 대시보드 상단 'AI가 분석한 오늘의 대리점 인사이트'에 노출될 대리점 목록입니다.
-각 대리점 태그(경고/기회/검토)에 맞게, 영업 담당자가 한눈에 왜 이 대리점이 이 카테고리에 포함됐는지 이해할 수 있도록 코멘트를 작성하세요.
+아래는 오늘 대시보드 상단 'AI가 분석한 오늘의 대리점 인사이트'에 노출할 대리점을 고르기 위한 후보 목록입니다.
+경고/기회/검토 각 카테고리에서, 아래 후보 중 오늘 담당자가 가장 먼저 봐야 할 곳을 최대 3곳씩 직접 선택하세요
+(후보가 3곳 미만이면 있는 만큼만 선택). 반드시 해당 카테고리 후보 목록 안에서만 골라야 합니다.
 
-{stores_text}
+[경고 후보] (위기/경계/관리 등급)
+{warn_text}
 
-각 대리점마다 줄바꿈 없이 1문장(간결하게, 가능하면 수치 근거 포함)으로 작성하세요.
-어조는 담당자에게 "~하세요/~하십시오" 같은 지시나 명령이 아니라, "~해보는 건 어떨까요/~하면 좋을 것 같습니다/~을 권장합니다" 같은
+[기회 후보] (적정 등급, 고득점)
+{opp_text}
+
+[검토 후보] (AI 판단과 기계적 등급이 불일치)
+{review_text}
+
+{prev_text}
+- 위 '어제 노출' 목록은 참고만 하세요. 오늘도 여전히 가장 눈에 띄는 곳이면 반복 선택해도 되고,
+  비슷한 수준의 다른 후보가 있다면 다양하게 섞어서 보여주는 것도 좋습니다. 담당자에게 매번 같은
+  대리점만 반복해서 보여주는 것은 피하되, 억지로 순서를 바꾸지는 마세요 — 정말 그날 상황에 맞게 판단하세요.
+
+각 선택된 대리점마다, 담당자가 한눈에 왜 이 대리점이 이 카테고리에 포함됐는지 이해할 수 있도록 코멘트도 함께 작성하세요.
+줄바꿈 없이 1문장(간결하게, 가능하면 수치 근거 포함)으로 작성하세요.
+어조는 "~하세요/~하십시오" 같은 지시나 명령이 아니라, "~해보는 건 어떨까요/~하면 좋을 것 같습니다/~을 권장합니다" 같은
 부드러운 권유·제안 톤으로 작성하세요. "즉시", "강도 높은 조사", "조사가 필요합니다" 같이 단정적이고 강한 표현은 피하고,
 "확인해보시길 권장합니다", "한 번 살펴보시면 좋을 것 같습니다" 처럼 담당자의 판단을 존중하는 완곡한 표현을 쓰세요.
-- 경고 태그: 왜 위험한지와 어떤 조치를 고려해보면 좋을지
-- 기회 태그: 왜 안정적인지와 어떤 점을 유지하면 좋을지
-- 검토 태그: AI 판단과 기계적 등급이 왜 다를 수 있는지에 대한 추정
+- 경고: 왜 위험한지와 어떤 조치를 고려해보면 좋을지
+- 기회: 왜 안정적인지와 어떤 점을 유지하면 좋을지
+- 검토: AI 판단과 기계적 등급이 왜 다를 수 있는지에 대한 추정
 
 ---
 
-아래는 아직 종합 등급상 위험 등급(위기/경계/관리)에는 속하지 않지만, 이번 달 CS 키워드가 입력된 '후보' 대리점 목록입니다.
+아래는 아직 종합 등급상 위험 등급(위기/경계/관리)에는 속하지 않지만, 이번 달 CS 키워드가 입력된 '추가 발견' 후보 대리점 목록입니다.
 키워드 내용을 실제로 읽고, 건수가 적더라도 표현 수위가 심각하거나(예: 법적조치, 한국소비자원신고, 반복되는 불만 등)
 앞으로 등급이 나빠질 조짐이 있다고 판단되는 대리점만 최대 3곳까지 골라주세요. 단순히 건수가 있다는 이유만으로 고르지 말고,
 정말 주의가 필요하다고 판단될 때만 고르세요. 우려되는 곳이 없으면 빈 배열로 두세요.
@@ -496,9 +533,11 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
 {candidates_text}
 
 반드시 아래 JSON 형식으로만 출력하세요. 다른 텍스트 일절 금지. 값 안에 줄바꿈 문자를 절대 넣지 마세요:
-{{"comments": [{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...],
- "flagged": [{{"name": "후보 목록 중 대리점명(정확히 동일하게)", "reason": "왜 주의가 필요한지 한 문장"}}, ...]}}"""
+{{"selected": {{"warn": ["대리점명", ...최대3], "opp": ["대리점명", ...최대3], "review": ["대리점명", ...최대3]}},
+ "comments": [{{"name": "대리점명(위와 정확히 동일하게)", "comment": "코멘트 한 문장"}}, ...],
+ "flagged": [{{"name": "추가 발견 후보 목록 중 대리점명(정확히 동일하게)", "reason": "왜 주의가 필요한지 한 문장"}}, ...]}}"""
 
+    total_blocks = len(warn_pool) + len(opp_pool) + len(review_pool) + len(candidate_list)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -506,7 +545,7 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
         # 넉넉하게 잡지 않으면 실제 텍스트(JSON)가 다 나오기 전에 잘릴 수 있음 (Unterminated string 오류의 원인).
         # thinkingBudget: 0으로 생각 토큰 자체를 꺼서 전체 예산을 응답 텍스트에만 쓰도록 함.
         "generationConfig": {
-            "maxOutputTokens": min(8192, 200 * (len(blocks) + len(candidate_blocks)) + 500),
+            "maxOutputTokens": min(8192, 200 * total_blocks + 500),
             "thinkingConfig": {"thinkingBudget": 0},
         },
     }
@@ -526,22 +565,44 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
             err = res.json().get('error', {}) if res.content else {}
             if err.get('status') == 'RESOURCE_EXHAUSTED':
                 _quota_exhausted = True
-            print("  ⚠️ 일일 인사이트 생성 실패 - Gemini 한도 초과")
-            return {'comments': {}, 'flagged': {}}
+            print("  ⚠️ 일일 인사이트 생성 실패 - Gemini 한도 초과 (점수순 상위 3개로 대체)")
+            return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
         data = res.json()
         if res.status_code != 200:
             err = data.get('error', {})
-            print(f"  ⚠️ 일일 인사이트 Gemini 오류: HTTP {res.status_code} / {err.get('message','')[:200]}")
-            return {'comments': {}, 'flagged': {}}
+            print(f"  ⚠️ 일일 인사이트 Gemini 오류: HTTP {res.status_code} / {err.get('message','')[:200]} (점수순 상위 3개로 대체)")
+            return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
         candidates_resp = data.get('candidates', [])
         if not candidates_resp:
-            print("  ⚠️ 일일 인사이트 응답에 candidates 없음")
-            return {'comments': {}, 'flagged': {}}
+            print("  ⚠️ 일일 인사이트 응답에 candidates 없음 (점수순 상위 3개로 대체)")
+            return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
         raw = candidates_resp[0]['content']['parts'][0]['text'].strip()
         raw = raw.strip('`').replace('json\n', '', 1).strip()
         # strict=False: Gemini가 값 안에 이스케이프 안 된 줄바꿈(제어문자)을 넣는 경우가 있어
         # 기본 json 파서(strict=True)는 이를 오류로 처리함 - strict=False로 완화해서 그대로 허용
         parsed = json.loads(raw, strict=False)
+
+        # 선택 결과 검증 - 각 카테고리는 반드시 해당 풀 안에서만 골라야 함(할루시네이션 방지),
+        # 부족하면(개수 미달/전부 무효) 그 카테고리는 fallback으로 보충
+        pool_names = {
+            'warn': {s['name'] for s in warn_pool},
+            'opp': {s['name'] for s in opp_pool},
+            'review': {s['name'] for s in review_pool},
+        }
+        selected = {}
+        raw_selected = parsed.get('selected', {})
+        for cat in ('warn', 'opp', 'review'):
+            names = [' '.join(str(n).split()) for n in raw_selected.get(cat, [])]
+            valid = [n for n in names if n in pool_names[cat]]
+            if len(valid) < min(3, len(pool_names[cat])):
+                # 부족한 만큼 fallback(점수순 상위)에서 중복 없이 보충
+                for n in fallback_selected[cat]:
+                    if n not in valid:
+                        valid.append(n)
+                    if len(valid) >= min(3, len(pool_names[cat])):
+                        break
+            selected[cat] = valid[:3]
+
         comments = {}
         for item in parsed.get('comments', []):
             name = ' '.join(str(item.get('name', '')).split())
@@ -556,12 +617,14 @@ def generate_daily_insights(warn_list, opp_list, review_list, candidate_list, ap
             # 후보 목록에 없는 이름을 Gemini가 지어내는 경우를 대비해 검증
             if name and reason and name in candidate_names:
                 flagged[name] = reason
-        save_insight_cache({'date': today, 'comments': comments, 'flagged': flagged})
-        print(f"  ✅ 일일 인사이트 코멘트 생성 완료 (코멘트 {len(comments)}건, AI 추가 발견 {len(flagged)}건, {today})")
-        return {'comments': comments, 'flagged': flagged}
+        save_insight_cache({'date': today, 'selected': selected, 'comments': comments, 'flagged': flagged})
+        print(f"  ✅ 일일 인사이트 AI 선택 완료 (경고 {len(selected['warn'])}·기회 {len(selected['opp'])}·검토 {len(selected['review'])}, "
+              f"코멘트 {len(comments)}건, AI 추가 발견 {len(flagged)}건, {today})")
+        return {'selected': selected, 'comments': comments, 'flagged': flagged}
     except Exception as e:
-        print(f"  ⚠️ 일일 인사이트 생성 오류: {type(e).__name__}: {e}")
-        return {'comments': {}, 'flagged': {}}
+        print(f"  ⚠️ 일일 인사이트 생성 오류: {type(e).__name__}: {e} (점수순 상위 3개로 대체)")
+        return {'selected': fallback_selected, 'comments': {}, 'flagged': {}}
+
 
 
 # ───────────────────────────────────────────

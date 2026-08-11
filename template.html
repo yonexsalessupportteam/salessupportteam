@@ -582,7 +582,7 @@ function buildQuickSummary(s){
 const clothingData=__CLOTHING_DATA__;
 const goodsData=__GOODS_DATA__;
 const CS_SHEET=__CS_DATA__;
-const OPP_SHOWN=__OPP_SHOWN__; // process.py가 로테이션 적용 후 결정한 '기회 요소' 대리점명 목록(순서 유지)
+const OPP_SHOWN=__OPP_SHOWN__; // process.py에서 AI가 오늘 노출할 대리점으로 직접 선택한 '기회 요소' 목록(순서 유지)
 const DATA={'의류':clothingData,'용품':goodsData};
 const SALES_VAT_RATE=1.1; // ERP 매출은 부가세 포함이라 화면 표시·판정 시 이 값으로 나눠 영업매출(부가세 제외) 환산
 
@@ -780,7 +780,7 @@ function buildAiDash(){
   const idxStores=allStores.map((s,idx)=>Object.assign({idx},s));
   const warnList=idxStores.filter(s=>s.scoreGrade==='위기'||s.scoreGrade==='경계'||s.scoreGrade==='관리').sort((a,b)=>a.totalScore-b.totalScore).slice(0,3);
   // 기회 요소는 매번 새로 상위 3개를 뽑지 않고, process.py가 로테이션(어제 노출분 후순위)까지
-  // 적용해서 결정한 OPP_SHOWN 순서를 그대로 따름 - 그래야 매일 같은 대리점만 반복 노출되는 문제가 해결됨
+  // 적용해서 결정한 OPP_SHOWN 순서를 그대로 따름 - AI가 매일 판단해서 고른 순서이므로 그대로 유지
   const oppList=OPP_SHOWN.map(name=>idxStores.find(s=>s.name===name)).filter(Boolean);
   const flagList=idxStores.filter(s=>s.aiFlagged);
 

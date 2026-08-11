@@ -17,7 +17,7 @@ import json
 import sys
 import os
 from datetime import datetime, timezone, timedelta
-from fetch_cs_scores import fetch_cs_data, generate_daily_insights, load_insight_cache, save_insight_cache, get_kst_today_str
+from fetch_cs_scores import fetch_cs_data, generate_daily_insights, load_insight_cache
 
 RAW_FILES = {
     '의류': 'clothing_raw.xls',
@@ -406,36 +406,23 @@ def main():
             'count_low': cs.get('count_low', 0),
         })
 
-    warn_list = sorted(
+    # 경고/기회/검토 각 카테고리별 후보 풀(최대 10개, 점수 기준으로 넉넉히 추려서 AI에게 넘김).
+    # 최종 노출 대상(최대 3개)은 generate_daily_insights()에서 AI가 이 풀 안에서 직접 선택한다
+    # (예전에는 여기서 점수순으로 그냥 상위 3개를 자르고, 기회 요소만 별도로 '어제 노출 안 한 곳 우선'
+    # 하드코딩 로테이션을 적용했으나, 그 방식은 풀 크기가 작으면 로테이션할 대안이 없어 계속 같은 곳만
+    # 노출되는 문제가 있었음. 이제는 로테이션 대신 AI 판단에 맡기고, 어제 노출 목록은 참고자료로만 전달)
+    warn_pool = sorted(
         [s for s in all_store_totals if s['score_grade'] in ('위기', '경계', '관리')],
         key=lambda s: s['total_score']
-    )[:3]
-    # 기회 요소 로테이션: 어제까지 노출됐던 대리점은 후순위로 밀어서, 만점 근처에 고정된
-    # 대리점이 매일 반복 노출되는 문제를 방지 (점수 자체는 그대로 반영, 순서만 조정)
-    today_str = get_kst_today_str()
-    opp_rotation_cache = load_insight_cache()
-    if opp_rotation_cache.get('opp_shown_date') == today_str:
-        prev_opp_names = set()  # 같은 날 재빌드는 로테이션 재적용 안 함 (오늘 목록 유지)
-    else:
-        prev_opp_names = set(opp_rotation_cache.get('opp_shown_names', []))
-
+    )[:10]
     opp_pool = sorted(
         [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 116],
         key=lambda s: -s['total_score']
-    )
-    opp_fresh = [s for s in opp_pool if s['name'] not in prev_opp_names]
-    opp_repeat = [s for s in opp_pool if s['name'] in prev_opp_names]
-    opp_list = (opp_fresh + opp_repeat)[:3]
-
-    if opp_rotation_cache.get('opp_shown_date') != today_str:
-        save_insight_cache({
-            'opp_shown_date': today_str,
-            'opp_shown_names': [s['name'] for s in opp_list],
-        })
-    review_list = sorted(
+    )[:10]
+    review_pool = sorted(
         [s for s in all_store_totals if s['ai_mismatch']],
         key=lambda s: (0 if s['ai_mismatch_direction'] == 'severe' else 1)
-    )[:3]
+    )[:10]
     # 'AI 추가 발견' 후보: 아직 위기/경계/관리 등급은 아니지만, 이번 달 CS 키워드가 입력됐고
     # 고위험/중위험 건이 하나라도 있는 대리점 (완전히 깨끗한 곳은 검토할 필요 없어 제외)
     candidate_list = sorted(
@@ -445,8 +432,34 @@ def main():
         key=lambda s: (-s['count_high'], -s['count_mid'])
     )[:15]
 
+    prev_selection = load_insight_cache().get('selected', {})
     api_key = os.environ.get('GEMINI_API_KEY', '')
-    daily_insights = generate_daily_insights(warn_list, opp_list, review_list, candidate_list, api_key)
+    daily_insights = generate_daily_insights(warn_pool, opp_pool, review_pool, candidate_list, api_key, prev_selection)
+
+    # AI(또는 실패 시 fallback)가 고른 이름을 풀에서 실제 데이터로 되찾아 최종 리스트 구성.
+    # 혹시 이름이 풀에 없거나(할루시네이션 등) 개수가 모자라면 해당 풀 상위에서 보충.
+    pool_lookup = {s['name']: s for s in warn_pool + opp_pool + review_pool}
+
+    def resolve_selected(names, pool):
+        chosen, seen = [], set()
+        for n in names:
+            s = pool_lookup.get(n)
+            if s and n not in seen:
+                chosen.append(s)
+                seen.add(n)
+        for s in pool:
+            if len(chosen) >= 3:
+                break
+            if s['name'] not in seen:
+                chosen.append(s)
+                seen.add(s['name'])
+        return chosen[:3]
+
+    selected = daily_insights.get('selected', {})
+    warn_list = resolve_selected(selected.get('warn', []), warn_pool)
+    opp_list = resolve_selected(selected.get('opp', []), opp_pool)
+    review_list = resolve_selected(selected.get('review', []), review_pool)
+
     for name, comment in daily_insights.get('comments', {}).items():
         if name in cs_scores:
             cs_scores[name]['insight_comment'] = comment
