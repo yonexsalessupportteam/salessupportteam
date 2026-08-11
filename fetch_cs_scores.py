@@ -153,6 +153,66 @@ def fetch_sales_tab(tab_name, name_col='매장명'):
     return result
 
 
+def get_recent_months(tab_name, name_col='매장명', count=3):
+    """매출 탭(예: '용품_3개월 매출') 헤더에서 최근 N개월의 (year, month)를 판별해서 반환.
+    fetch_sales_tab과 동일한 컬럼 판별 로직을 재사용하되 헤더만 읽는다(목표 raw 데이터의
+    3개월 구간을 매출 탭과 동일하게 맞추기 위함)."""
+    spreadsheet_id = os.environ.get('SPREADSHEET_ID', '')
+    client = get_sheets_client()
+    try:
+        ws = client.open_by_key(spreadsheet_id).worksheet(tab_name)
+        header = ws.row_values(1)
+    except Exception as e:
+        print(f"'{tab_name}' 탭 헤더 조회 실패: {e}")
+        return []
+
+    month_cols = []
+    for h in header:
+        parsed = parse_month_header(h)
+        if parsed:
+            month_cols.append(parsed)
+    month_cols.sort(key=lambda x: (x[0], x[1]))
+    return month_cols[-count:]
+
+
+_TARGET_RAW_FILES = {
+    '용품': 'target_goods_raw.json',
+    '의류': 'target_clothing_raw.json',
+}
+_target_raw_cache = {}
+
+
+def load_target_raw(category):
+    """매출목표달성 배점용 연간 목표 raw 데이터(용품_목표매출달성.xls/의류_목표매출달성.xls를
+    미리 파싱해 커밋해둔 target_goods_raw.json/target_clothing_raw.json)를 로드.
+    목표는 매 사이클 바뀌지 않는 고정값이라 구글시트가 아니라 저장소에 정적 파일로 둔다.
+    형식: {대리점명: {'code': 'D00001', 'monthly': [1월,2월,...,12월]}}"""
+    if category in _target_raw_cache:
+        return _target_raw_cache[category]
+    fname = _TARGET_RAW_FILES.get(category)
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), fname)
+    try:
+        with open(path, encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"'{fname}' 로드 실패: {e}")
+        data = {}
+    _target_raw_cache[category] = data
+    return data
+
+
+def target_3m_from_raw(category, recent_months):
+    """load_target_raw()로 읽은 연간 목표에서 recent_months(get_recent_months() 결과)에
+    해당하는 월만 합산 - 매출3개월 탭과 동일한 최근 3개월 구간을 사용. 반환: {대리점명: 3개월목표합}"""
+    raw = load_target_raw(category)
+    months = [m for (_, m) in recent_months if 1 <= m <= 12]
+    result = {}
+    for name, entry in raw.items():
+        monthly = entry.get('monthly', [])
+        result[name] = sum(monthly[m - 1] for m in months if m - 1 < len(monthly))
+    return result
+
+
 # ───────────────────────────────────────────
 # CS 점수 계산 (20점 만점)
 # 메모 없음 → 20점 (이슈 없음으로 간주)
@@ -503,18 +563,21 @@ def fetch_cs_data(store_debt_map={}):
         print(f"의류 3개월 매출 탭 조회 실패: {e}")
         sales_3m_clothing_tab = {}
 
-    # '용품_목표3개월' / '의류_목표3개월' 탭(매출3개월 탭과 동일 구조: 매장명 + 월별 컬럼)에서
-    # 최근 3개월 목표 합계 자동 산출 - 매출목표 달성 배점(5+5=10점)에 사용
+    # 매출목표 달성 배점(5+5=10점)용 목표값: 목표는 매 사이클 바뀌지 않는 고정값이라
+    # 구글시트 대신 저장소에 커밋해둔 target_goods_raw.json/target_clothing_raw.json(연간
+    # 월별 목표, 용품_목표매출달성.xls/의류_목표매출달성.xls를 미리 파싱한 것)을 사용.
+    # '용품_3개월 매출' 탭 헤더에서 현재 활성 3개월을 판별해 그 월들만 목표에서 합산 -
+    # 실제 매출 3개월 구간과 항상 동일한 달을 비교하게 된다.
     try:
-        target_3m_goods_tab = fetch_sales_tab('용품_목표3개월')
+        recent_months = get_recent_months('용품_3개월 매출')
     except Exception as e:
-        print(f"용품 목표3개월 탭 조회 실패: {e}")
-        target_3m_goods_tab = {}
-    try:
-        target_3m_clothing_tab = fetch_sales_tab('의류_목표3개월')
-    except Exception as e:
-        print(f"의류 목표3개월 탭 조회 실패: {e}")
-        target_3m_clothing_tab = {}
+        print(f"최근 3개월 판별 실패: {e}")
+        recent_months = []
+    if not recent_months:
+        # 폴백: 판별 실패 시 KST 기준 현재월 이전 3개월(당월 제외)을 사용
+        recent_months = [(cur_year, ((cur_month - i - 1) % 12) + 1) for i in range(3)][::-1]
+    target_3m_goods_tab = target_3m_from_raw('용품', recent_months)
+    target_3m_clothing_tab = target_3m_from_raw('의류', recent_months)
 
     def new_entry():
         return {
