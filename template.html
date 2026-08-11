@@ -722,6 +722,10 @@ function buildAllStoresList(){
       const targetScore=targetScoreGoods+targetScoreClothing;
       const target3mGoods=csData.target_3m_goods||0; // 목표 raw 자체가 부가세 제외 기준이라 환산 불필요
       const target3mClothing=csData.target_3m_clothing||0;
+      const salesMonthlyGoods=csData.sales_monthly_goods||{};       // {"1":금액,...} 부가세 포함(ERP원본), 시트에 입력된 월만 키 존재
+      const salesMonthlyClothing=csData.sales_monthly_clothing||{};
+      const targetMonthlyGoods=csData.target_monthly_goods||[];     // [1월,2월,...,12월] 부가세 제외, 항상 12개
+      const targetMonthlyClothing=csData.target_monthly_clothing||[];
       const pGoods=csData.p_goods||'';
       const pClothing=csData.p_clothing||'';
       const pGoodsCount=csData.p_goods_count||0;
@@ -753,7 +757,7 @@ function buildAllStoresList(){
       // "등급" 라벨로 화면에 노출할 땐 반드시 이 값을 써야 함 (getRiskClass와 동일 공식)
       const scoreGrade=getRiskClass(totalScore,worstRisk).label;
       const catLabel=[c?'의류':'',g?'용품':''].filter(Boolean).join('+');
-      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,targetScore,targetScoreGoods,targetScoreClothing,target3mGoods,target3mClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,scoreGrade,catLabel});
+      allStores.push({code,name:base.name,salesperson:base.salesperson,dept,clothing:c,goods:g,csScore,partnershipScore,salesScore,salesScoreGoods,salesScoreClothing,sales3mGoods,sales3mClothing,targetScore,targetScoreGoods,targetScoreClothing,target3mGoods,target3mClothing,salesMonthlyGoods,salesMonthlyClothing,targetMonthlyGoods,targetMonthlyClothing,pGoods,pClothing,pGoodsCount,pClothingCount,keywords,memo,aiComment,aiAssessedRisk,aiMismatch,aiMismatchDirection,dailyInsight,aiFlagged,aiFlagComment,deductCollectionClothing,deductCollectionGoods,deductCollateralClothing,deductCollateralGoods,collectionDaysClothing,collectionDaysGoods,quantScore,totalScore,worstRisk,scoreGrade,catLabel});
     });
   });
   allStores.sort((a,b)=>b.totalScore-a.totalScore);
@@ -1096,6 +1100,8 @@ function toggleAiDet(idx,card){
 
 let targetPageBuilt=false;
 let targetDeptFilter='전체';
+let targetViewMode='summary'; // 'summary' | 'monthly'
+let targetMonthlyCat='용품';
 
 function switchTargetTab(dept,el){
   document.querySelectorAll('#cat-target .tab').forEach(t=>t.classList.remove('active'));
@@ -1104,10 +1110,51 @@ function switchTargetTab(dept,el){
   buildTargetPage();
 }
 
+function switchTargetViewMode(mode){
+  targetViewMode=mode;
+  buildTargetPage();
+}
+
+function switchTargetMonthlyCat(cat){
+  targetMonthlyCat=cat;
+  buildTargetPage();
+}
+
 function buildTargetPage(){
   const dept=targetDeptFilter;
   const all=buildAllStoresList();
   const rows=(dept==='전체'?all:all.filter(s=>s.dept===dept));
+
+  const modeToggleHtml=`<div class="tabs" style="margin-bottom:14px">
+    <div class="tab${targetViewMode==='summary'?' active':''}" onclick="switchTargetViewMode('summary')">3개월 합계</div>
+    <div class="tab${targetViewMode==='monthly'?' active':''}" onclick="switchTargetViewMode('monthly')">월별 상세 (2026)</div>
+  </div>`;
+
+  const el=document.getElementById('target-page-content');
+
+  if(targetViewMode==='monthly'){
+    el.innerHTML=modeToggleHtml+`
+    <div class="tabs" style="margin-bottom:14px">
+      <div class="tab${targetMonthlyCat==='용품'?' active':''}" onclick="switchTargetMonthlyCat('용품')">🏸 용품</div>
+      <div class="tab${targetMonthlyCat==='의류'?' active':''}" onclick="switchTargetMonthlyCat('의류')">👔 의류</div>
+    </div>
+    <div class="card">
+      <div class="card-title">${targetMonthlyCat} 매장별 월별 목표 대비 실적 (2026, ${rows.length}개)</div>
+      <div class="filter-bar"><input id="target-monthly-search" type="text" placeholder="매장명 검색..."/></div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th style="width:150px;position:sticky;left:0;background:#fff;z-index:1">매장명</th><th style="width:70px">팀</th>
+          ${['1','2','3','4','5','6','7','8','9','10','11','12'].map(m=>`<th style="width:110px;text-align:center">${m}월</th>`).join('')}
+        </tr></thead>
+        <tbody id="target-monthly-tbl"></tbody>
+      </table></div>
+      <div class="kpi-sub" style="margin-top:10px">각 칸: 목표 / 실적(부가세 제외 환산) — 실적이 아직 입력되지 않은 달은 "실적 미입력"으로 표시됩니다.</div>
+    </div>`;
+    window._targetRows=rows;
+    document.getElementById('target-monthly-search').addEventListener('input',renderTargetMonthlyTable);
+    renderTargetMonthlyTable();
+    return;
+  }
 
   const goodsRows=rows.filter(s=>s.target3mGoods>0);
   const clothingRows=rows.filter(s=>s.target3mClothing>0);
@@ -1128,8 +1175,7 @@ function buildTargetPage(){
     </div>
   </div>`;
 
-  const el=document.getElementById('target-page-content');
-  el.innerHTML=kpiHtml+`
+  el.innerHTML=modeToggleHtml+kpiHtml+`
   <div class="card">
     <div class="card-title">매장별 목표 대비 달성 현황 (${rows.length}개)</div>
     <div class="filter-bar">
@@ -1186,6 +1232,35 @@ function renderTargetTable(){
     tr.innerHTML=`<td title="${s.name}">${s.name}</td><td>${s.dept}</td><td>${s.salesperson}</td>
       <td class="nr">${goodsHas?fmt(s.target3mGoods):'—'}</td><td class="nr">${fmt(Math.round(s.sales3mGoods))}</td><td style="text-align:center">${badge(goodsOk,goodsHas)}</td>
       <td class="nr">${clothingHas?fmt(s.target3mClothing):'—'}</td><td class="nr">${fmt(Math.round(s.sales3mClothing))}</td><td style="text-align:center">${badge(clothingOk,clothingHas)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderTargetMonthlyTable(){
+  const rows=window._targetRows||[];
+  const cat=targetMonthlyCat;
+  const q=(document.getElementById('target-monthly-search')||{}).value?.toLowerCase()||'';
+  const filtered=rows.filter(s=>!q||s.name.toLowerCase().includes(q));
+  const tbody=document.getElementById('target-monthly-tbl');
+  tbody.innerHTML='';
+  filtered.forEach(s=>{
+    const targetMonthly=cat==='용품'?s.targetMonthlyGoods:s.targetMonthlyClothing;
+    const salesMonthly=cat==='용품'?s.salesMonthlyGoods:s.salesMonthlyClothing;
+    const cells=[];
+    for(let m=1;m<=12;m++){
+      const target=targetMonthly&&targetMonthly.length>=m?(targetMonthly[m-1]||0):0;
+      const hasActual=salesMonthly&&Object.prototype.hasOwnProperty.call(salesMonthly,String(m));
+      if(!hasActual){
+        cells.push(`<td style="text-align:center;color:#b4b2a9;font-size:11px">${target>0?'목표 '+fmt(target)+'<br>실적 미입력':'—'}</td>`);
+        continue;
+      }
+      const actualNet=(salesMonthly[String(m)]||0)/SALES_VAT_RATE;
+      const ok=target>0&&actualNet>=target;
+      const color=target<=0?'#5f5e5a':(ok?'#0F6E56':'#A32D2D');
+      cells.push(`<td style="text-align:center;font-size:11px;color:${color}">${target>0?'목표 '+fmt(target):'목표없음'}<br>실적 ${fmt(Math.round(actualNet))}</td>`);
+    }
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td title="${s.name}" style="position:sticky;left:0;background:#fff">${s.name}</td><td>${s.dept}</td>${cells.join('')}`;
     tbody.appendChild(tr);
   });
 }

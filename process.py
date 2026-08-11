@@ -335,6 +335,8 @@ def main():
                 'sales_3m_goods': 0, 'sales_3m_clothing': 0,
                 'target_score': 0, 'target_score_goods': 0, 'target_score_clothing': 0,
                 'target_3m_goods': 0, 'target_3m_clothing': 0,
+                'sales_monthly_goods': {}, 'sales_monthly_clothing': {},
+                'target_monthly_goods': [], 'target_monthly_clothing': [],
                 'p_goods': '', 'p_clothing': '', 'p_goods_count': 0, 'p_clothing_count': 0,
                 'keywords': '', 'memo': '', 'ai_comment': '',
                 'deduct_collection':          debt.get('deduct_collection', 0),

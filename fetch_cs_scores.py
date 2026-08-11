@@ -153,6 +153,54 @@ def fetch_sales_tab(tab_name, name_col='매장명'):
     return result
 
 
+def fetch_monthly_series(tab_name, name_col='매장명', year=None):
+    """'용품_3개월 매출' / '의류_3개월 매출' 탭에서 지정 연도(year)에 해당하는 월별 컬럼을
+    전부(3개월 제한 없이) 읽어서 {대리점명: {월(1~12): 금액}} 형태로 반환.
+    fetch_sales_tab()은 최근 3개월 합계만 필요할 때, 이 함수는 월별 상세 화면처럼
+    개별 월 값이 다 필요할 때 사용. 시트에 실제로 입력된 월만 키로 존재한다
+    (미입력 월은 아예 키가 없음 - 프론트에서 '실적 미입력'으로 구분하는 데 사용)."""
+    spreadsheet_id = os.environ.get('SPREADSHEET_ID', '')
+    client = get_sheets_client()
+    try:
+        ws = client.open_by_key(spreadsheet_id).worksheet(tab_name)
+    except Exception as e:
+        print(f"'{tab_name}' 탭 읽기 실패: {e}")
+        return {}
+
+    values = ws.get_all_values()
+    if not values:
+        return {}
+    header = values[0]
+
+    try:
+        name_idx = header.index(name_col)
+    except ValueError:
+        print(f"'{tab_name}' 탭에서 '{name_col}' 컬럼을 찾지 못함")
+        return {}
+
+    month_cols = []  # (month, col_idx) - year 필터링됨
+    for idx, h in enumerate(header):
+        parsed = parse_month_header(h)
+        if parsed and (year is None or parsed[0] == year):
+            month_cols.append((parsed[1], idx))
+    if not month_cols:
+        return {}
+
+    result = {}
+    for row in values[1:]:
+        if len(row) <= name_idx:
+            continue
+        name = ' '.join(str(row[name_idx]).split())
+        if not name:
+            continue
+        monthly = {}
+        for month, idx in month_cols:
+            if idx < len(row):
+                monthly[month] = parse_amount(row[idx])
+        result[name] = monthly
+    return result
+
+
 def get_recent_months(tab_name, name_col='매장명', count=3):
     """매출 탭(예: '용품_3개월 매출') 헤더에서 최근 N개월의 (year, month)를 판별해서 반환.
     fetch_sales_tab과 동일한 컬럼 판별 로직을 재사용하되 헤더만 읽는다(목표 raw 데이터의
@@ -563,6 +611,19 @@ def fetch_cs_data(store_debt_map={}):
         print(f"의류 3개월 매출 탭 조회 실패: {e}")
         sales_3m_clothing_tab = {}
 
+    # 매출목표 달성 "월별 상세" 화면용: 3개월 제한 없이 올해(cur_year)에 입력된 월별 실적을 전부 조회.
+    # 시트에 없는 월은 dict에 키 자체가 없음 (프론트에서 '실적 미입력'으로 구분).
+    try:
+        sales_monthly_goods_tab = fetch_monthly_series('용품_3개월 매출', year=cur_year)
+    except Exception as e:
+        print(f"용품 월별 매출 조회 실패: {e}")
+        sales_monthly_goods_tab = {}
+    try:
+        sales_monthly_clothing_tab = fetch_monthly_series('의류_3개월 매출', year=cur_year)
+    except Exception as e:
+        print(f"의류 월별 매출 조회 실패: {e}")
+        sales_monthly_clothing_tab = {}
+
     # 매출목표 달성 배점(5+5=10점)용 목표값: 목표는 매 사이클 바뀌지 않는 고정값이라
     # 구글시트 대신 저장소에 커밋해둔 target_goods_raw.json/target_clothing_raw.json(연간
     # 월별 목표, 용품_목표매출달성.xls/의류_목표매출달성.xls를 미리 파싱한 것)을 사용.
@@ -586,6 +647,7 @@ def fetch_cs_data(store_debt_map={}):
             'p_goods_latest': '', 'p_clothing_latest': '',
             'sales_3m_goods': 0, 'sales_3m_clothing': 0,
             'target_3m_goods': 0, 'target_3m_clothing': 0,
+            'sales_monthly_goods': {}, 'sales_monthly_clothing': {},
         }
 
     # CS 시트 병합 (대리점명 기준) - 키워드/파트너십 둘 다 "이번 달 작성분만" 누적 집계 (매달 리셋)
@@ -654,6 +716,19 @@ def fetch_cs_data(store_debt_map={}):
         if name not in merged:
             merged[name] = new_entry()
         merged[name]['target_3m_clothing'] = total
+    for name, monthly in sales_monthly_goods_tab.items():
+        name = resolve_erp_name(name)
+        if name not in merged:
+            merged[name] = new_entry()
+        merged[name]['sales_monthly_goods'] = monthly
+    for name, monthly in sales_monthly_clothing_tab.items():
+        name = resolve_erp_name(name)
+        if name not in merged:
+            merged[name] = new_entry()
+        merged[name]['sales_monthly_clothing'] = monthly
+
+    target_goods_raw = load_target_raw('용품')
+    target_clothing_raw = load_target_raw('의류')
 
     result = {}
     for name, data in merged.items():
@@ -681,6 +756,10 @@ def fetch_cs_data(store_debt_map={}):
         sales_score_clothing = score_sales_tier_clothing(sales_3m_clothing)
         target_score_goods    = score_target_achieve(sales_3m_goods, target_3m_goods)
         target_score_clothing = score_target_achieve(sales_3m_clothing, target_3m_clothing)
+        sales_monthly_goods    = data.get('sales_monthly_goods', {})
+        sales_monthly_clothing = data.get('sales_monthly_clothing', {})
+        target_monthly_goods    = target_goods_raw.get(name, {}).get('monthly', [])
+        target_monthly_clothing = target_clothing_raw.get(name, {}).get('monthly', [])
 
         result[name] = {
             'score':                  cs_score,
@@ -695,6 +774,10 @@ def fetch_cs_data(store_debt_map={}):
             'target_score_clothing':  target_score_clothing,
             'target_3m_goods':        target_3m_goods,
             'target_3m_clothing':     target_3m_clothing,
+            'sales_monthly_goods':    sales_monthly_goods,
+            'sales_monthly_clothing': sales_monthly_clothing,
+            'target_monthly_goods':   target_monthly_goods,
+            'target_monthly_clothing': target_monthly_clothing,
             'p_goods':                data['p_goods_latest'],
             'p_clothing':             data['p_clothing_latest'],
             'p_goods_count':          p_goods_count,
