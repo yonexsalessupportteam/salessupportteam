@@ -26,14 +26,21 @@ RAW_FILES = {
 
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
-# 담보대비 초과율 5단계 컷라인. 18개월 실측(채권데이터.xlsx) 기준 초과(>0%) 발생 케이스만 놓고 봤을 때
-# 25/50/75분위가 약 28%/73%/157%로 나와, 라운드넘버로 0%/30%/75%/150%를 컷라인으로 확정
-# (기존 3단계(주의/경계/위기)로는 30~120% 구간에 케이스가 과도하게 뭉쳐 변별력이 없었음).
+# 담보대비 초과율 4단계(+관리) 컷라인. 담보초과_채권비율_월별요약 실측 데이터에서 카테고리(용품/의류)별
+# 초과(>0%) 발생 케이스의 분포를 3등분(tercile)해 산출 — 두 카테고리는 초과율 값의 분포 자체가 달라
+# (의류가 전반적으로 더 크게 퍼짐) 카테고리별로 별도 컷라인을 둔다. 기존 5단계(위험/위기 분리)는
+# 위험+위기를 하나의 '위기'로 통합해 4단계(적정/주의/경계/위기)+관리로 단순화.
 RISK_THRESHOLDS = {
-    'safe_max': 0.0,     # 초과율 ≤0% → 적정
-    'caution_max': 0.3,  # 0~30% → 주의
-    'warning_max': 0.75, # 30~75% → 경계
-    'danger_max': 1.5,   # 75~150% → 위험, 150% 초과 → 위기
+    '용품': {
+        'safe_max': 0.0,      # 초과율 ≤0% → 적정
+        'caution_max': 0.30,  # 0~30% → 주의
+        'warning_max': 0.95,  # 30~95% → 경계, 95% 초과 → 위기
+    },
+    '의류': {
+        'safe_max': 0.0,      # 초과율 ≤0% → 적정
+        'caution_max': 0.60,  # 0~60% → 주의
+        'warning_max': 1.50,  # 60~150% → 경계, 150% 초과 → 위기
+    },
 }
 
 # (폐기됨) 과거엔 성수기(2~10월, 수주기간)에 완화된 컷라인을 별도 적용했으나,
@@ -66,11 +73,13 @@ def deduct_collection_days(days):
         return 15
 
 
-def deduct_collateral_ratio(collateral, receivable):
-    """담보대비 초과율 감점 (카테고리당 최대 10점 - 의류/용품 각각 독립 채점). classify_risk() 등급 기준과 동일하게 정렬.
-    초과율 = (채권잔액-담보)/담보. 의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 그대로 합산(최대 20점)한다.
-    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS) 적용 — 수주기간 완화 없음.
-    5단계(적정/주의/경계/위험/위기) 감점 스케일 0/-2/-4/-7/-10 (매출규모 5분위 감점과 동일한 스케일 사용)."""
+def deduct_collateral_ratio(collateral, receivable, category):
+    """담보대비 초과율 감점 (카테고리당 최대 10점 - 의류/용품 각각 독립 채점, 카테고리별 컷라인 적용).
+    classify_risk() 등급 기준과 동일하게 정렬. 초과율 = (채권잔액-담보)/담보.
+    의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 그대로 합산(최대 20점)한다.
+    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS[category]) 적용 — 수주기간 완화 없음.
+    4단계(적정/주의/경계/위기) 감점 스케일 0/-4/-6/-10 (회수일 감점과 동일한 비례 구조: 0/40%/60%/100%)."""
+    thresholds = ACTIVE_THRESHOLDS[category]
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
@@ -78,37 +87,34 @@ def deduct_collateral_ratio(collateral, receivable):
     if collateral == 0 and receivable > 0:
         return 10
     excess_rate = (receivable - collateral) / collateral * 100
-    if excess_rate <= ACTIVE_THRESHOLDS['safe_max'] * 100:      # 적정
+    if excess_rate <= thresholds['safe_max'] * 100:      # 적정
         return 0
-    elif excess_rate <= ACTIVE_THRESHOLDS['caution_max'] * 100:  # 주의
-        return 2
-    elif excess_rate <= ACTIVE_THRESHOLDS['warning_max'] * 100:  # 경계
+    elif excess_rate <= thresholds['caution_max'] * 100:  # 주의
         return 4
-    elif excess_rate <= ACTIVE_THRESHOLDS['danger_max'] * 100:  # 위험
-        return 7
-    else:                                                       # 위기
+    elif excess_rate <= thresholds['warning_max'] * 100:  # 경계
+        return 6
+    else:                                                 # 위기
         return 10
 
 
 
-def classify_risk(collateral, receivable):
-    """소액 채권(50만원 미만)은 주의/경계/위험/위기 등급의 노이즈를 막기 위해 '해당없음' 처리하되,
+def classify_risk(collateral, receivable, category):
+    """소액 채권(50만원 미만)은 주의/경계/위기 등급의 노이즈를 막기 위해 '해당없음' 처리하되,
     담보가 충분해 '적정'인 경우와 무담보 상태라 '관리'인 경우는 소액이어도 그대로 노출한다
     (둘 다 노이즈가 아니라 실제 담보 상태를 정확히 보여줘야 하는 정보이므로).
-    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS) 적용 — 수주기간 완화 없음.
-    5단계: 적정(≤0%)/주의(0~30%)/경계(30~75%)/위험(75~150%)/위기(150%초과)."""
+    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS[category]) 적용 — 수주기간 완화 없음.
+    4단계(카테고리별 컷라인): 적정(≤0%)/주의/경계/위기 + 관리(무담보+채권존재)."""
+    thresholds = ACTIVE_THRESHOLDS[category]
     if collateral == 0:
         grade = '관리' if receivable > 0 else '적정'
     else:
         excess_rate = (receivable - collateral) / collateral
-        if excess_rate <= ACTIVE_THRESHOLDS['safe_max']:
+        if excess_rate <= thresholds['safe_max']:
             grade = '적정'
-        elif excess_rate <= ACTIVE_THRESHOLDS['caution_max']:
+        elif excess_rate <= thresholds['caution_max']:
             grade = '주의'
-        elif excess_rate <= ACTIVE_THRESHOLDS['warning_max']:
+        elif excess_rate <= thresholds['warning_max']:
             grade = '경계'
-        elif excess_rate <= ACTIVE_THRESHOLDS['danger_max']:
-            grade = '위험'
         else:
             grade = '위기'
     if grade not in ('적정', '관리') and abs(receivable) < MIN_RECEIVABLE_THRESHOLD:
@@ -116,7 +122,7 @@ def classify_risk(collateral, receivable):
     return grade
 
 
-def process_raw(filepath):
+def process_raw(filepath, category):
     xl = pd.read_excel(filepath, engine='xlrd', sheet_name=None, header=None)
     df = xl['export']
     data = df.iloc[1:].copy()
@@ -143,13 +149,13 @@ def process_raw(filepath):
         (result['receivable'] - result['collateral']) / result['collateral'], 0.0
     )
     result['risk'] = result.apply(
-        lambda r: classify_risk(r['collateral'], r['receivable']), axis=1
+        lambda r: classify_risk(r['collateral'], r['receivable'], category), axis=1
     )
 
     # 감점 계산 (회수일 카테고리당 최대15/합산최대30, 담보 카테고리당 최대10/합산최대20 - 의류+용품 합산은 store_debt_map 병합 단계에서 처리)
     result['deduct_collection'] = result['collection_days'].apply(deduct_collection_days)
     result['deduct_collateral'] = result.apply(
-        lambda r: deduct_collateral_ratio(r['collateral'], r['receivable']), axis=1
+        lambda r: deduct_collateral_ratio(r['collateral'], r['receivable'], category), axis=1
     )
 
     return result
@@ -196,8 +202,8 @@ def build_group_data(full_sub):
     return {'stores': stores, 'summary': summary, 'by_salesperson': sp_summary}
 
 
-def build_category_dashboard(filepath):
-    result = process_raw(filepath)
+def build_category_dashboard(filepath, category):
+    result = process_raw(filepath, category)
     dashboard = {}
     for dept in DEPT_TABS:
         sub = result[result['dept_name'] == dept]
@@ -252,14 +258,15 @@ def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, output_
 
 def main():
     print("raw 파일 처리 시작...")
-    print(f"현재 적용 담보대비 초과율 컷라인 (연중 동일, 5단계): "
-          f"적정≤{ACTIVE_THRESHOLDS['safe_max']*100:.0f}% / "
-          f"주의~{ACTIVE_THRESHOLDS['caution_max']*100:.0f}% / "
-          f"경계~{ACTIVE_THRESHOLDS['warning_max']*100:.0f}% / "
-          f"위험~{ACTIVE_THRESHOLDS['danger_max']*100:.0f}% / 위기 초과")
+    for cat in ('용품', '의류'):
+        t = ACTIVE_THRESHOLDS[cat]
+        print(f"현재 적용 담보대비 초과율 컷라인 ({cat}, 연중 동일, 4단계): "
+              f"적정≤{t['safe_max']*100:.0f}% / "
+              f"주의~{t['caution_max']*100:.0f}% / "
+              f"경계~{t['warning_max']*100:.0f}% / 위기 초과")
 
-    clothing_dash = build_category_dashboard(RAW_FILES['의류'])
-    goods_dash    = build_category_dashboard(RAW_FILES['용품'])
+    clothing_dash = build_category_dashboard(RAW_FILES['의류'], '의류')
+    goods_dash    = build_category_dashboard(RAW_FILES['용품'], '용품')
 
     print("\n=== 의류 ===")
     for dept, d in clothing_dash.items():
@@ -343,7 +350,7 @@ def main():
 
     # ── 대리점별 종합점수·등급 계산 (template.html buildAiDash의 계산과 동일한 공식) ──
     # "AI가 분석한 오늘의 대리점 인사이트" 팝업(경고/기회/검토)에 노출할 대리점을 선정하기 위함
-    risk_order = ['위기', '위험', '경계', '주의', '적정', '관리', '해당없음']
+    risk_order = ['위기', '경계', '주의', '적정', '관리', '해당없음']
 
     def combine_worst_risk(risks):
         w = '해당없음'
