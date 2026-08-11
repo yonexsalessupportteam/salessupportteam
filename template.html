@@ -79,12 +79,14 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#F4F5FA;colo
 .p적정{background:#EAF3DE;color:#3B6D11;border-color:#97C459}
 .p주의{background:#E6F1FB;color:#185FA5;border-color:#85B7EB}
 .p경계{background:#FAEEDA;color:#854F0B;border-color:#FAC775}
+.p위험{background:#FCE0D5;color:#8B3A1A;border-color:#F0A87A}
 .p위기{background:#FCEBEB;color:#A32D2D;border-color:#F09595}
 .p관리{background:#f1efe8;color:#5f5e5a;border-color:#d3d1c7}
 .p해당없음{background:#f1efe8;color:#888780;border-color:#d3d1c7}
 .pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .p적정 .pill-dot{background:#3B6D11}.p주의 .pill-dot{background:#185FA5}
-.p경계 .pill-dot{background:#854F0B}.p위기 .pill-dot{background:#A32D2D}
+.p경계 .pill-dot{background:#854F0B}.p위험 .pill-dot{background:#8B3A1A}
+.p위기 .pill-dot{background:#A32D2D}
 .p관리 .pill-dot{background:#5f5e5a}.p해당없음 .pill-dot{background:#888780}
 .pill-expand{display:none;background:#fff;border:.5px solid #e0dfd8;border-radius:10px;padding:12px 14px;margin-bottom:20px}
 .pill-expand.show{display:block}
@@ -189,6 +191,7 @@ tbody tr:hover{background:#f9f8f4}
 .rp-safe{background:#EAF3DE;color:#27500A}
 .rp-caution{background:#FAEEDA;color:#633806}
 .rp-border{background:#FAECE7;color:#712B13}
+.rp-danger{background:#FCE0D5;color:#6B2A10}
 .rp-crisis{background:#FCEBEB;color:#791F1F}
 .rp-manage{background:#F1E5F5;color:#4A1758}
 .det-panel{background:#fff;border:.5px solid #e0dfd8;border-radius:12px;padding:18px 20px;margin-bottom:8px}
@@ -364,13 +367,14 @@ tbody tr:hover{background:#f9f8f4}
           <tr><td>90일 초과</td><td class="neg">-15점</td></tr>
         </table>
         <p><b>담보대비 초과율 감점</b> (초과율 = (채권잔액-담보)/담보, 의류/용품 각각 독립 채점)</p>
-        <p style="font-size:12px;color:#5f5e5a;margin:-4px 0 8px">※ 수주여신 부여 자체가 회사가 감수하는 리스크이므로, 수주기간(2~10월)에도 완화 없이 연중 동일 기준 적용</p>
+        <p style="font-size:12px;color:#5f5e5a;margin:-4px 0 8px">※ 수주여신 부여 자체가 회사가 감수하는 리스크이므로, 수주기간(2~10월)에도 완화 없이 연중 동일 기준 적용. 18개월 실측 데이터의 초과(&gt;0%) 케이스 분위 기준 5단계로 세분화</p>
         <table class="crit-table">
           <tr><th>담보대비 초과율</th><th>등급</th><th>감점 (카테고리당)</th></tr>
           <tr><td>0% 이하</td><td>적정</td><td>0점</td></tr>
-          <tr><td>0~30%</td><td>주의</td><td class="neg">-4점</td></tr>
-          <tr><td>30~120%</td><td>경계</td><td class="neg">-6점</td></tr>
-          <tr><td>120% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-10점</td></tr>
+          <tr><td>0~30%</td><td>주의</td><td class="neg">-2점</td></tr>
+          <tr><td>30~75%</td><td>경계</td><td class="neg">-4점</td></tr>
+          <tr><td>75~150%</td><td>위험</td><td class="neg">-7점</td></tr>
+          <tr><td>150% 초과 / 무담보+채권존재</td><td>위기 / 관리</td><td class="neg">-10점</td></tr>
         </table>
         <div class="crit-sub">※ 의류+용품 둘 다 있는 대리점은 카테고리별 감점을 그대로 합산 (회수일 최대 15+15=30점, 담보 최대 10+10=20점) - 한 카테고리만 있으면 그 카테고리 감점만 반영</div>
       </div>
@@ -562,10 +566,10 @@ function fmt(n){
   return sign+'₩'+Math.round(a).toLocaleString('ko-KR');
 }
 
-const riskColors={'위기':'#E24B4A','경계':'#EF9F27','주의':'#378ADD','적정':'#639922','관리':'#888780'};
+const riskColors={'위기':'#E24B4A','위험':'#D9622C','경계':'#EF9F27','주의':'#378ADD','적정':'#639922','관리':'#888780'};
 const spColors={'김연준':'#378ADD','김종윤':'#1D9E75','손효동':'#D85A30','왕준하':'#534AB7','전재영':'#D4537E','최낙호':'#639922','윤홍선':'#7F77DD','안재우':'#F0997B','김동경':'#E24B4A','박현진':'#993556','안우진':'#854F0B','신동원':'#0F6E56','문창수':'#993C1D'};
 const chartRegistry={};
-const allRisks=['위기','경계','주의','적정','관리'];
+const allRisks=['위기','위험','경계','주의','적정','관리'];
 const excessOnly={};
 const builtPages={};
 const expandedRisk={};
@@ -704,7 +708,7 @@ function buildAiDash(){
       const dailyInsight=csData.insight_comment||'';
       const aiFlagged=!!csData.ai_flagged;
       const aiFlagComment=csData.ai_flag_comment||'';
-      const order=['위기','경계','주의','적정','관리','해당없음'];
+      const order=['위기','위험','경계','주의','적정','관리','해당없음'];
       const worstRisk=[c,g].filter(Boolean).reduce((w,s)=>order.indexOf(s.risk)<order.indexOf(w)?s.risk:w,'해당없음');
       const deductCollection=csData.deduct_collection!=null?csData.deduct_collection:0;
       const deductCollectionClothing=csData.deduct_collection_clothing!=null?csData.deduct_collection_clothing:0;
@@ -851,7 +855,7 @@ function buildAiDash(){
       <div class="sec-label">👔 의류 채권 리스크</div>
       <div class="risk-card">
         <div class="risk-card-top">
-          <span class="rpill ${s.clothing.risk==='위기'?'rp-crisis':s.clothing.risk==='경계'?'rp-border':s.clothing.risk==='주의'?'rp-caution':s.clothing.risk==='적정'?'rp-safe':'rp-manage'}">${s.clothing.risk}단계</span>
+          <span class="rpill ${s.clothing.risk==='위기'?'rp-crisis':s.clothing.risk==='위험'?'rp-danger':s.clothing.risk==='경계'?'rp-border':s.clothing.risk==='주의'?'rp-caution':s.clothing.risk==='적정'?'rp-safe':'rp-manage'}">${s.clothing.risk}단계</span>
         </div>
         <div class="cat-grid">
           <div class="dc"${s.deductCollectionClothing>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
@@ -874,7 +878,7 @@ function buildAiDash(){
       <div class="sec-label">🏸 용품 채권 리스크</div>
       <div class="risk-card">
         <div class="risk-card-top">
-          <span class="rpill ${s.goods.risk==='위기'?'rp-crisis':s.goods.risk==='경계'?'rp-border':s.goods.risk==='주의'?'rp-caution':s.goods.risk==='적정'?'rp-safe':'rp-manage'}">${s.goods.risk}단계</span>
+          <span class="rpill ${s.goods.risk==='위기'?'rp-crisis':s.goods.risk==='위험'?'rp-danger':s.goods.risk==='경계'?'rp-border':s.goods.risk==='주의'?'rp-caution':s.goods.risk==='적정'?'rp-safe':'rp-manage'}">${s.goods.risk}단계</span>
         </div>
         <div class="cat-grid">
           <div class="dc"${s.deductCollectionGoods>0?' style="background:#FCEBEB;border:.5px solid #F09595"':''}>
