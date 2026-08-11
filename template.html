@@ -1220,26 +1220,18 @@ function renderTargetTable(){
   });
 }
 
+function hexToRgba(hex,alpha){
+  const h=hex.replace('#','');
+  const r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function buildTeamMonthlyChart(all,cat,chartId){
   const teams=['영업1팀','영업2팀','E-BIZ팀'];
-  // 파란 계열 3단계로 톤 통일: 팀은 명도로, 매출(실선 막대)/목표(점선)는 형태로 구분
-  const barColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
-  const lineColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
+  // 파란(남색) 계열 3단계로 톤 통일: 팀은 명도로 구분. 목표=막대, 매출=굵은 선(+옅은 채우기)
+  const teamColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
 
   const barDatasets=teams.map(team=>{
-    const teamRows=all.filter(s=>s.dept===team);
-    const sums=[];
-    for(let m=1;m<=12;m++){
-      let sum=0;
-      teamRows.forEach(s=>{
-        const {hasActual,actualNet}=getMonthlyStat(s,cat,m);
-        if(hasActual) sum+=actualNet;
-      });
-      sums.push(Math.round(sum));
-    }
-    return {type:'bar',label:team+' 매출',data:sums,backgroundColor:barColors[team],borderRadius:2,order:2};
-  });
-  const lineDatasets=teams.map(team=>{
     const teamRows=all.filter(s=>s.dept===team);
     const sums=[];
     for(let m=1;m<=12;m++){
@@ -1250,7 +1242,20 @@ function buildTeamMonthlyChart(all,cat,chartId){
       });
       sums.push(Math.round(sum));
     }
-    return {type:'line',label:team+' 목표',data:sums,borderColor:lineColors[team],backgroundColor:lineColors[team],borderDash:[5,3],borderWidth:2,pointRadius:3,pointStyle:'circle',fill:false,tension:0,order:1};
+    return {type:'bar',label:team+' 목표',data:sums,backgroundColor:teamColors[team],borderRadius:2,order:2};
+  });
+  const lineDatasets=teams.map(team=>{
+    const teamRows=all.filter(s=>s.dept===team);
+    const sums=[];
+    for(let m=1;m<=12;m++){
+      let sum=0;
+      teamRows.forEach(s=>{
+        const {hasActual,actualNet}=getMonthlyStat(s,cat,m);
+        if(hasActual) sum+=actualNet;
+      });
+      sums.push(Math.round(sum));
+    }
+    return {type:'line',label:team+' 매출',data:sums,borderColor:teamColors[team],backgroundColor:hexToRgba(teamColors[team],0.12),borderWidth:3,pointRadius:3,pointBackgroundColor:teamColors[team],fill:true,tension:.35,order:1};
   });
 
   if(chartRegistry[chartId]) chartRegistry[chartId].destroy();
