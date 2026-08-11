@@ -23,10 +23,12 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#FAFBFF;colo
 .sidebar-group.collapsed{max-height:0}
 .sidebar-restore{padding:10px 16px;font-size:12px;color:#9CA3AF;cursor:pointer;user-select:none}
 .sidebar-restore:hover{color:#4F46E5}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;cursor:pointer;color:#5f5e5a;font-weight:400;transition:.15s;border-left:3px solid transparent}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:2px 10px;border-radius:10px;font-size:14px;cursor:pointer;color:#5f5e5a;font-weight:400;transition:.15s;position:relative}
 .sidebar-item:hover{background:#F3F2FF;color:#4F46E5}
-.sidebar-item.active{background:#EEF0FF;color:#4F46E5;font-weight:600;border-left-color:#4F46E5}
-.sidebar-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-item.active{background:#EEF0FF;color:#4F46E5;font-weight:600}
+.sidebar-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:4px;height:18px;background:#4F46E5;border-radius:0 4px 4px 0}
+.sidebar-item .icon{font-size:13px;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:#F3F2FF;flex-shrink:0}
+.sidebar-item.active .icon{background:#fff}
 .sidebar-divider{height:1px;background:#E5E7EB;margin:8px 0}
 .crit-wrap{padding:24px;max-width:1200px}
 .crit-intro{font-size:13px;color:#5f5e5a;margin-bottom:20px;line-height:1.6}
@@ -39,7 +41,7 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#FAFBFF;colo
 .crit-body{padding:0 18px 18px;font-size:13px;color:#3a3a38}
 .crit-body p{margin:8px 0;color:#5f5e5a}
 .crit-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
-.crit-table th{background:#4F46E5;color:#fff;padding:8px 12px;text-align:center;font-weight:600}
+.crit-table th{background:#2563EB;color:#fff;padding:8px 12px;text-align:center;font-weight:600}
 .crit-table td{padding:8px 12px;text-align:center;border-bottom:.5px solid #e0dfd8;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 .crit-table{table-layout:auto}
 .crit-table tr:nth-child(even) td{background:#f9f8f5}
@@ -57,6 +59,7 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#FAFBFF;colo
 .page.active{display:block}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .kpi{background:#fff;border-radius:10px;padding:16px 18px;border:1px solid #EDECF5;box-shadow:0 1px 3px rgba(33,27,73,0.04)}
+.kpi-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
 .kpi-label{font-size:12px;color:#888780;margin-bottom:8px}
 .kpi-value{font-size:22px;font-weight:500}
 .kpi-sub{font-size:11px;color:#b4b2a9;margin-top:4px}
@@ -143,6 +146,7 @@ tbody tr:hover{background:#f9f8f4}
 .insight-row-sub{font-size:12px;color:#888780;margin-top:2px}
 .ai-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
 .ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8}
+.ai-kpi-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:8px}
 .ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
 .ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
 .ai-kpi .val.g{color:#0F6E56}.ai-kpi .val.r{color:#A32D2D}.ai-kpi .val.a{color:#854F0B}
@@ -856,12 +860,12 @@ function buildAiDash(){
   </div>
   `+insightHtml+`
   <div class="ai-kpi-grid">
-    <div class="ai-kpi"><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
-    <div class="ai-kpi"><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="lbl">주의</div><div class="val a">${caution}</div><div class="pct">전체의 ${total?Math.round(caution/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="lbl">경계</div><div class="val a">${border}</div><div class="pct">전체의 ${total?Math.round(border/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="lbl">위기</div><div class="val r">${crisis}</div><div class="pct">전체의 ${total?Math.round(crisis/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="lbl">관리</div><div class="val r">${manage}</div><div class="pct">전체의 ${total?Math.round(manage/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#F1EFE8">📊</div><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#E3F3EC">✅</div><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FEF3E2">⚠️</div><div class="lbl">주의</div><div class="val a">${caution}</div><div class="pct">전체의 ${total?Math.round(caution/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FDEEE0">🔶</div><div class="lbl">경계</div><div class="val a">${border}</div><div class="pct">전체의 ${total?Math.round(border/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FCEBEB">🔴</div><div class="lbl">위기</div><div class="val r">${crisis}</div><div class="pct">전체의 ${total?Math.round(crisis/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#F1EFE8">⛔</div><div class="lbl">관리</div><div class="val r">${manage}</div><div class="pct">전체의 ${total?Math.round(manage/total*1000)/10:0}%</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
     <input id="ai-search" type="text" placeholder="매장명 검색..." style="font-size:13px;padding:6px 12px;border-radius:8px;border:.5px solid #d3d1c7;outline:none;width:180px;">
@@ -1281,9 +1285,9 @@ function buildPage(cat,dept){
   const exCnt=d.stores.filter(x=>x.excess>0).length;
   const excessPct=d.stores.length>0?Math.round(exCnt/d.stores.length*100):0;
   const kpiHtml=`<div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div></div>
-    <div class="kpi"><div class="kpi-label">총 담보</div><div class="kpi-value">${fmt(s.total_collateral)}</div><div class="kpi-callout"><span class="kpi-callout-dot"></span>해당 부서 합산</div></div>
-    <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div>
+    <div class="kpi"><div class="kpi-icon" style="background:#EEF0FF">💰</div><div class="kpi-label">총 채권잔액</div><div class="kpi-value">${fmt(s.total_receivable)}</div></div>
+    <div class="kpi"><div class="kpi-icon" style="background:#E7F0FF">🛡️</div><div class="kpi-label">총 담보</div><div class="kpi-value">${fmt(s.total_collateral)}</div><div class="kpi-callout"><span class="kpi-callout-dot"></span>해당 부서 합산</div></div>
+    <div class="kpi danger clickable" id="excess-kpi-${key}"><div class="kpi-icon" style="background:#FCEBEB">⚠️</div><div class="kpi-label">담보초과 채권 (클릭하여 보기)</div><div class="kpi-value">${fmt(s.total_excess)}</div>
       <div class="kpi-mini-bar"><div class="kpi-mini-fill" style="width:${excessPct}%"></div></div>
       <div class="kpi-mini-label">${exCnt}개 / ${d.stores.length}개 매장 초과 (${excessPct}%)</div>
     </div>
