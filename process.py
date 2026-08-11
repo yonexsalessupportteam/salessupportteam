@@ -33,29 +33,13 @@ RISK_THRESHOLDS = {
     'danger_max': 1.5,   # 120% 초과 → 위기
 }
 
-# 성수기(2~10월, 봄+가을 수주기간) 컷라인. 수주기간엔 재고 확보 때문에 채권이 계절적으로
-# 늘어나 담보대비 초과율이 자연히 튀는데, 이를 실제 리스크로 오인하지 않도록 비수기(11~1월)보다
-# 완화된 기준을 적용한다. 용품/의류 동일 기준 사용 (18개월 실데이터로 검증: 이 컷라인 적용 시
-# 성수기 등급 분포가 비수기 컷라인(0/30/120%) 적용한 비수기 분포와 근접하게 맞춰짐).
-PEAK_SEASON_MONTHS = {2, 3, 4, 5, 6, 7, 8, 9, 10}
-PEAK_RISK_THRESHOLDS = {
-    'safe_max': 0.6,     # 초과율 ≤60% → 적정
-    'caution_max': 1.2,  # 60~120% → 주의
-    'warning_max': 2.0,  # 120~200% → 경계
-    'danger_max': 2.0,   # 200% 초과 → 위기
-}
-
-
-def get_active_risk_thresholds():
-    """현재(KST 기준) 월이 성수기(2~10월)인지에 따라 적용할 컷라인을 반환한다."""
-    kst = timezone(timedelta(hours=9))
-    month = datetime.now(kst).month
-    return PEAK_RISK_THRESHOLDS if month in PEAK_SEASON_MONTHS else RISK_THRESHOLDS
-
-
+# (폐기됨) 과거엔 성수기(2~10월, 수주기간)에 완화된 컷라인을 별도 적용했으나,
+# 수주여신 부여 자체가 회사 입장에서 감수하는 리스크이므로 그 기간에도 동일하게
+# 엄격기준으로 평가해야 한다는 결정에 따라 계절 구분 없이 RISK_THRESHOLDS를
+# 연중 동일하게 적용하는 것으로 변경.
 MIN_RECEIVABLE_THRESHOLD = 500_000
 MIN_DISPLAY_THRESHOLD = 100_000
-ACTIVE_THRESHOLDS = get_active_risk_thresholds()
+ACTIVE_THRESHOLDS = RISK_THRESHOLDS
 
 
 # ───────────────────────────────────────────
@@ -82,7 +66,7 @@ def deduct_collection_days(days):
 def deduct_collateral_ratio(collateral, receivable):
     """담보대비 초과율 감점 (카테고리당 최대 10점 - 의류/용품 각각 독립 채점). classify_risk() 등급 기준과 동일하게 정렬.
     초과율 = (채권잔액-담보)/담보. 의류+용품 둘 다 있는 대리점은 카테고리별로 이 값을 각각 구해 그대로 합산(최대 20점)한다.
-    성수기(2~10월)엔 계절적 채권 증가를 고려해 완화된 컷라인(ACTIVE_THRESHOLDS)을 적용한다."""
+    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS) 적용 — 수주기간 완화 없음."""
     # 무담보 & 채권 없음 → 감점 없음
     if collateral == 0 and receivable <= 0:
         return 0
@@ -105,7 +89,7 @@ def classify_risk(collateral, receivable):
     """소액 채권(50만원 미만)은 주의/경계/위기 등급의 노이즈를 막기 위해 '해당없음' 처리하되,
     담보가 충분해 '적정'인 경우와 무담보 상태라 '관리'인 경우는 소액이어도 그대로 노출한다
     (둘 다 노이즈가 아니라 실제 담보 상태를 정확히 보여줘야 하는 정보이므로).
-    성수기(2~10월)엔 계절적 채권 증가를 고려해 완화된 컷라인(ACTIVE_THRESHOLDS)을 적용한다."""
+    연중 동일 엄격기준(ACTIVE_THRESHOLDS=RISK_THRESHOLDS) 적용 — 수주기간 완화 없음."""
     if collateral == 0:
         grade = '관리' if receivable > 0 else '적정'
     else:
@@ -259,8 +243,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, output_
 
 def main():
     print("raw 파일 처리 시작...")
-    season_label = '성수기(2~10월)' if ACTIVE_THRESHOLDS is PEAK_RISK_THRESHOLDS else '비수기(11~1월)'
-    print(f"현재 적용 담보대비 초과율 컷라인: {season_label} — "
+    print(f"현재 적용 담보대비 초과율 컷라인 (연중 동일): "
           f"적정≤{ACTIVE_THRESHOLDS['safe_max']*100:.0f}% / "
           f"주의~{ACTIVE_THRESHOLDS['caution_max']*100:.0f}% / "
           f"경계~{ACTIVE_THRESHOLDS['warning_max']*100:.0f}% / 위기 초과")
