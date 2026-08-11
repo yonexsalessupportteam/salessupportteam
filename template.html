@@ -510,7 +510,7 @@ function buildQuantGrid(s){
   const salesScoreClothing = Math.min(5, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
   const targetScoreGoods = Math.min(5, Math.max(0, s.targetScoreGoods!=null?s.targetScoreGoods:0));
   const targetScoreClothing = Math.min(5, Math.max(0, s.targetScoreClothing!=null?s.targetScoreClothing:0));
-  const targetLabel = function(score, target){ return target ? (score>=5?'달성':'미달성')+' (목표 '+fmt(target)+')' : '목표 미입력'; };
+  const targetLabel = function(score, target, sales){ return target ? (score>=5?'달성':'미달성')+' (목표 '+fmt(target)+' · 매출 '+fmt(sales||0)+')' : '목표 미입력'; };
   return '<div style="margin-bottom:14px">'
     +'<div class="cat-grid">'
     +(s.clothing?(
@@ -529,13 +529,13 @@ function buildQuantGrid(s){
     '<div class="dc">'
     +'<div class="dl">매출목표 달성 (의류)</div>'
     +'<div class="dv" style="color:'+dvColor(targetScoreClothing,5,5)+'">'+targetScoreClothing+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
-    +'<div class="dsub">'+targetLabel(targetScoreClothing, s.target3mClothing)+'</div></div>'
+    +'<div class="dsub">'+targetLabel(targetScoreClothing, s.target3mClothing, s.sales3mClothing)+'</div></div>'
     ):'')
     +(s.goods?(
     '<div class="dc">'
     +'<div class="dl">매출목표 달성 (용품)</div>'
     +'<div class="dv" style="color:'+dvColor(targetScoreGoods,5,5)+'">'+targetScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
-    +'<div class="dsub">'+targetLabel(targetScoreGoods, s.target3mGoods)+'</div></div>'
+    +'<div class="dsub">'+targetLabel(targetScoreGoods, s.target3mGoods, s.sales3mGoods)+'</div></div>'
     ):'')
     +'<div class="dc">'
     +'<div class="dl">정량점수</div>'
@@ -1137,15 +1137,16 @@ function buildTargetPage(){
   let rows=(dept==='전체'?all:all.filter(s=>s.dept===dept));
   rows=rows.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')); // 대리점명 가나다순 기본 정렬
 
+  const chartTitlePrefix=(dept==='전체')?'팀별':dept;
   const el=document.getElementById('target-page-content');
   el.innerHTML=`
   <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
     <div class="card" style="flex:1;min-width:320px">
-      <div class="card-title">🏸 용품 팀별 월별 매출 vs 목표</div>
+      <div class="card-title">🏸 용품 ${chartTitlePrefix} 월별 매출 vs 목표</div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-goods"></canvas></div>
     </div>
     <div class="card" style="flex:1;min-width:320px">
-      <div class="card-title">👔 의류 팀별 월별 매출 vs 목표</div>
+      <div class="card-title">👔 의류 ${chartTitlePrefix} 월별 매출 vs 목표</div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-clothing"></canvas></div>
     </div>
   </div>
@@ -1181,8 +1182,8 @@ function buildTargetPage(){
   window._targetRows=rows;
   window._targetAllStores=all;
   renderTargetTable();
-  buildTeamMonthlyChart(all,'용품','team-monthly-chart-goods');
-  buildTeamMonthlyChart(all,'의류','team-monthly-chart-clothing');
+  buildTeamMonthlyChart(all,'용품','team-monthly-chart-goods',dept);
+  buildTeamMonthlyChart(all,'의류','team-monthly-chart-clothing',dept);
 }
 
 function renderTargetTable(){
@@ -1230,8 +1231,8 @@ function hexToRgba(hex,alpha){
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function buildTeamMonthlyChart(all,cat,chartId){
-  const teams=['영업1팀','영업2팀','E-BIZ팀'];
+function buildTeamMonthlyChart(all,cat,chartId,deptFilter){
+  const teams=(deptFilter && deptFilter!=='전체') ? [deptFilter] : ['영업1팀','영업2팀','E-BIZ팀'];
   // 파란(남색) 계열 3단계로 톤 통일: 팀은 명도로 구분. 목표=막대, 매출=굵은 선(+옅은 채우기)
   const teamColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
 
