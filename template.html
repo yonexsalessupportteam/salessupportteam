@@ -351,6 +351,7 @@ tbody tr:hover{background:#f9f8f4}
     <div class="tab" onclick="switchTargetTab('영업1팀',this)">영업1팀</div>
     <div class="tab" onclick="switchTargetTab('영업2팀',this)">영업2팀</div>
     <div class="tab" onclick="switchTargetTab('E-BIZ팀',this)">E-BIZ팀</div>
+    <div class="tab" onclick="switchTargetTab('프로모션팀',this)">프로모션팀</div>
   </div>
   <div id="target-page-content"></div>
 </div>
@@ -1131,15 +1132,55 @@ function monthBadge(target,hasActual,actualNet){
     : '<span class="badge" style="background:#FCEBEB;color:#A32D2D">미달성</span>';
 }
 
+// ERP 매장 마스터(D코드)에 없어서 buildAllStoresList()로는 안 잡히지만 목표(raw 파일)에는
+// 금액이 잡혀있는 특수 거래선 — 리스크/CS 평가 대상은 아니고 매출목표 KPI/팀별 합계 표시 전용.
+const EXTRA_TARGET_STORES=[
+  {name:'대회경기장',dept:'영업1팀'},
+  {name:'프로모션(사업계획)',dept:'프로모션팀'},
+  {name:'주식회사 무신사',dept:'E-BIZ팀'},
+  {name:'요넥스쇼핑몰',dept:'E-BIZ팀'},
+];
+function buildExtraTargetStores(){
+  return EXTRA_TARGET_STORES.map(es=>{
+    const csData=CS_SHEET[es.name]||{};
+    return {
+      code:es.name,name:es.name,salesperson:'',dept:es.dept,
+      target3mGoods:csData.target_3m_goods||0,
+      target3mClothing:csData.target_3m_clothing||0,
+      salesMonthlyGoods:csData.sales_monthly_goods||{},
+      salesMonthlyClothing:csData.sales_monthly_clothing||{},
+      targetMonthlyGoods:csData.target_monthly_goods||[],
+      targetMonthlyClothing:csData.target_monthly_clothing||[],
+    };
+  });
+}
+
 function buildTargetPage(){
   const dept=targetDeptFilter;
-  const all=buildAllStoresList();
+  const all=buildAllStoresList().concat(buildExtraTargetStores());
   let rows=(dept==='전체'?all:all.filter(s=>s.dept===dept));
   rows=rows.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')); // 대리점명 가나다순 기본 정렬
+
+  // 목표금액 총액 KPI: 영업1팀/영업2팀/E-BIZ팀(ERP D코드 매칭분) 합계와, target_goods_raw.json/
+  // target_clothing_raw.json(용품_목표매출달성.xls/의류_목표매출달성.xls 원본 전체 — F코드·팀 미배정
+  // 거래선 포함)에서 직접 합산한 전사 합계를 함께 보여줘서 raw 파일 총액과 맞는지 확인할 수 있게 한다.
+  // 팀 필터와 무관하게 항상 전사 기준 총액(고정값)으로 표시.
+  const matchedTargetGoods=all.reduce((sum,s)=>sum+(s.target3mGoods||0),0);
+  const matchedTargetClothing=all.reduce((sum,s)=>sum+(s.target3mClothing||0),0);
+  const grandTargetGoods=Object.values(CS_SHEET).reduce((sum,d)=>sum+(d.target_3m_goods||0),0);
+  const grandTargetClothing=Object.values(CS_SHEET).reduce((sum,d)=>sum+(d.target_3m_clothing||0),0);
+  const unmatchedGoods=grandTargetGoods-matchedTargetGoods;
+  const unmatchedClothing=grandTargetClothing-matchedTargetClothing;
 
   const chartTitlePrefix=(dept==='전체')?'팀별':dept;
   const el=document.getElementById('target-page-content');
   el.innerHTML=`
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+    <div class="kpi"><div class="kpi-icon" style="background:#EEF0FF">🏸</div><div class="kpi-label">용품 목표금액 합계 (전사, 3개월)</div><div class="kpi-value">${fmt(grandTargetGoods)}</div>
+      <div class="kpi-sub">영업1/2팀·E-BIZ팀 매칭분 ${fmt(matchedTargetGoods)} + 팀 미배정/F코드 등 ${fmt(unmatchedGoods)}</div></div>
+    <div class="kpi"><div class="kpi-icon" style="background:#E7F0FF">👔</div><div class="kpi-label">의류 목표금액 합계 (전사, 3개월)</div><div class="kpi-value">${fmt(grandTargetClothing)}</div>
+      <div class="kpi-sub">영업1/2팀·E-BIZ팀 매칭분 ${fmt(matchedTargetClothing)} + 팀 미배정/F코드 등 ${fmt(unmatchedClothing)}</div></div>
+  </div>
   <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
     <div class="card" style="flex:1;min-width:320px">
       <div class="card-title">🏸 용품 ${chartTitlePrefix} 월별 매출 vs 목표</div>
@@ -1159,6 +1200,7 @@ function buildTargetPage(){
         <option value="영업1팀">영업1팀</option>
         <option value="영업2팀">영업2팀</option>
         <option value="E-BIZ팀">E-BIZ팀</option>
+        <option value="프로모션팀">프로모션팀</option>
       </select>
       <select id="target-status-filter">
         <option value="">전체</option>
@@ -1232,9 +1274,9 @@ function hexToRgba(hex,alpha){
 }
 
 function buildTeamMonthlyChart(all,cat,chartId,deptFilter){
-  const teams=(deptFilter && deptFilter!=='전체') ? [deptFilter] : ['영업1팀','영업2팀','E-BIZ팀'];
-  // 파란(남색) 계열 3단계로 톤 통일: 팀은 명도로 구분. 목표=막대, 매출=굵은 선(+옅은 채우기)
-  const teamColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
+  const teams=(deptFilter && deptFilter!=='전체') ? [deptFilter] : ['영업1팀','영업2팀','E-BIZ팀','프로모션팀'];
+  // 파란(남색) 계열 3단계 + 프로모션팀은 별도 색(주황)으로 톤 통일: 팀은 명도로 구분. 목표=막대, 매출=굵은 선(+옅은 채우기)
+  const teamColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0','프로모션팀':'#D97706'};
 
   const barDatasets=teams.map(team=>{
     const teamRows=all.filter(s=>s.dept===team);
