@@ -229,7 +229,20 @@ def sanitize_text(text):
             .replace("'", "'"))
 
 
-def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, output_path='index.html'):
+def load_team_sales_summary():
+    """2026YONEX사업본부_팀별_매출현황.xlsx('7월소계' 등 최신 월소계 시트)를 미리 파싱해 커밋해둔
+    team_sales_summary.json을 로드. 회사 공식 팀별/카테고리별 월별 목표·실적(2026년) 배열.
+    형식: [{team, cat, monthly_target:[12], monthly_actual_2026:[12](미보고월은 null)}, ...]"""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'team_sales_summary.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"team_sales_summary.json 로드 실패: {e}")
+        return []
+
+
+def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, team_sales_summary, output_path='index.html'):
     clothing_raw = json.dumps(clothing_dash, ensure_ascii=False)
     goods_raw    = json.dumps(goods_dash, ensure_ascii=False)
     update_date  = get_update_timestamp()
@@ -249,6 +262,7 @@ def generate_html(clothing_dash, goods_dash, cs_scores, opp_shown_names, output_
             .replace('__GOODS_DATA__',    goods_raw)
             .replace('__CS_DATA__',       json.dumps(cs_scores, ensure_ascii=False))
             .replace('__OPP_SHOWN__',     json.dumps(opp_shown_names, ensure_ascii=False))
+            .replace('__TEAM_SALES_SUMMARY__', json.dumps(team_sales_summary, ensure_ascii=False))
             .replace('__UPDATE_DATE__',   update_date))
 
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -468,7 +482,7 @@ def main():
             cs_scores[name]['ai_flagged'] = True
             cs_scores[name]['ai_flag_comment'] = reason
 
-    generate_html(clothing_dash, goods_dash, cs_scores, [s['name'] for s in opp_list])
+    generate_html(clothing_dash, goods_dash, cs_scores, [s['name'] for s in opp_list], load_team_sales_summary())
 
 
 if __name__ == '__main__':
