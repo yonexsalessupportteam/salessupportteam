@@ -1245,12 +1245,9 @@ function buildTargetPage(){
     <div class="card-title">매장별 월별 목표 대비 달성 현황 — 구글시트 입력 매장만 (2026, ${rows.length}개)</div>
     <div class="filter-bar">
       <input id="target-search" type="text" placeholder="매장명 검색..."/>
-      <select id="target-team-filter">
-        <option value="">전체 팀</option>
-        <option value="영업1팀">영업1팀</option>
-        <option value="영업2팀">영업2팀</option>
-        <option value="E-BIZ팀">E-BIZ팀</option>
-        <option value="프로모션팀">프로모션팀</option>
+      <select id="target-person-filter">
+        <option value="">전체 담당자</option>
+        ${[...new Set(rows.map(s=>s.salesperson).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(p=>`<option value="${p}">${p}</option>`).join('')}
       </select>
       <select id="target-status-filter">
         <option value="">전체</option>
@@ -1269,7 +1266,7 @@ function buildTargetPage(){
     <div class="kpi-sub" style="margin-top:10px">각 칸: 🏸 용품 / 👔 의류 목표 달성 여부. 실적이 아직 입력되지 않은 달은 "미입력"으로 표시됩니다.</div>
   </div>`;
   document.getElementById('target-search').addEventListener('input',renderTargetTable);
-  document.getElementById('target-team-filter').addEventListener('change',renderTargetTable);
+  document.getElementById('target-person-filter').addEventListener('change',renderTargetTable);
   document.getElementById('target-status-filter').addEventListener('change',renderTargetTable);
   window._targetRows=rows;
   window._targetAllStores=all;
@@ -1281,9 +1278,9 @@ function buildTargetPage(){
 function renderTargetTable(){
   const rows=window._targetRows||[];
   const q=(document.getElementById('target-search')||{}).value?.toLowerCase()||'';
-  const teamF=(document.getElementById('target-team-filter')||{}).value||'';
+  const personF=(document.getElementById('target-person-filter')||{}).value||'';
   const statusF=(document.getElementById('target-status-filter')||{}).value||'';
-  let filtered=rows.filter(s=>(!q||s.name.toLowerCase().includes(q))&&(!teamF||s.dept===teamF));
+  let filtered=rows.filter(s=>(!q||s.name.toLowerCase().includes(q))&&(!personF||s.salesperson===personF));
   if(statusF){
     filtered=filtered.filter(s=>{
       let goodsMiss=false,clothingMiss=false;
