@@ -1158,61 +1158,33 @@ function buildExtraTargetStores(){
   });
 }
 
-// 2026YONEX사업본부_팀별_매출현황.xlsx(회사 공식 집계, team_sales_summary.json으로 커밋)을 그대로
-// 보여주는 표 — 매장별 raw 목표 합산이 아니라 회사가 직접 집계한 팀별/카테고리별 월별 목표·실적 수치.
-// 가장 최근까지 실적이 채워진 달까지 자동으로 누계(연초~해당월)해서 표시 — 다음 달 파일이 갱신되면
-// monthly_actual_2026에 값이 하나 더 채워지므로 별도 코드 수정 없이 누계 구간이 자동으로 늘어남.
-function buildOfficialSummaryTable(dept){
-  if(!TEAM_SALES_SUMMARY||!TEAM_SALES_SUMMARY.length) return '';
-  const anyRow=TEAM_SALES_SUMMARY[0];
-  let lastIdx=-1;
-  anyRow.monthly_actual_2026.forEach((v,i)=>{ if(v!=null) lastIdx=i; });
-  if(lastIdx<0) return '';
-  const periodLabel=`1~${lastIdx+1}월 누계`;
-  const sum3=arr=>arr.slice(0,lastIdx+1).reduce((s,v)=>s+(v||0),0);
-
+// 2026YONEX사업본부_팀별_매출현황.xlsx(회사 공식 집계, team_sales_summary.json으로 커밋)을 월별 목표 vs 실적
+// 그래프로 렌더링 — 표 대신 그래프 하나로 합쳐서 아래 매장별 표와 헷갈리지 않게 한다.
+// 프로모션팀은 이 회사 공식 집계에 없는 팀이라(EXTRA_TARGET_STORES 전용 개념) 이 차트 대상에서 제외.
+function buildOfficialMonthlyChart(cat,chartId,dept){
+  if(!TEAM_SALES_SUMMARY||!TEAM_SALES_SUMMARY.length) return;
   const officialTeams=['영업1팀','영업2팀','E-BIZ팀'];
   const teams=(officialTeams.includes(dept))?[dept]:officialTeams;
-  const rest=(officialTeams.includes(dept))?[]:['브랜드커뮤니케이션팀','기타(콜라보_예일,IAB)','동승-세양간거래'];
-  const teamOrder=[...teams,...rest,'합계'];
+  const teamColors={'영업1팀':'#1E3A8A','영업2팀':'#2563EB','E-BIZ팀':'#7DAEF0'};
 
-  const rowsHtml=teamOrder.map(team=>{
-    const isTotal=team==='합계';
-    const cats=['용품','의류','소계'].map(cat=>{
-      const rec=TEAM_SALES_SUMMARY.find(r=>r.team===team&&r.cat===cat);
-      if(!rec) return {target:0,actual:0};
-      return {target:sum3(rec.monthly_target),actual:sum3(rec.monthly_actual_2026)};
-    });
-    const pct=c=>c.target>0?Math.round(c.actual/c.target*1000)/10:null;
-    const pctCell=c=>{
-      const p=pct(c);
-      if(p==null) return '<span style="color:#b4b2a9">-</span>';
-      const color=p>=100?'#0F6E56':(p>=80?'#854F0B':'#A32D2D');
-      return `<span style="color:${color};font-weight:600">${p}%</span>`;
-    };
-    return `<tr${isTotal?' style="font-weight:600;background:#F7F6F2"':''}>
-      <td>${team}</td>
-      <td style="text-align:right">${fmt(cats[0].target)}</td><td style="text-align:right">${fmt(cats[0].actual)}</td><td style="text-align:center">${pctCell(cats[0])}</td>
-      <td style="text-align:right">${fmt(cats[1].target)}</td><td style="text-align:right">${fmt(cats[1].actual)}</td><td style="text-align:center">${pctCell(cats[1])}</td>
-      <td style="text-align:right">${fmt(cats[2].target)}</td><td style="text-align:right">${fmt(cats[2].actual)}</td><td style="text-align:center">${pctCell(cats[2])}</td>
-    </tr>`;
-  }).join('');
+  const barDatasets=teams.map(team=>{
+    const rec=TEAM_SALES_SUMMARY.find(r=>r.team===team&&r.cat===cat);
+    const data=(rec?rec.monthly_target:Array(12).fill(0)).map(v=>v||0);
+    return {type:'bar',label:team+' 목표',data,backgroundColor:teamColors[team],borderRadius:2,order:2};
+  });
+  const lineDatasets=teams.map(team=>{
+    const rec=TEAM_SALES_SUMMARY.find(r=>r.team===team&&r.cat===cat);
+    const data=rec?rec.monthly_actual_2026:Array(12).fill(null);
+    return {type:'line',label:team+' 실적',data,borderColor:teamColors[team],backgroundColor:hexToRgba(teamColors[team],0.12),borderWidth:3,pointRadius:3,pointBackgroundColor:teamColors[team],fill:true,tension:.35,spanGaps:false,order:1};
+  });
 
-  return `<div class="card">
-    <div class="card-title">📈 목표대비 매출 달성 현황 — 회사 공식 집계 (2026년 ${periodLabel})</div>
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th rowspan="2" style="vertical-align:bottom">팀</th>
-        <th colspan="3">🏸 용품</th><th colspan="3">👔 의류</th><th colspan="3">소계</th>
-      </tr><tr>
-        <th style="text-align:right">목표</th><th style="text-align:right">실적</th><th style="text-align:center">달성률</th>
-        <th style="text-align:right">목표</th><th style="text-align:right">실적</th><th style="text-align:center">달성률</th>
-        <th style="text-align:right">목표</th><th style="text-align:right">실적</th><th style="text-align:center">달성률</th>
-      </tr></thead>
-      <tbody>${rowsHtml}</tbody>
-    </table></div>
-    <div class="kpi-sub" style="margin-top:8px">단위: 원 · 2026YONEX사업본부_팀별_매출현황.xlsx 기준(매장 raw 목표 합산이 아닌 회사 공식 집계치)</div>
-  </div>`;
+  if(chartRegistry[chartId]) chartRegistry[chartId].destroy();
+  chartRegistry[chartId]=new Chart(document.getElementById(chartId),{
+    data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[...barDatasets,...lineDatasets]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
+      scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}},x:{stacked:false}}}
+  });
 }
 
 function buildTargetPage(){
@@ -1227,22 +1199,25 @@ function buildTargetPage(){
   });
   rows=rows.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')); // 대리점명 가나다순 기본 정렬
 
+  // 프로모션팀은 회사 공식 집계(TEAM_SALES_SUMMARY)에 없는 매장 전용 그룹이라 이 팀 탭에서만
+  // 기존 매장 raw 데이터 기반 차트(buildTeamMonthlyChart)를 쓰고, 나머지는 회사 공식 월별 차트를 쓴다.
+  const useOfficial=dept!=='프로모션팀';
   const chartTitlePrefix=(dept==='전체')?'팀별':dept;
   const el=document.getElementById('target-page-content');
   el.innerHTML=`
-  ${buildOfficialSummaryTable(dept)}
   <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
     <div class="card" style="flex:1;min-width:320px">
-      <div class="card-title">🏸 용품 ${chartTitlePrefix} 월별 매출 vs 목표</div>
+      <div class="card-title">🏸 용품 ${chartTitlePrefix} 월별 목표 대비 매출${useOfficial?' (회사 공식 집계)':''}</div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-goods"></canvas></div>
     </div>
     <div class="card" style="flex:1;min-width:320px">
-      <div class="card-title">👔 의류 ${chartTitlePrefix} 월별 매출 vs 목표</div>
+      <div class="card-title">👔 의류 ${chartTitlePrefix} 월별 목표 대비 매출${useOfficial?' (회사 공식 집계)':''}</div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-clothing"></canvas></div>
     </div>
   </div>
   <div class="card">
     <div class="card-title">매장별 월별 목표 대비 달성 현황 — 구글시트 입력 매장만 (2026, ${rows.length}개)</div>
+
     <div class="filter-bar">
       <input id="target-search" type="text" placeholder="매장명 검색..."/>
       <select id="target-person-filter">
@@ -1271,8 +1246,13 @@ function buildTargetPage(){
   window._targetRows=rows;
   window._targetAllStores=all;
   renderTargetTable();
-  buildTeamMonthlyChart(all,'용품','team-monthly-chart-goods',dept);
-  buildTeamMonthlyChart(all,'의류','team-monthly-chart-clothing',dept);
+  if(useOfficial){
+    buildOfficialMonthlyChart('용품','team-monthly-chart-goods',dept);
+    buildOfficialMonthlyChart('의류','team-monthly-chart-clothing',dept);
+  }else{
+    buildTeamMonthlyChart(all,'용품','team-monthly-chart-goods',dept);
+    buildTeamMonthlyChart(all,'의류','team-monthly-chart-clothing',dept);
+  }
 }
 
 function renderTargetTable(){
