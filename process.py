@@ -260,6 +260,8 @@ def inject_missing_master_stores(dash, dealer_master, erp_codes_by_dept):
             'collateral': 0, 'receivable': 0, 'excess': 0, 'ratio': 0.0,
             'risk': '적정', 'collection_days': 0,
             'deduct_collection': 0, 'deduct_collateral': 0,
+            'master_only': True,  # ERP엔 없고 대리점리스트.xlsx에만 있는 신규/무채권 대리점 표시 —
+                                   # 화면(template.html)의 소액채권 숨김 필터에서 이 플래그로 예외처리해야 함
         })
         added += 1
     return added
