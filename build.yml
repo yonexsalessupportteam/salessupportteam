@@ -6,6 +6,7 @@ on:
       - 'goods_raw.xls'
       - '의류 수주여신.xls'
       - '용품 수주여신.xls'
+      - '대리점리스트.xlsx'
       - 'target_goods_raw.json'
       - 'target_clothing_raw.json'
       - 'team_sales_summary.json'
@@ -31,7 +32,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: 필요한 패키지 설치
-        run: pip install pandas numpy xlrd gspread google-auth requests
+        run: pip install pandas numpy xlrd openpyxl gspread google-auth requests
       - name: 대시보드 생성
         env:
           GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}

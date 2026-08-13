@@ -24,6 +24,8 @@ RAW_FILES = {
     '용품': 'goods_raw.xls',
 }
 
+DEALER_LIST_FILE = '대리점리스트.xlsx'
+
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
 # 담보대비 초과율 4단계(+관리) 컷라인. 담보초과_채권비율_월별요약 실측 데이터에서 카테고리(용품/의류)별
@@ -208,7 +210,59 @@ def build_category_dashboard(filepath, category):
     for dept in DEPT_TABS:
         sub = result[result['dept_name'] == dept]
         dashboard[dept] = build_group_data(sub)
-    return dashboard
+    return dashboard, result
+
+
+def load_dealer_master():
+    """대리점리스트.xlsx('현황' 시트: 매장(코드)/매장명/담당자/팀 컬럼)을 읽어 전체 대리점 마스터 목록을
+    반환한다. ERP 원본(clothing_raw.xls/goods_raw.xls)은 현재 채권잔액이 있는 대리점만 담고 있어,
+    신규 등록되었거나 이번 사이클에 채권이 없는 대리점은 거기 없을 수 있음 — 이 마스터 목록을 전체
+    대리점 기준으로 삼고, ERP에서 실제로 발견된 대리점에만 채권/담보 값을 채워넣는 데 사용한다.
+    반환: {code: {name, salesperson, dept}} (dept는 DEPT_TABS 값 중 하나로 정규화, 매칭 안 되면 제외)"""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEALER_LIST_FILE)
+    try:
+        df = pd.read_excel(path, sheet_name='현황', engine='openpyxl')
+    except Exception as e:
+        print(f"{DEALER_LIST_FILE} 로드 실패 (마스터 목록 없이 ERP 데이터만 사용): {e}")
+        return {}
+    dept_norm = {d.lower(): d for d in DEPT_TABS}
+    result = {}
+    for _, r in df.iterrows():
+        code = str(r.get('매장', '') or '').strip()
+        if not code or not code.upper().startswith('D'):
+            continue
+        raw_dept = str(r.get('팀', '') or '').strip()
+        dept = dept_norm.get(raw_dept.lower())
+        if dept is None:
+            continue
+        result[code] = {
+            'name':        str(r.get('매장명', '') or '').strip(),
+            'salesperson': str(r.get('담당자', '') or '').strip(),
+            'dept':        dept,
+        }
+    return result
+
+
+def inject_missing_master_stores(dash, dealer_master, erp_codes_by_dept):
+    """마스터 목록(대리점리스트.xlsx)에는 있지만 ERP(의류+용품) 어디에도 코드가 없는 대리점을
+    채권/담보 0 · 리스크 '적정' 상태로 dash(기본 용품 dash)에 추가해 대시보드 목록·검색에 노출되게 한다.
+    이미 ERP 원본에 존재하는(채권이 소액이라 화면 표시 임계값 밑으로 걸러진 경우 포함) 대리점은
+    건드리지 않는다 — erp_codes_by_dept는 표시 임계값 필터링 전, ERP raw 전체 기준."""
+    added = 0
+    for code, info in dealer_master.items():
+        dept = info['dept']
+        if dept not in dash:
+            continue
+        if code in erp_codes_by_dept.get(dept, set()):
+            continue
+        dash[dept]['stores'].append({
+            'code': code, 'name': info['name'], 'salesperson': info['salesperson'],
+            'collateral': 0, 'receivable': 0, 'excess': 0, 'ratio': 0.0,
+            'risk': '적정', 'collection_days': 0,
+            'deduct_collection': 0, 'deduct_collateral': 0,
+        })
+        added += 1
+    return added
 
 
 def get_update_timestamp():
@@ -279,8 +333,24 @@ def main():
               f"주의~{t['caution_max']*100:.0f}% / "
               f"경계~{t['warning_max']*100:.0f}% / 위기 초과")
 
-    clothing_dash = build_category_dashboard(RAW_FILES['의류'], '의류')
-    goods_dash    = build_category_dashboard(RAW_FILES['용품'], '용품')
+    clothing_dash, clothing_result = build_category_dashboard(RAW_FILES['의류'], '의류')
+    goods_dash, goods_result       = build_category_dashboard(RAW_FILES['용품'], '용품')
+
+    # 대리점리스트.xlsx(전체 대리점 마스터 목록) 기준으로, ERP 원본(의류+용품 raw 전체, 표시 임계값
+    # 필터링 전) 어디에도 없는 신규/무채권 대리점을 채권0 상태로 용품 목록에 추가 — CS/파트너십/매출
+    # 데이터만 있고 아직 ERP 채권 데이터가 없는 대리점(예: 신규 등록)도 대시보드에 노출되도록 함
+    dealer_master = load_dealer_master()
+    if dealer_master:
+        erp_codes_by_dept = {}
+        for dept in DEPT_TABS:
+            codes = set()
+            for res in (clothing_result, goods_result):
+                codes |= set(res[res['dept_name'] == dept]['code'])
+            erp_codes_by_dept[dept] = codes
+        added = inject_missing_master_stores(goods_dash, dealer_master, erp_codes_by_dept)
+        for dept in DEPT_TABS:
+            goods_dash[dept]['stores'].sort(key=lambda x: -x['receivable'])
+        print(f"\n대리점리스트.xlsx 기준 ERP 미등록 대리점 {added}개를 채권0 상태로 추가")
 
     print("\n=== 의류 ===")
     for dept, d in clothing_dash.items():
