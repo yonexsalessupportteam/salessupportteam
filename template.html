@@ -969,12 +969,8 @@ function buildAiDash(){
             <span class="partner-status ${pClothingViolation?'ng':'ok'}">${pClothingViolation?`위반 ${s.pClothingCount}건`:'준수'}</span>
             <span class="partner-pts">${pClothingViolation?'(-'+s.pClothingCount+'점)':'(0점)'}</span>
           </div>
-          <div class="partner-total">
-            <div><div class="pt-title">파트너십 점수</div><div class="pt-sub">이번 달 누적, 위반 1건당 -1점</div></div>
-            <div class="pt-val" style="color:${s.partnershipScore>=15?'#0F6E56':'#A32D2D'}">${Math.round(s.partnershipScore*10)/10}<span class="pt-unit">/30</span></div>
-          </div>
         </div>
-        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등) - 이번 달 행 개수만큼 누적 집계</div>
+        <div style="font-size:11px;color:#b4b2a9;margin-top:8px">※ 이번 달 누적, 위반 1건당 -1점 · 변경은 CS 평가 구글 시트에서 파트너십_용품 / 파트너십_의류 컬럼에 값 입력(적발/미준수 등)</div>
       </div>`;
 
     const aiCommentHtml = s.aiComment
