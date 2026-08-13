@@ -208,8 +208,14 @@ def build_group_data(full_sub, strategic_codes=None):
     return {'stores': stores, 'summary': summary, 'by_salesperson': sp_summary}
 
 
-def build_category_dashboard(filepath, category, strategic_codes=None):
+def build_category_dashboard(filepath, category, strategic_codes=None, allowed_codes=None):
     result = process_raw(filepath, category)
+    if allowed_codes is not None:
+        excluded = result[~result['code'].isin(allowed_codes)]
+        if len(excluded):
+            names = ', '.join(sorted(set(excluded['name'])))
+            print(f"  [{category}] 대리점리스트.xlsx에 없는 매장 {len(excluded)}건 제외(폐점 등): {names}")
+        result = result[result['code'].isin(allowed_codes)].copy()
     dashboard = {}
     for dept in DEPT_TABS:
         sub = result[result['dept_name'] == dept]
@@ -363,13 +369,18 @@ def main():
     if strategic_codes:
         print(f"\n전략점리스트.xlsx 기준 전략점 {len(strategic_codes)}개 로드")
 
-    clothing_dash, clothing_result = build_category_dashboard(RAW_FILES['의류'], '의류', strategic_codes)
-    goods_dash, goods_result       = build_category_dashboard(RAW_FILES['용품'], '용품', strategic_codes)
-
-    # 대리점리스트.xlsx(전체 대리점 마스터 목록) 기준으로, ERP 원본(의류+용품 raw 전체, 표시 임계값
-    # 필터링 전) 어디에도 없는 신규/무채권 대리점을 채권0 상태로 용품 목록에 추가 — CS/파트너십/매출
-    # 데이터만 있고 아직 ERP 채권 데이터가 없는 대리점(예: 신규 등록)도 대시보드에 노출되도록 함
+    # 대리점리스트.xlsx(전체 대리점 마스터 목록)를 먼저 로드해 ERP 필터링의 allowlist로 사용.
+    # 대리점리스트.xlsx에 없는 매장(폐점 등으로 제외된 경우)은 ERP에 채권 잔액이 남아있어도
+    # 대시보드에 노출하지 않는다 — 폐점 대리점이 잔액 때문에 계속 노출되던 문제 해결.
     dealer_master = load_dealer_master()
+    allowed_codes = set(dealer_master.keys()) if dealer_master else None
+
+    clothing_dash, clothing_result = build_category_dashboard(RAW_FILES['의류'], '의류', strategic_codes, allowed_codes)
+    goods_dash, goods_result       = build_category_dashboard(RAW_FILES['용품'], '용품', strategic_codes, allowed_codes)
+
+    # 대리점리스트.xlsx 기준으로, ERP 원본(의류+용품 raw, 위에서 이미 allowlist로 필터링됨)
+    # 어디에도 없는 신규/무채권 대리점을 채권0 상태로 용품 목록에 추가 — CS/파트너십/매출
+    # 데이터만 있고 아직 ERP 채권 데이터가 없는 대리점(예: 신규 등록)도 대시보드에 노출되도록 함
     if dealer_master:
         erp_codes_by_dept = {}
         for dept in DEPT_TABS:
