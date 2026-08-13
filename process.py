@@ -26,6 +26,8 @@ RAW_FILES = {
 
 DEALER_LIST_FILE = '대리점리스트.xlsx'
 
+STRATEGIC_LIST_FILE = '2026_전략점리스트.xlsx'
+
 DEPT_TABS = ['영업1팀', '영업2팀', 'E-BIZ팀']
 
 # 담보대비 초과율 4단계(+관리) 컷라인. 담보초과_채권비율_월별요약 실측 데이터에서 카테고리(용품/의류)별
@@ -163,7 +165,8 @@ def process_raw(filepath, category):
     return result
 
 
-def build_group_data(full_sub):
+def build_group_data(full_sub, strategic_codes=None):
+    strategic_codes = strategic_codes or set()
     # 요약(담보/채권 합계 등)은 전체 매장 기준으로 계산
     full_sub = full_sub.copy()
 
@@ -183,6 +186,7 @@ def build_group_data(full_sub):
             'collection_days':  int(r['collection_days']),
             'deduct_collection': int(r['deduct_collection']),
             'deduct_collateral': int(r['deduct_collateral']),
+            'is_strategic':     r['code'] in strategic_codes,
         })
     stores = sorted(stores, key=lambda x: -x['receivable'])
 
@@ -204,12 +208,12 @@ def build_group_data(full_sub):
     return {'stores': stores, 'summary': summary, 'by_salesperson': sp_summary}
 
 
-def build_category_dashboard(filepath, category):
+def build_category_dashboard(filepath, category, strategic_codes=None):
     result = process_raw(filepath, category)
     dashboard = {}
     for dept in DEPT_TABS:
         sub = result[result['dept_name'] == dept]
-        dashboard[dept] = build_group_data(sub)
+        dashboard[dept] = build_group_data(sub, strategic_codes)
     return dashboard, result
 
 
@@ -243,11 +247,29 @@ def load_dealer_master():
     return result
 
 
-def inject_missing_master_stores(dash, dealer_master, erp_codes_by_dept):
+def load_strategic_codes():
+    """2026_전략점리스트.xlsx('Sheet1': 매장/담당자명/매장명/대리점 등급/구분 컬럼)을 읽어
+    전략점으로 지정된 매장코드(D코드) 집합을 반환한다. 파일이 없으면 빈 집합(필터 미노출)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), STRATEGIC_LIST_FILE)
+    try:
+        df = pd.read_excel(path, sheet_name=0, engine='openpyxl')
+    except Exception as e:
+        print(f"{STRATEGIC_LIST_FILE} 로드 실패 (전략점 필터 없이 진행): {e}")
+        return set()
+    codes = set()
+    for _, r in df.iterrows():
+        code = str(r.get('매장', '') or '').strip()
+        if code and code.upper().startswith('D'):
+            codes.add(code)
+    return codes
+
+
+def inject_missing_master_stores(dash, dealer_master, erp_codes_by_dept, strategic_codes=None):
     """마스터 목록(대리점리스트.xlsx)에는 있지만 ERP(의류+용품) 어디에도 코드가 없는 대리점을
     채권/담보 0 · 리스크 '적정' 상태로 dash(기본 용품 dash)에 추가해 대시보드 목록·검색에 노출되게 한다.
     이미 ERP 원본에 존재하는(채권이 소액이라 화면 표시 임계값 밑으로 걸러진 경우 포함) 대리점은
     건드리지 않는다 — erp_codes_by_dept는 표시 임계값 필터링 전, ERP raw 전체 기준."""
+    strategic_codes = strategic_codes or set()
     added = 0
     for code, info in dealer_master.items():
         dept = info['dept']
@@ -262,6 +284,7 @@ def inject_missing_master_stores(dash, dealer_master, erp_codes_by_dept):
             'deduct_collection': 0, 'deduct_collateral': 0,
             'master_only': True,  # ERP엔 없고 대리점리스트.xlsx에만 있는 신규/무채권 대리점 표시 —
                                    # 화면(template.html)의 소액채권 숨김 필터에서 이 플래그로 예외처리해야 함
+            'is_strategic': code in strategic_codes,
         })
         added += 1
     return added
@@ -335,8 +358,13 @@ def main():
               f"주의~{t['caution_max']*100:.0f}% / "
               f"경계~{t['warning_max']*100:.0f}% / 위기 초과")
 
-    clothing_dash, clothing_result = build_category_dashboard(RAW_FILES['의류'], '의류')
-    goods_dash, goods_result       = build_category_dashboard(RAW_FILES['용품'], '용품')
+    # 2026_전략점리스트.xlsx(전략점 D코드 목록) — 대시보드에서 "전략점만 보기" 필터에 사용
+    strategic_codes = load_strategic_codes()
+    if strategic_codes:
+        print(f"\n전략점리스트.xlsx 기준 전략점 {len(strategic_codes)}개 로드")
+
+    clothing_dash, clothing_result = build_category_dashboard(RAW_FILES['의류'], '의류', strategic_codes)
+    goods_dash, goods_result       = build_category_dashboard(RAW_FILES['용품'], '용품', strategic_codes)
 
     # 대리점리스트.xlsx(전체 대리점 마스터 목록) 기준으로, ERP 원본(의류+용품 raw 전체, 표시 임계값
     # 필터링 전) 어디에도 없는 신규/무채권 대리점을 채권0 상태로 용품 목록에 추가 — CS/파트너십/매출
@@ -349,7 +377,7 @@ def main():
             for res in (clothing_result, goods_result):
                 codes |= set(res[res['dept_name'] == dept]['code'])
             erp_codes_by_dept[dept] = codes
-        added = inject_missing_master_stores(goods_dash, dealer_master, erp_codes_by_dept)
+        added = inject_missing_master_stores(goods_dash, dealer_master, erp_codes_by_dept, strategic_codes)
         for dept in DEPT_TABS:
             goods_dash[dept]['stores'].sort(key=lambda x: -x['receivable'])
         print(f"\n대리점리스트.xlsx 기준 ERP 미등록 대리점 {added}개를 채권0 상태로 추가")
