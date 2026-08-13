@@ -274,7 +274,7 @@ tbody tr:hover{background:#f9f8f4}
 <div class="topbar">
   <img src="logo.jpg" alt="YONEX" class="topbar-logo">
   <div class="topbar-center"><h1>대리점 종합평가</h1></div>
-  <span class="sub">2026.08.13(목) 16:46 업데이트</span>
+  <span class="sub">2026.08.13(목) 16:51 업데이트</span>
 </div>
 
 <div class="layout">
@@ -495,8 +495,8 @@ tbody tr:hover{background:#f9f8f4}
       <div class="crit-body">
         <table class="crit-table">
           <tr><th>등급</th><th>종합점수 구간</th></tr>
-          <tr><td>적정</td><td>116점 이상</td></tr>
-          <tr><td>주의</td><td>101~115점</td></tr>
+          <tr><td>적정</td><td>115점 이상</td></tr>
+          <tr><td>주의</td><td>101~114점</td></tr>
           <tr><td>경계</td><td>90~100점</td></tr>
           <tr><td>위기</td><td>90점 미만</td></tr>
           <tr><td>관리</td><td>무담보 + 채권 존재 (별도 분류)</td></tr>
@@ -678,7 +678,7 @@ function updatePartnership(storeName, field, isViolation, idx){
 
 function getRiskClass(score,worstRisk){
   if(worstRisk==='관리') return {label:'관리',cls:'rp-manage',bar:'#7A2E8C'};
-  if(score>=116) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
+  if(score>=115) return {label:'적정',cls:'rp-safe',bar:'#1D9E75'};
   if(score>=101) return {label:'주의',cls:'rp-caution',bar:'#EF9F27'};
   if(score>=90) return {label:'경계',cls:'rp-border',bar:'#EF9F27'};
   return {label:'위기',cls:'rp-crisis',bar:'#E24B4A'};
@@ -692,8 +692,8 @@ function makeScoreGauge(score,grade,gradeColor){
   const zones=[
     {from:0,to:90,color:'#E24B4A'},
     {from:90,to:101,color:'#EF9F27'},
-    {from:101,to:116,color:'#378ADD'},
-    {from:116,to:130,color:'#1D9E75'}
+    {from:101,to:115,color:'#378ADD'},
+    {from:115,to:130,color:'#1D9E75'}
   ];
   const arcs=zones.map(z=>{
     const a0=angleForScore(z.from),a1=angleForScore(z.to);
@@ -706,7 +706,7 @@ function makeScoreGauge(score,grade,gradeColor){
   const needleBaseL=polar(7,needleAngle+90);
   const needleBaseR=polar(7,needleAngle-90);
   const needle=`<polygon points="${needleTip.x.toFixed(2)},${needleTip.y.toFixed(2)} ${needleBaseL.x.toFixed(2)},${needleBaseL.y.toFixed(2)} ${needleBaseR.x.toFixed(2)},${needleBaseR.y.toFixed(2)}" fill="#1a1a18"/><circle cx="${cx}" cy="${cy}" r="8" fill="#1a1a18"/>`;
-  const labelPositions=[{v:0,a:'middle'},{v:90,a:'middle'},{v:101,a:'middle'},{v:116,a:'middle'},{v:130,a:'middle'}];
+  const labelPositions=[{v:0,a:'middle'},{v:90,a:'middle'},{v:101,a:'middle'},{v:115,a:'middle'},{v:130,a:'middle'}];
   const tickLabels=labelPositions.map(t=>{
     const p=polar(r+18,angleForScore(t.v));
     return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" font-size="10" fill="#888780" text-anchor="${t.a}" dominant-baseline="middle">${t.v}</text>`;
@@ -805,8 +805,8 @@ function buildAiDash(){
   const total=allStores.length;
   const manage=allStores.filter(s=>s.worstRisk==='관리').length;
   const graded=allStores.filter(s=>s.worstRisk!=='관리');
-  const safe=graded.filter(s=>s.totalScore>=116).length;
-  const caution=graded.filter(s=>s.totalScore>=101&&s.totalScore<116).length;
+  const safe=graded.filter(s=>s.totalScore>=115).length;
+  const caution=graded.filter(s=>s.totalScore>=101&&s.totalScore<115).length;
   const border=graded.filter(s=>s.totalScore>=90&&s.totalScore<101).length;
   const crisis=graded.filter(s=>s.totalScore<90).length;
 
@@ -973,10 +973,10 @@ function buildAiDash(){
     const kwLow=['친절','신속처리','적극협조','고객칭찬','만족도우수','응대우수','규정준수','정확한안내','클레임없음'];
     const kwHtml=s.keywords?s.keywords.split(',').map(k=>k.trim()).filter(Boolean).map(k=>{const ku=k.toUpperCase();return `<span class="kw-tag ${kwLow.some(d=>ku.includes(d.toUpperCase()))?'safe':kwHigh.some(d=>ku.includes(d.toUpperCase()))?'danger':kwMid.some(d=>ku.includes(d.toUpperCase()))?'warn':''}">${k}</span>`;}).join(''):'';
 
-    const aiBoxBg=s.totalScore>=116?'#EAF3DE':'#E6F1FB';
-    const aiBoxBd=s.totalScore>=116?'#1D9E75':'#185FA5';
-    const aiLblColor=s.totalScore>=116?'#085041':'#0C447C';
-    const aiTxtColor=s.totalScore>=116?'#0F6E56':'#185FA5';
+    const aiBoxBg=s.totalScore>=115?'#EAF3DE':'#E6F1FB';
+    const aiBoxBd=s.totalScore>=115?'#1D9E75':'#185FA5';
+    const aiLblColor=s.totalScore>=115?'#085041':'#0C447C';
+    const aiTxtColor=s.totalScore>=115?'#0F6E56':'#185FA5';
 
     const pGoodsViolation=(s.pGoodsCount||0)>0;
     const pClothingViolation=(s.pClothingCount||0)>0;
