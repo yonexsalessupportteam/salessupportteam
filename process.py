@@ -480,7 +480,7 @@ def main():
     def score_grade(total_score, worst_risk):
         if worst_risk == '관리':
             return '관리'
-        if total_score >= 116:
+        if total_score >= 115:
             return '적정'
         if total_score >= 101:
             return '주의'
@@ -530,7 +530,7 @@ def main():
         key=lambda s: s['total_score']
     )[:10]
     opp_pool = sorted(
-        [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 116],
+        [s for s in all_store_totals if s['score_grade'] != '관리' and s['total_score'] >= 115],
         key=lambda s: -s['total_score']
     )[:10]
     review_pool = sorted(
