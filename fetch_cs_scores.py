@@ -310,11 +310,12 @@ def score_partnership_cumulative(violations):
 # 근거: 매출_규모_기준.xlsx 용품_2안/의류_2안 시트 (회사 실제 영업매출=부가세제외 계산 기준,
 # 최근 6개 분기 실측 합산 분포로 5분위(quintile) 재산정)
 #
-# ⚠️ ERP 매출 데이터는 부가세 포함 금액이지만, 회사 기준은 부가세 제외(영업매출)이므로
-# 아래 컷라인은 부가세 제외(영업매출) 기준 금액임 — 부가세 포함 원본 금액은
-# VAT_RATE로 나눠서(영업매출 환산) 비교함 (SALES_VAT_RATE, deduct_sales 참고).
+# ⚠️ 컷라인은 부가세 제외(영업매출) 기준 금액이며, 구글시트 '용품_3개월 매출'/'의류_3개월
+# 매출' 탭에 사용자가 입력하는 값도 이미 부가세 제외 기준이므로 별도 환산 없이 그대로 비교함.
+# (과거엔 이 값을 ERP 부가세포함 원본으로 오인해 SALES_VAT_RATE로 한 번 더 나누는 2중차감
+# 버그가 있었음 — deduct_sales()/score_target_achieve()에서 제거됨)
 # ───────────────────────────────────────────
-SALES_VAT_RATE = 1.1  # 부가세 10% 가정 (부가세포함액 = 영업매출 × 1.1)
+SALES_VAT_RATE = 1.1  # 참고용 상수(현재 매출3개월 판정에는 미사용) — 부가세 10% 가정
 SALES_DEDUCT_BRACKETS_GOODS = [
     (130_000_000, 0),
     (70_000_000,  2),
@@ -341,16 +342,15 @@ def parse_amount(val):
 
 
 def deduct_sales(amount, brackets):
-    """3개월 매출 합계(부가세 포함 원본) 구간 감점 (10점 만점에서 감점할 점수 반환).
-    ERP 원본 금액은 부가세 포함이라, 컷라인(부가세 제외 기준)과 비교하기 전에
-    SALES_VAT_RATE로 나눠 영업매출(부가세 제외)로 환산한다."""
+    """3개월 매출 합계(구글시트 '매출3개월' 탭 입력값, 이미 부가세 제외/영업매출 기준) 구간
+    감점 (10점 만점에서 감점할 점수 반환). 구글시트 입력값은 부가세 포함 ERP 원본이 아니라
+    사용자가 이미 부가세 제외로 입력하므로 추가 환산 없이 그대로 컷라인과 비교한다."""
     try:
         amount = float(amount)
     except (TypeError, ValueError):
         return 10
-    net_amount = amount / SALES_VAT_RATE
     for threshold, deduct in brackets:
-        if net_amount >= threshold:
+        if amount >= threshold:
             return deduct
     return 10
 
@@ -367,9 +367,9 @@ def score_sales_tier_clothing(amount):
 # 매출목표 달성 배점 (3개월 목표 합계 대비 3개월 매출 합계, 용품 5점 + 의류 5점 = 10점 만점)
 # '용품_목표3개월' / '의류_목표3개월' 구글시트 탭(매출3개월 탭과 동일한 구조: 매장명 + 월별
 # 컬럼)에서 fetch_sales_tab()으로 최근 3개월 목표 합계를 자동 산출해 비교한다.
-# 목표 raw 파일(용품_목표매출달성.xls/의류_목표매출달성.xls) 기준 목표값은 부가세 제외
-# (영업매출) 금액이므로, ERP 매출(부가세 포함)은 SALES_VAT_RATE로 나눠 환산 후 비교.
-# 달성(영업매출 환산 매출 ≥ 목표) 5점 / 미달성 0점. 목표가 0/미입력이면 판정 불가로 보고
+# 목표 raw 파일(용품_목표매출달성.xls/의류_목표매출달성.xls) 기준 목표값과 구글시트 매출3개월
+# 값 모두 부가세 제외(영업매출) 기준으로 이미 입력되어 있으므로 별도 환산 없이 그대로 비교.
+# 달성(매출 ≥ 목표) 5점 / 미달성 0점. 목표가 0/미입력이면 판정 불가로 보고
 # 감점 없이 5점(달성) 처리.
 # ───────────────────────────────────────────
 def score_target_achieve(sales_3m_amount, target_3m_amount):
@@ -380,7 +380,7 @@ def score_target_achieve(sales_3m_amount, target_3m_amount):
     if target <= 0:
         return 5
     try:
-        net_sales = float(sales_3m_amount) / SALES_VAT_RATE
+        net_sales = float(sales_3m_amount)
     except (TypeError, ValueError):
         net_sales = 0
     return 5 if net_sales >= target else 0
