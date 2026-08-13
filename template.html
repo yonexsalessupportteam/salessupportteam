@@ -211,6 +211,10 @@ tbody tr:hover{background:#f9f8f4}
 .score-total-sub{font-size:11px;color:#888780}
 .subgroup-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:#5f5e5a;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e0dfd8}
 .subgroup-label:first-of-type{margin-top:2px}
+.qnum-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:#4F46E5;margin:16px 0 8px}
+.qnum-label:first-child{margin-top:2px}
+.qnum-sub{font-weight:400;color:#888780;font-size:11px;margin-left:2px}
+.qnum-badge{font-size:12px;font-weight:700;white-space:nowrap;margin-left:10px}
 .subgroup-badge{font-size:12px;font-weight:600}
 .dc{background:#f5f4f0;border-radius:8px;padding:12px}
 .dc .dl{font-size:11px;color:#888780;margin-bottom:3px}
@@ -505,15 +509,27 @@ tbody tr:hover{background:#f9f8f4}
 
 <script>
 
-function buildQuantGrid(s){
+function buildQuantGrid(s,clSec,gdSec){
   const dvColor = function(v,hi,mid){ return v>=hi ? '#0F6E56' : v>=mid ? '#185FA5' : '#A32D2D'; };
   const salesScoreGoods = Math.min(5, Math.max(0, s.salesScoreGoods!=null?s.salesScoreGoods:0));
   const salesScoreClothing = Math.min(5, Math.max(0, s.salesScoreClothing!=null?s.salesScoreClothing:0));
   const targetScoreGoods = Math.min(5, Math.max(0, s.targetScoreGoods!=null?s.targetScoreGoods:0));
   const targetScoreClothing = Math.min(5, Math.max(0, s.targetScoreClothing!=null?s.targetScoreClothing:0));
   const targetLabel = function(score, target, sales){ return target ? (score>=5?'달성':'미달성')+' (목표 '+fmt(target)+' · 매출 '+fmt(sales||0)+')' : '목표 미입력'; };
+  const deductCollection=Math.min(30,(s.deductCollectionClothing||0)+(s.deductCollectionGoods||0));
+  const deductCollateral=Math.min(20,(s.deductCollateralClothing||0)+(s.deductCollateralGoods||0));
+  const healthScore=Math.max(0,50-deductCollection-deductCollateral);
+  const salesScore=salesScoreClothing+salesScoreGoods;
+  const targetScore=targetScoreClothing+targetScoreGoods;
+  const qnumLabel = function(num,title,sub,val,cap,hi,mid){
+    return '<div class="qnum-label"><span>'+num+' '+title+' <span class="qnum-sub">('+sub+')</span></span>'
+      +'<span class="qnum-badge" style="color:'+dvColor(val,hi,mid)+'">'+(Math.round(val*10)/10)+'점 <span style="font-weight:400;color:#888780">/'+cap+'</span></span></div>';
+  };
   return '<div style="margin-bottom:14px">'
-    +'<div class="cat-grid">'
+    + qnumLabel('①','채권건전성','50점 = 회수일30+담보대비20',healthScore,50,42,33)
+    + clSec + gdSec
+    + qnumLabel('②','매출규모','10점 = 용품5+의류5',salesScore,10,8,5)
+    + '<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc">'
     +'<div class="dl">매출규모 (의류, 3개월·부가세제외)</div>'
@@ -526,6 +542,9 @@ function buildQuantGrid(s){
     +'<div class="dv" style="color:'+dvColor(salesScoreGoods,4,2.5)+'">'+salesScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+(s.sales3mGoods?fmt(s.sales3mGoods):'미입력')+'</div></div>'
     ):'')
+    +'</div>'
+    + qnumLabel('③','매출목표 달성','10점 = 용품5+의류5',targetScore,10,10,10)
+    + '<div class="cat-grid">'
     +(s.clothing?(
     '<div class="dc">'
     +'<div class="dl">매출목표 달성 (의류, 3개월·부가세제외)</div>'
@@ -538,11 +557,13 @@ function buildQuantGrid(s){
     +'<div class="dv" style="color:'+dvColor(targetScoreGoods,5,5)+'">'+targetScoreGoods+'점 <span style="font-size:11px;color:#888780">/5</span></div>'
     +'<div class="dsub">'+targetLabel(targetScoreGoods, s.target3mGoods, s.sales3mGoods)+'</div></div>'
     ):'')
-    +'<div class="dc">'
-    +'<div class="dl">정량점수</div>'
+    +'</div>'
+    +'<div style="height:.5px;background:#e0dfd8;margin:14px 0 10px"></div>'
+    +'<div class="dc" style="max-width:220px">'
+    +'<div class="dl">정량점수 합계</div>'
     +'<div class="dv" style="color:'+dvColor(s.quantScore,59,46)+'">'+(Math.round(s.quantScore*10)/10)+'점 <span style="font-size:11px;color:#888780">/70</span></div>'
     +'</div>'
-    +'</div></div>';
+    +'</div>';
 }
 
 function buildQualGrid(s){
@@ -1005,8 +1026,7 @@ function buildAiDash(){
         <summary>항목별 상세 보기</summary>
         <div style="margin-top:8px">
           <div class="subgroup-label"><span>📈 정량평가 (채권건전성+매출)</span><span class="subgroup-badge" style="color:${dvColor(s.quantScore,59,46)}">${Math.round(s.quantScore*10)/10}점 / 70</span></div>
-          ${clSec}${gdSec}
-          ${buildQuantGrid(s)}
+          ${buildQuantGrid(s,clSec,gdSec)}
           <div style="height:.5px;background:#e0dfd8;margin:1rem 0"></div>
           <div class="subgroup-label"><span>🤝 정성평가 (CS+파트너십)</span><span class="subgroup-badge" style="color:${dvColor(s.csScore+s.partnershipScore,50,40)}">${Math.round((s.csScore+s.partnershipScore)*10)/10}점 / 60</span></div>
           ${buildQualGrid(s)}
