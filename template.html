@@ -145,7 +145,9 @@ tbody tr:hover{background:#f9f8f4}
 .insight-row-name{font-size:13px;font-weight:500;color:#1a1a18}
 .insight-row-sub{font-size:12px;color:#888780;margin-top:2px}
 .ai-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
-.ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8}
+.ai-kpi{background:#fff;border-radius:10px;padding:14px 16px;border:.5px solid #e0dfd8;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+.ai-kpi:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.ai-kpi.kpi-active{border-color:#4F46E5;box-shadow:0 0 0 1.5px #4F46E5 inset}
 .ai-kpi-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:8px}
 .ai-kpi .lbl{font-size:12px;color:#888780;margin-bottom:6px}
 .ai-kpi .val{font-size:20px;font-weight:500;color:#1a1a18}
@@ -889,12 +891,12 @@ function buildAiDash(){
   </div>
   `+insightHtml+`
   <div class="ai-kpi-grid">
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#F1EFE8">📊</div><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#E3F3EC">✅</div><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FEF3E2">⚠️</div><div class="lbl">주의</div><div class="val a">${caution}</div><div class="pct">전체의 ${total?Math.round(caution/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FDEEE0">🔶</div><div class="lbl">경계</div><div class="val a">${border}</div><div class="pct">전체의 ${total?Math.round(border/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#FCEBEB">🔴</div><div class="lbl">위기</div><div class="val r">${crisis}</div><div class="pct">전체의 ${total?Math.round(crisis/total*1000)/10:0}%</div></div>
-    <div class="ai-kpi"><div class="ai-kpi-icon" style="background:#F1EFE8">⛔</div><div class="lbl">관리</div><div class="val r">${manage}</div><div class="pct">전체의 ${total?Math.round(manage/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi kpi-active" id="kpi-전체" onclick="filterAiTag('전체',true)"><div class="ai-kpi-icon" style="background:#F1EFE8">📊</div><div class="lbl">전체 대리점</div><div class="val">${total}</div><div class="pct">기준 100%</div></div>
+    <div class="ai-kpi" id="kpi-적정" onclick="filterAiTag('적정',true)"><div class="ai-kpi-icon" style="background:#E3F3EC">✅</div><div class="lbl">적정</div><div class="val g">${safe}</div><div class="pct">전체의 ${total?Math.round(safe/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi" id="kpi-주의" onclick="filterAiTag('주의',true)"><div class="ai-kpi-icon" style="background:#FEF3E2">⚠️</div><div class="lbl">주의</div><div class="val a">${caution}</div><div class="pct">전체의 ${total?Math.round(caution/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi" id="kpi-경계" onclick="filterAiTag('경계',true)"><div class="ai-kpi-icon" style="background:#FDEEE0">🔶</div><div class="lbl">경계</div><div class="val a">${border}</div><div class="pct">전체의 ${total?Math.round(border/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi" id="kpi-위기" onclick="filterAiTag('위기',true)"><div class="ai-kpi-icon" style="background:#FCEBEB">🔴</div><div class="lbl">위기</div><div class="val r">${crisis}</div><div class="pct">전체의 ${total?Math.round(crisis/total*1000)/10:0}%</div></div>
+    <div class="ai-kpi" id="kpi-관리" onclick="filterAiTag('관리',true)"><div class="ai-kpi-icon" style="background:#F1EFE8">⛔</div><div class="lbl">관리</div><div class="val r">${manage}</div><div class="pct">전체의 ${total?Math.round(manage/total*1000)/10:0}%</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
     <input id="ai-search" type="text" placeholder="매장명 검색..." style="font-size:13px;padding:6px 12px;border-radius:8px;border:.5px solid #d3d1c7;outline:none;width:180px;">
@@ -1083,13 +1085,19 @@ function toggleStrategicFilter(){
   applyAiFilters();
 }
 
-function filterAiTag(grade){
+function filterAiTag(grade,fromKpi){
   currentAiGrade=grade;
   ['전체','적정','주의','경계','위기','관리'].forEach(g=>{
-    const el=document.getElementById('aitag-'+g);
-    if(el) el.classList.toggle('active',g===grade);
+    const tag=document.getElementById('aitag-'+g);
+    if(tag) tag.classList.toggle('active',g===grade);
+    const kpi=document.getElementById('kpi-'+g);
+    if(kpi) kpi.classList.toggle('kpi-active',g===grade);
   });
   applyAiFilters();
+  if(fromKpi){
+    const list=document.getElementById('ai-dealer-list');
+    if(list) list.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 
 function applyAiFilters(){
