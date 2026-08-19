@@ -1105,6 +1105,7 @@ function applyAiFilters(){
   const team=(document.getElementById('ai-team-filter')||{}).value||'';
   const cat=(document.getElementById('ai-cat-filter')||{}).value||'';
   const wl=getWatchlist();
+  let visibleRank=0;
   document.querySelectorAll('.dealer-card').forEach(card=>{
     const det=document.getElementById('aidet-'+card.id.replace('aicard-',''));
     const gradeOk=currentAiGrade==='전체'||card.dataset.grade===currentAiGrade;
@@ -1116,6 +1117,13 @@ function applyAiFilters(){
     const show=gradeOk&&teamOk&&catOk&&nameOk&&watchOk&&strategicOk;
     card.style.display=show?'':'none';
     if(det&&!show) det.style.display='none';
+    // 필터로 걸러지고 남은 카드끼리 1,2,3...으로 다시 번호 매김 (전체 목록 기준 순위 대신
+    // 현재 화면에 보이는 목록 기준 순번을 보여줘서 30,31,34,35처럼 번호가 튀지 않게 함)
+    if(show){
+      visibleRank++;
+      const badge=card.querySelector('.rank-badge');
+      if(badge) badge.textContent=visibleRank;
+    }
   });
 }
 
