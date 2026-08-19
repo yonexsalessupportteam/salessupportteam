@@ -906,6 +906,10 @@ function buildAiDash(){
     <select id="ai-cat-filter" style="font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;">
       <option value="">전체 카테고리</option><option>의류</option><option>용품</option>
     </select>
+    <select id="ai-sort" style="font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;">
+      <option value="rank">순위순 (종합점수)</option>
+      <option value="name">가나다순</option>
+    </select>
     <span class="ai-filter-tag watchlist" id="ai-watchlist-toggle" onclick="toggleWatchlistFilter()">⭐ 관심 대리점만</span>
     <span class="ai-filter-tag strategic" id="ai-strategic-toggle" onclick="toggleStrategicFilter()">🎯 전략점만</span>
     <span style="font-size:12px;color:#888780;">등급</span>
@@ -1053,6 +1057,7 @@ function buildAiDash(){
   document.getElementById('ai-search').addEventListener('input',applyAiFilters);
   document.getElementById('ai-team-filter').addEventListener('change',applyAiFilters);
   document.getElementById('ai-cat-filter').addEventListener('change',applyAiFilters);
+  document.getElementById('ai-sort').addEventListener('change',applyAiFilters);
 }
 
 function getWatchlist(){
@@ -1104,10 +1109,22 @@ function applyAiFilters(){
   const q=(document.getElementById('ai-search')||{}).value?.toLowerCase()||'';
   const team=(document.getElementById('ai-team-filter')||{}).value||'';
   const cat=(document.getElementById('ai-cat-filter')||{}).value||'';
+  const sortMode=(document.getElementById('ai-sort')||{}).value||'rank';
   const wl=getWatchlist();
+  const container=document.getElementById('ai-dealer-list');
+
+  // 카드+상세패널 쌍을 묶어서 정렬 기준(순위순=원래 종합점수 내림차순 순서 / 가나다순)에 따라
+  // DOM 순서 자체를 재배치. 이벤트 리스너가 붙은 기존 엘리먼트를 appendChild로 옮기는 방식이라
+  // 다시 만들 필요 없이 그대로 재사용됨.
+  const items=Array.from(container.querySelectorAll('.dealer-card')).map(card=>{
+    const idx=card.id.replace('aicard-','');
+    return {card,det:document.getElementById('aidet-'+idx),origIdx:parseInt(idx,10),name:card.dataset.name};
+  });
+  items.sort((a,b)=>sortMode==='name'?a.name.localeCompare(b.name,'ko'):a.origIdx-b.origIdx);
+  items.forEach(it=>{ container.appendChild(it.card); if(it.det) container.appendChild(it.det); });
+
   let visibleRank=0;
-  document.querySelectorAll('.dealer-card').forEach(card=>{
-    const det=document.getElementById('aidet-'+card.id.replace('aicard-',''));
+  items.forEach(({card,det})=>{
     const gradeOk=currentAiGrade==='전체'||card.dataset.grade===currentAiGrade;
     const teamOk=!team||card.dataset.dept===team;
     const catOk=!cat||card.dataset.cat.includes(cat);
@@ -1117,8 +1134,8 @@ function applyAiFilters(){
     const show=gradeOk&&teamOk&&catOk&&nameOk&&watchOk&&strategicOk;
     card.style.display=show?'':'none';
     if(det&&!show) det.style.display='none';
-    // 필터로 걸러지고 남은 카드끼리 1,2,3...으로 다시 번호 매김 (전체 목록 기준 순위 대신
-    // 현재 화면에 보이는 목록 기준 순번을 보여줘서 30,31,34,35처럼 번호가 튀지 않게 함)
+    // 필터로 걸러지고 남은 카드끼리 1,2,3...으로 다시 번호 매김 (현재 정렬·필터 기준으로 보이는
+    // 목록 순서를 그대로 따라감)
     if(show){
       visibleRank++;
       const badge=card.querySelector('.rank-badge');
