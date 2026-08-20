@@ -104,6 +104,12 @@ body{font-family:-apple-system,'Noto Sans KR',sans-serif;background:#FAFBFF;colo
 .card-title{font-size:13px;font-weight:500;color:#5f5e5a;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .toggle-btn{font-size:12px;padding:4px 10px;border-radius:999px;border:.5px solid #d3d1c7;background:#fff;cursor:pointer;color:#5f5e5a}
 .toggle-btn.active{background:#A32D2D;color:#fff;border-color:#A32D2D}
+.chart-legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chart-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--chip-color,#d3d1c7);color:#5f5e5a;background:#fff;cursor:pointer;user-select:none;transition:.15s}
+.chart-legend-chip:hover{filter:brightness(0.97)}
+.chart-legend-chip::before{content:'';width:8px;height:8px;border-radius:2px;background:var(--chip-color,#ccc);display:inline-block;flex-shrink:0}
+.chart-legend-chip.active{background:var(--chip-color,#4F46E5);color:#fff;border-color:var(--chip-color,#4F46E5)}
+.chart-legend-chip.active::before{background:#fff}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .filter-bar input,.filter-bar select{font-size:13px;padding:6px 10px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;color:#1a1a18;outline:none}
 .filter-bar input{flex:1;min-width:140px}
@@ -1246,9 +1252,11 @@ function buildOfficialMonthlyChart(cat,chartId,dept){
   chartRegistry[chartId]=new Chart(document.getElementById(chartId),{
     data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[...barDatasets,...lineDatasets]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
       scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}},x:{stacked:false}}}
   });
+  applyLegendState(chartId,chartRegistry[chartId],teams);
+  renderChartLegend(chartId,teams,teamColors);
 }
 
 function buildTargetPage(){
@@ -1272,10 +1280,12 @@ function buildTargetPage(){
   <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
     <div class="card" style="flex:1;min-width:320px">
       <div class="card-title">🏸 용품 ${chartTitlePrefix} 월별 목표 대비 매출${useOfficial?' (회사 공식 집계)':''}</div>
+      <div class="chart-legend-row" id="legend-team-monthly-chart-goods"></div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-goods"></canvas></div>
     </div>
     <div class="card" style="flex:1;min-width:320px">
       <div class="card-title">👔 의류 ${chartTitlePrefix} 월별 목표 대비 매출${useOfficial?' (회사 공식 집계)':''}</div>
+      <div class="chart-legend-row" id="legend-team-monthly-chart-clothing"></div>
       <div style="position:relative;width:100%;height:240px"><canvas id="team-monthly-chart-clothing"></canvas></div>
     </div>
   </div>
@@ -1358,6 +1368,43 @@ function renderTargetTable(){
   });
 }
 
+// 커스텀 범례(칩 버튼) — Chart.js 기본 legend가 팀 수만큼 늘어나 줄바꿈되고 읽기 힘든 문제를
+// 이미지1 스타일의 토글 pill 버튼으로 대체. 팀 하나당 칩 하나로 목표(막대)+실적(선) 데이터셋을 함께 토글한다.
+window._legendState=window._legendState||{};
+function applyLegendState(chartId,chart,teams){
+  const state=window._legendState[chartId]=window._legendState[chartId]||{};
+  chart.data.datasets.forEach((ds,i)=>{
+    const team=teams.find(t=>ds.label&&ds.label.startsWith(t+' '));
+    if(team){
+      if(state[team]===undefined) state[team]=true;
+      chart.getDatasetMeta(i).hidden=!state[team];
+    }
+  });
+  chart.update('none');
+}
+function renderChartLegend(chartId,teams,teamColors){
+  const el=document.getElementById('legend-'+chartId);
+  if(!el) return;
+  const state=window._legendState[chartId]=window._legendState[chartId]||{};
+  el.innerHTML=teams.map(t=>{
+    if(state[t]===undefined) state[t]=true;
+    return `<span class="chart-legend-chip${state[t]?' active':''}" data-team="${t}" style="--chip-color:${teamColors[t]}" onclick="toggleTeamSeries('${chartId}','${t}')">${t}</span>`;
+  }).join('');
+}
+function toggleTeamSeries(chartId,team){
+  const chart=chartRegistry[chartId];
+  if(!chart) return;
+  const state=window._legendState[chartId]=window._legendState[chartId]||{};
+  if(state[team]===undefined) state[team]=true;
+  state[team]=!state[team];
+  chart.data.datasets.forEach((ds,i)=>{
+    if(ds.label&&ds.label.startsWith(team+' ')) chart.getDatasetMeta(i).hidden=!state[team];
+  });
+  chart.update();
+  const chip=document.querySelector(`#legend-${chartId} [data-team="${CSS.escape(team)}"]`);
+  if(chip) chip.classList.toggle('active',state[team]);
+}
+
 function hexToRgba(hex,alpha){
   const h=hex.replace('#','');
   const r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);
@@ -1400,9 +1447,11 @@ function buildTeamMonthlyChart(all,cat,chartId,deptFilter){
   chartRegistry[chartId]=new Chart(document.getElementById(chartId),{
     data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[...barDatasets,...lineDatasets]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
       scales:{y:{beginAtZero:true,ticks:{callback:v=>fmt(v)}},x:{stacked:false}}}
   });
+  applyLegendState(chartId,chartRegistry[chartId],teams);
+  renderChartLegend(chartId,teams,teamColors);
 }
 
 
